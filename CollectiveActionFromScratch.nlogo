@@ -9,23 +9,26 @@ globals [
   ;; make some tables for saving this stuff for later.
   farmers-say;; this contains a list of people and what they say they will do
   farmers-do;; this contains a list of people and what they do
+  
+  max-grass ;; the max amount of grass on a patch
+  cows-eat ;; the amount cows eat per turn
+  grass-regrow ;; the amount that grass grows back
 ]
 
 cows-own
 [
-  food-stored        ;; amount of grass collected from grazing
-  owner#             ;; the user-id of the farmer who owns the goat
+  owner             ;; the user-id of the farmer who owns the goat
+  energy            ;; amount the cow has eaten this round
 ]
 
 farmers-own
 [
   user-id            ;; unique user-id, input by the client when they log in,
                      ;; to identify each student turtle
-  revenue-lst        ;; list of each days' revenue collection;; ah: not sure we need this
-  total-assets       ;; total of past revenue, minus expenses;; ah: not sure we need this
+  revenue-list        ;; list of each days' revenue collection;; ah: not sure we need this
   current-revenue    ;; the revenue collected at the end of the last day;; ah: not sure we need this
   say-will-do-today
-  will-cheat-today?   ;; will they defect today
+  will-cheat-today?  ;; will they defect today
 ]
 
 fences-own [
@@ -34,28 +37,108 @@ fences-own [
 
 patches-own[
   grass
+  water
 ]
 
+to run-a-week
+  
+  
+  if any? farmers with [will-cheat-today? = 0 or say-will-do-today = 0] [show "Not everybody has decided yet." stop]
+  ;; we can figure out how to do the visualization later. But here are the options:
+  ask farmers with [will-cheat-today? or say-will-do-today = "Say: Shepherd my Cows"] [shepherd-cows]
+  ask farmers with [not will-cheat-today?][
+    (cf:match say-will-do-today
+      cf:case ["Say: Repair Fences"] [fix-fences]
+      cf:case ["Say: Inspect Fences"] [inspect-fences]
+      cf:case ["Say: Dig Water Reservoir"] [dig-water]
+      cf:case ["Say: Survey Water Reservoir"] [inspect-water]
+      )
+  ]
+  
+  
+  ;; grass regrows
+  ask grass-patches [grow-grass]
+  ;; cows metabolize
+  ;;; and maybe die
+  ask cows [
+    set energy energy - 20
+    if energy < 0 [die]
+  ]
+  ;; lake refills (the lake doens't really do anything yet - maybe it's too much?)
+  ;; we could also replace that with spreading manure/fertilizer or something like that
+  
+  ;; calculate how much milk they get (we need a ceiling on this too)
+  
+  
+end
 
+to inspect-water
+  ask lake-patches [set label water]
+end
 
+to dig-water
+  let new-water-patch one-of patches with [pcolor = green and any? neighbors with [pcolor = blue]]
+  ask new-water-patch [set water 100]
+end
 
+to shepherd-cows  ;; this basically just adds to what the cows would normally do - they just get to walk around and eat more energy
+    ask my-cows [graze]
+end
 
+to fix-fences
+  let fix-points 300 
+  while [fix-points > 0 and any? fences with [durability < 100]] [    
+    let most-broken-fence min-one-of fences [durability]
+    move-to most-broken-fence
+    let fix-diff 100 - [durability] of most-broken-fence
+    ifelse fix-diff < fix-points 
+    [
+      ask most-broken-fence [set durability 100]
+      set fix-points fix-points - fix-diff
+    ]
+    [
+      ask most-broken-fence [set durability durability + fix-points]
+      set fix-points 0
+    ]
+  ]  
+end
+
+to inspect-fences
+  ask fences [set label durability]
+end
+  
+to graze
+  eat
+  rt random 30
+  lt random 30
+  ifelse [ member? self grass-patches and not any? fences-here] of patch-ahead .5 [fd .5] [rt 180 fd .5]
+end
+
+to eat
+  let energy-diff grass - cows-eat
+  ifelse energy-diff > 0 [
+    set grass grass - cows-eat
+    set energy energy + cows-eat
+  ]
+  [
+    set energy energy  + grass
+    set grass 0
+  ]
+end
+  
+  
+  
 to setup
+  ca
   setup-globals
   setup-world
   hubnet-reset
-  setup
 end
 
 
 to go
   reset-daily-vars
-  ;; A day has three phases
   hubnet-broadcast "Action" "Choose what to do today"
-  
-  
-  
-  
 end
 
 
@@ -63,21 +146,32 @@ end
 
 to reset-daily-vars
   ask farmers [
-    set say-will-do-today 0
-    set will-cheat-today? 0
+    reset-farmer
   ]
 end
 
+
+
+
+
+
+
+
 to setup-world
-  ask patches [set grass 50 + random 50 recolor-grass]
+  ask patches [set grass 5 + random 5 recolor-grass]
   ask fences [die]
   ask patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor] [sprout-fences 1 [set shape "fence" set heading 0 set color brown]]
-end
+end  
 
 to setup-globals
   set farmers-do table:make
   set farmers-say table:make
+  
+  set max-grass 10;; the max amount of grass on a patch
+  set cows-eat 3 ;; the amount cows eat per turn
+  set grass-regrow 1 ;; the amount that grass grows back
 end
+
 
 
 to listen-to-clients
@@ -94,7 +188,11 @@ end
 to add-farmer [message-source]
   create-farmers 1 [
     set user-id message-source
+    ht
     set color one-of base-colors
+    set revenue-list []
+    hatch-cows 3 [ show self set color [color] of myself set energy 10 move-to one-of grass-patches st]
+    reset-farmer
     ]
 end
 
@@ -104,11 +202,12 @@ end
 
 to do-command [source tag]
   ;; ifelse/case here for different kinds
+  
   ask farmers with [user-id = source] [set say-will-do-today tag print-who-says-what ]
 end
 
 to show-who-says [astring] 
-    let the-users [user-id] of farmers with [say-will-do-today = astring]
+    let the-users sort [user-id] of farmers with [say-will-do-today = astring]
     output-print (word astring " (" length the-users ")")
     output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
     output-print ""
@@ -119,14 +218,35 @@ to print-who-says-what
   show-who-says "Say: Repair Fences" 
   show-who-says "Say: Inspect Fences" 
   show-who-says "Say: Dig Water Reservoir"
-  show-who-says "Say: Inspect Water Reservoir"
+  show-who-says "Say: Survey Water Reservoir"
   show-who-says "Say: Shepherd my Cows"
+end
 
+to reset-farmer
+  set current-revenue 0
+  set say-will-do-today 0
+  set will-cheat-today? 0
+end
+
+to grow-grass
+  set grass min (list 10 (grass + grass-regrow))
 end
 
 
 to recolor-grass
-  set pcolor scale-color green grass -20 120
+  set pcolor scale-color green grass -2 12
+end
+
+to-report my-cows  ;; farmer procedure, returns agentset of their cows
+    report cows with [owner = myself]
+end
+
+to-report lake-patches 
+  report patches with [pcolor = blue]
+end
+
+to-report grass-patches 
+  report patches with [shade-of? pcolor   green]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -153,7 +273,7 @@ GRAPHICS-WINDOW
 0
 0
 1
-ticks
+Week
 30.0
 
 OUTPUT
@@ -164,13 +284,47 @@ OUTPUT
 12
 
 BUTTON
-80
-20
-212
-53
+140
+10
+272
+43
 NIL
 listen-to-clients
 T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+10
+160
+112
+193
+NIL
+run-a-week
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+10
+10
+135
+43
+NIL
+setup
+NIL
 1
 T
 OBSERVER
