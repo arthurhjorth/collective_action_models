@@ -9,8 +9,6 @@ globals [
   ;; make some tables for saving this stuff for later.
   farmers-say;; this contains a list of people and what they say they will do
   farmers-do;; this contains a list of people and what they do
-  
-  
 ]
 
 cows-own
@@ -34,13 +32,17 @@ fences-own [
  durability 
 ]
 
+patches-own[
+  grass
+]
+
 
 
 
 
 to setup
   setup-globals
-  
+  setup-world
   hubnet-reset
   setup
 end
@@ -57,10 +59,6 @@ to go
 end
 
 
-to decide
-end
-
-
 
 
 to reset-daily-vars
@@ -70,6 +68,11 @@ to reset-daily-vars
   ]
 end
 
+to setup-world
+  ask patches [set grass 50 + random 50 recolor-grass]
+  ask fences [die]
+  ask patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor] [sprout-fences 1 [set shape "fence" set heading 0 set color brown]]
+end
 
 to setup-globals
   set farmers-do table:make
@@ -119,6 +122,11 @@ to print-who-says-what
   show-who-says "Say: Inspect Water Reservoir"
   show-who-says "Say: Shepherd my Cows"
 
+end
+
+
+to recolor-grass
+  set pcolor scale-color green grass -20 120
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -316,6 +324,17 @@ Circle -7500403 true true 8 8 285
 Circle -16777216 true false 60 75 60
 Circle -16777216 true false 180 75 60
 Polygon -16777216 true false 150 168 90 184 62 210 47 232 67 244 90 220 109 205 150 198 192 205 210 220 227 242 251 229 236 206 212 183
+
+fence
+false
+0
+Line -6459832 false 30 255 30 105
+Line -6459832 false 150 240 150 75
+Line -6459832 false 255 225 255 60
+Line -6459832 false 15 135 285 90
+Line -6459832 false 15 165 285 120
+Line -6459832 false 15 195 285 150
+Line -6459832 false 15 225 285 180
 
 fish
 false
