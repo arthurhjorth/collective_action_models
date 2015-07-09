@@ -1,8 +1,17 @@
+extensions [table]
+
 
 breed [ cows cow ]  ;; creation controlled by farmers
 breed [ farmers farmer ] ;; created and controlled by clients
 breed [ fences fence]
 
+globals [
+  ;; make some tables for saving this stuff for later.
+  farmers-say;; this contains a list of people and what they say they will do
+  farmers-do;; this contains a list of people and what they do
+  
+  
+]
 
 cows-own
 [
@@ -25,7 +34,10 @@ fences-own [
 
 
 
+
+
 to setup
+  setup-globals
   
   hubnet-reset
   setup
@@ -34,9 +46,17 @@ end
 
 to go
   ;; A day has three phases
-;  hubnet-broadcast "Decide on what you will do today."
+  hubnet-broadcast "Action" "Choose what to do today"
   
   
+  
+  
+end
+
+
+to setup-globals
+  set farmers-do table:make
+  set farmers-say table:make
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -416,9 +436,9 @@ NetLogo 5.2.0
 @#$#@#$#@
 BUTTON
 5
-15
+95
 150
-48
+128
 Say: Repair Fences
 NIL
 NIL
@@ -430,9 +450,9 @@ NIL
 
 BUTTON
 155
-15
+95
 330
-48
+128
 Say: Dig Water Reservoir
 NIL
 NIL
@@ -444,9 +464,9 @@ NIL
 
 BUTTON
 5
-85
+165
 150
-118
+198
 Say: Shepherd my cows
 NIL
 NIL
@@ -458,9 +478,9 @@ NIL
 
 BUTTON
 5
-50
+130
 150
-83
+163
 Say: Inspect Fences
 NIL
 NIL
@@ -472,9 +492,9 @@ NIL
 
 BUTTON
 155
-50
+130
 330
-83
+163
 Say: Survey Water Reservoir
 NIL
 NIL
@@ -486,10 +506,10 @@ NIL
 
 BUTTON
 5
-155
-152
-188
-Do: Shepherd Cows
+235
+150
+268
+Yes, Shepherd Cows
 NIL
 NIL
 1
@@ -500,9 +520,9 @@ NIL
 
 MONITOR
 5
-205
+360
 77
-254
+409
 # of Cows
 NIL
 0
@@ -510,9 +530,9 @@ NIL
 
 MONITOR
 85
-205
+360
 142
-254
+409
 $
 NIL
 3
@@ -520,9 +540,9 @@ NIL
 
 BUTTON
 145
-205
+360
 270
-255
+410
 Buy Cow
 NIL
 NIL
@@ -553,6 +573,60 @@ VIEW
 16
 -16
 16
+
+MONITOR
+10
+10
+325
+59
+Action
+NIL
+0
+1
+
+TEXTBOX
+10
+75
+160
+93
+What you say you will do
+11
+0.0
+1
+
+TEXTBOX
+10
+215
+160
+233
+Will you cheat?
+11
+0.0
+1
+
+TEXTBOX
+5
+340
+155
+358
+Click here to buy cows
+11
+0.0
+1
+
+BUTTON
+155
+235
+330
+268
+No, do what I said
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
 
 @#$#@#$#@
 default
