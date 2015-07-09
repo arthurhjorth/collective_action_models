@@ -57,6 +57,10 @@ to go
 end
 
 
+to decide
+end
+
+
 
 
 to reset-daily-vars
@@ -73,41 +77,47 @@ to setup-globals
 end
 
 
+to listen-to-clients
+  while [ hubnet-message-waiting? ]
+  [
+    hubnet-fetch-message
+    (cf:cond
+     cf:case [ hubnet-enter-message? ] [ add-farmer hubnet-message-source ]
+     cf:case [hubnet-exit-message?] [kill-farmer hubnet-message-source]
+     cf:else [ do-command hubnet-message-source hubnet-message-tag])
+  ]
+end
 
-to update-output
+to add-farmer [message-source]
+  create-farmers 1 [
+    set user-id message-source
+    set color one-of base-colors
+    ]
+end
+
+to kill-farmer [message-source]
+  ask farmers with [user-id = message-source ] [die]
+end
+
+to do-command [source tag]
+  ;; ifelse/case here for different kinds
+  ask farmers with [user-id = source] [set say-will-do-today tag print-who-says-what ]
+end
+
+to show-who-says [astring] 
+    let the-users [user-id] of farmers with [say-will-do-today = astring]
+    output-print (word astring " (" length the-users ")")
+    output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+    output-print ""
+end
+
+to print-who-says-what
   clear-output
-  output-print "Repairing fences: "
-  let the-users [user-id] of farmers with [say-will-do-today = "Say: Repair Fences"]
-  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
-  output-print ""
-  
-  output-print "Inspecting fences: "
-  set the-users [user-id] of farmers with [say-will-do-today = "Say: Inspect Fences"]
-  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
-  output-print ""
-  
-  output-print "Dig water reservoir: "
-  set the-users [user-id] of farmers with [say-will-do-today = "Say: Dig Water Reservoir"]
-  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
-  output-print ""
-  
-  output-print "Inspecting Water Reservoir: "
-  set the-users [user-id] of farmers with [say-will-do-today = "Say: Inspect Water Reservoir"]
-  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
-  output-print ""
-  
-  output-print "Shepherding their Cows: "
-  set the-users [user-id] of farmers with [say-will-do-today = "Say: Shepherd my Cows"]
-  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
-  output-print ""
-  
-  output-print "Undecided: "
-  set the-users [user-id] of farmers with [say-will-do-today = 0]
-  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
-  output-print ""
-  
-  
-  
+  show-who-says "Say: Repair Fences" 
+  show-who-says "Say: Inspect Fences" 
+  show-who-says "Say: Dig Water Reservoir"
+  show-who-says "Say: Inspect Water Reservoir"
+  show-who-says "Say: Shepherd my Cows"
 
 end
 @#$#@#$#@
@@ -144,6 +154,23 @@ OUTPUT
 1065
 470
 12
+
+BUTTON
+80
+20
+212
+53
+NIL
+listen-to-clients
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
