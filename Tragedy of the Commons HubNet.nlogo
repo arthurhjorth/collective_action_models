@@ -50,7 +50,6 @@ farmers-own
 [
   user-id            ;; unique user-id, input by the client when they log in,
                      ;; to identify each student turtle
-  num-goats-to-buy   ;; desired quantity of goats to purchase
   revenue-lst        ;; list of each days' revenue collection
   total-assets       ;; total of past revenue, minus expenses
   current-revenue    ;; the revenue collected at the end of the last day
@@ -86,7 +85,6 @@ to setup
       set shape "fence"
       set heading 0 
       set durability 50 + 100
-      
     ]
   ]
   ask farmers
@@ -131,6 +129,7 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 to go
+  
 
   ;; this is where we need to do a bunch of things differently. First, "go" is a day, and a day has three phases:
   ;; 1. Students decide what to do out of simulation
@@ -224,17 +223,19 @@ to milk-goats  ;; farmer procedure
 end
 
 ;; the goat market setup
+;; We replace this with simply buying more goats. Oh, that is what we do at the end of the day when we know how much money we have!
 to go-to-market
-  ask farmers
-  [
-    if num-goats-to-buy > 0
-      [ buy-goats num-goats-to-buy ]
-    if num-goats-to-buy < 0
-      [ lose-goats (- num-goats-to-buy) ]
-    if num-goats-to-buy = 0
-      [ hubnet-send user-id "Goat Seller Says:" "You did not buy any goats." ]
-    send-personal-info
-  ]
+  
+;  ask farmers
+;  [
+;    if num-goats-to-buy > 0
+;      [ buy-goats num-goats-to-buy ]
+;    if num-goats-to-buy < 0
+;      [ lose-goats (- num-goats-to-buy) ]
+;    if num-goats-to-buy = 0
+;      [ hubnet-send user-id "Goat Seller Says:" "You did not buy any goats." ]
+;    send-personal-info
+;  ]
 end
 
 ;; farmers buy goats at market
@@ -452,12 +453,12 @@ end
 ;; doing based on the tag sent by the node:
 ;; num-goats-to-buy - determine quantity of student's desired purchase
 to execute-command [command]
-  if command = "num-goats-to-buy"
-  [
-    ask farmers with [user-id = hubnet-message-source]
-      [ set num-goats-to-buy hubnet-message ]
-    stop
-  ]
+;  if command = "num-goats-to-buy"
+;  [
+;    ask farmers with [user-id = hubnet-message-source]
+;      [ set num-goats-to-buy hubnet-message ]
+;    stop
+;  ]
 end
 
 to create-new-farmer [ id ]
@@ -467,7 +468,7 @@ to create-new-farmer [ id ]
     setup-farm
     set-unique-color
     reset-farmers-vars
-    hubnet-send id "num-goats-to-buy" num-goats-to-buy
+;    hubnet-send id "num-goats-to-buy" num-goats-to-buy
     send-system-info
   ]
 end
@@ -492,7 +493,6 @@ end
 to reset-farmers-vars  ;; farmer procedure
   ;; reset the farmer variable to initial values
   set revenue-lst []
-  set num-goats-to-buy 1
   set total-assets cost/goat
   set current-revenue 0
 
@@ -551,8 +551,9 @@ to remove-farmer [ id ]
 end
 
 
-; Copyright 2002 Uri Wilensky.
-; See Info tab for full copyright and license.
+to show-who-does-what
+  
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 462
