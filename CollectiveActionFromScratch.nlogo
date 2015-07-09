@@ -13,6 +13,7 @@ globals [
   max-grass ;; the max amount of grass on a patch
   cows-eat ;; the amount cows eat per turn
   grass-regrow ;; the amount that grass grows back
+  fence-fix-points
 ]
 
 cows-own
@@ -29,6 +30,7 @@ farmers-own
   current-revenue    ;; the revenue collected at the end of the last day;; ah: not sure we need this
   say-will-do-today
   will-cheat-today?  ;; will they defect today
+  money
 ]
 
 fences-own [
@@ -41,35 +43,46 @@ patches-own[
 ]
 
 to run-a-week
-  
-  
   if any? farmers with [will-cheat-today? = 0 or say-will-do-today = 0] [show "Not everybody has decided yet." stop]
   ;; we can figure out how to do the visualization later. But here are the options:
-  ask farmers with [will-cheat-today? or say-will-do-today = "Say: Shepherd my Cows"] [shepherd-cows]
   ask farmers with [not will-cheat-today?][
     (cf:match say-will-do-today
-      cf:case ["Say: Repair Fences"] [fix-fences]
-      cf:case ["Say: Inspect Fences"] [inspect-fences]
-      cf:case ["Say: Dig Water Reservoir"] [dig-water]
-      cf:case ["Say: Survey Water Reservoir"] [inspect-water]
+      cf:= "Say: Repair Fences" [fix-fences]
+      cf:= "Say: Inspect Fences" [inspect-fences]
+      cf:= "Say: Dig Water Reservoir" [dig-water]
+      cf:= "Say: Survey Water Reservoir" [inspect-water]
       )
   ]
-  
-  
-  ;; grass regrows
-  ask grass-patches [grow-grass]
-  ;; cows metabolize
-  ;;; and maybe die
+  ;; this is "bonus grazing" for shepherding
+  ask farmers with [will-cheat-today? or say-will-do-today = "Say: Shepherd my Cows"] [
+    ask my-cows [repeat 3 [graze]]
+    ]  
+  ;; all cows graze
+  ask cows [repeat 10 [graze]]
   ask cows [
-    set energy energy - 20
+    set energy energy - 5
     if energy < 0 [die]
   ]
-  ;; lake refills (the lake doens't really do anything yet - maybe it's too much?)
-  ;; we could also replace that with spreading manure/fertilizer or something like that
+  ;; grass regrows
+  ask grass-patches [grow-grass]
   
-  ;; calculate how much milk they get (we need a ceiling on this too)
+  ;; calculate how much milk they get (we need a better function for this, I think)
+  ask farmers [sell-milk]
   
-  
+  ;; fences deteriorate 
+  ask fences [set durability min (list durability (durability - random 25))]
+
+  tick
+  ;; and reset farmers
+  ask farmers [reset-farmer]
+end
+
+
+to sell-milk
+  let total-production [energy] of my-cows
+  let profit  sum total-production
+  set money money + profit
+  set revenue-list lput profit revenue-list
 end
 
 to inspect-water
@@ -82,11 +95,11 @@ to dig-water
 end
 
 to shepherd-cows  ;; this basically just adds to what the cows would normally do - they just get to walk around and eat more energy
-    ask my-cows [graze]
+    ask my-cows [ repeat 15 [graze]]
 end
 
 to fix-fences
-  let fix-points 300 
+  let fix-points fence-fix-points
   while [fix-points > 0 and any? fences with [durability < 100]] [    
     let most-broken-fence min-one-of fences [durability]
     move-to most-broken-fence
@@ -133,22 +146,17 @@ to setup
   setup-globals
   setup-world
   hubnet-reset
+  reset-ticks
 end
 
 
 to go
-  reset-daily-vars
   hubnet-broadcast "Action" "Choose what to do today"
 end
 
 
 
 
-to reset-daily-vars
-  ask farmers [
-    reset-farmer
-  ]
-end
 
 
 
@@ -160,7 +168,7 @@ end
 to setup-world
   ask patches [set grass 5 + random 5 recolor-grass]
   ask fences [die]
-  ask patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor] [sprout-fences 1 [set shape "fence" set heading 0 set color brown]]
+  ask patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor] [sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50]]
 end  
 
 to setup-globals
@@ -170,6 +178,9 @@ to setup-globals
   set max-grass 10;; the max amount of grass on a patch
   set cows-eat 3 ;; the amount cows eat per turn
   set grass-regrow 1 ;; the amount that grass grows back
+  
+  set fence-fix-points 500
+  
 end
 
 
@@ -189,11 +200,12 @@ to add-farmer [message-source]
   create-farmers 1 [
     set user-id message-source
     ht
+    set money 0
     set color one-of base-colors
     set revenue-list []
-    hatch-cows 3 [ show self set color [color] of myself set energy 10 move-to one-of grass-patches st]
+    hatch-cows 3 [ set owner myself set shape "cow" set color [color] of myself set energy 10 move-to one-of grass-patches st]
     reset-farmer
-    ]
+  ]
 end
 
 to kill-farmer [message-source]
@@ -201,13 +213,20 @@ to kill-farmer [message-source]
 end
 
 to do-command [source tag]
-  ;; ifelse/case here for different kinds
+  ask farmers with [user-id = source] [
+    
+    ;; ifelse/case here for different kinds
+    (cf:cond 
+      cf:case [member? "Say:" tag] [set say-will-do-today tag print-who-says-what]
+    cf:case [tag = "Do: What I Said"] [set will-cheat-today? false]
+    cf:case [tag = "Do: Lie, and shepherd Cows"] [set will-cheat-today? false]
+    )
+  ]
   
-  ask farmers with [user-id = source] [set say-will-do-today tag print-who-says-what ]
 end
 
 to show-who-says [astring] 
-    let the-users sort [user-id] of farmers with [say-will-do-today = astring]
+  let the-users sort [user-id] of farmers with [say-will-do-today = astring]
     output-print (word astring " (" length the-users ")")
     output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
     output-print ""
@@ -688,7 +707,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.0-LS1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -766,9 +785,9 @@ NIL
 BUTTON
 5
 235
-150
+207
 268
-Yes, Shepherd Cows
+Do: Lie, and shepherd Cows
 NIL
 NIL
 1
@@ -874,11 +893,11 @@ Click here to buy cows
 1
 
 BUTTON
-155
+210
 235
-330
+335
 268
-No, do what I said
+Do: What I Said
 NIL
 NIL
 1
