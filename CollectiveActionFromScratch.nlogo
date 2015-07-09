@@ -1,4 +1,4 @@
-extensions [table]
+extensions [table cf]
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -26,6 +26,8 @@ farmers-own
   revenue-lst        ;; list of each days' revenue collection;; ah: not sure we need this
   total-assets       ;; total of past revenue, minus expenses;; ah: not sure we need this
   current-revenue    ;; the revenue collected at the end of the last day;; ah: not sure we need this
+  say-will-do-today
+  will-cheat-today?   ;; will they defect today
 ]
 
 fences-own [
@@ -45,6 +47,7 @@ end
 
 
 to go
+  reset-daily-vars
   ;; A day has three phases
   hubnet-broadcast "Action" "Choose what to do today"
   
@@ -54,15 +57,64 @@ to go
 end
 
 
+
+
+to reset-daily-vars
+  ask farmers [
+    set say-will-do-today 0
+    set will-cheat-today? 0
+  ]
+end
+
+
 to setup-globals
   set farmers-do table:make
   set farmers-say table:make
 end
+
+
+
+to update-output
+  clear-output
+  output-print "Repairing fences: "
+  let the-users [user-id] of farmers with [say-will-do-today = "Say: Repair Fences"]
+  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+  output-print ""
+  
+  output-print "Inspecting fences: "
+  set the-users [user-id] of farmers with [say-will-do-today = "Say: Inspect Fences"]
+  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+  output-print ""
+  
+  output-print "Dig water reservoir: "
+  set the-users [user-id] of farmers with [say-will-do-today = "Say: Dig Water Reservoir"]
+  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+  output-print ""
+  
+  output-print "Inspecting Water Reservoir: "
+  set the-users [user-id] of farmers with [say-will-do-today = "Say: Inspect Water Reservoir"]
+  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+  output-print ""
+  
+  output-print "Shepherding their Cows: "
+  set the-users [user-id] of farmers with [say-will-do-today = "Say: Shepherd my Cows"]
+  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+  output-print ""
+  
+  output-print "Undecided: "
+  set the-users [user-id] of farmers with [say-will-do-today = 0]
+  output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+  output-print ""
+  
+  
+  
+
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
+340
 10
-649
+779
 470
 16
 16
@@ -85,6 +137,13 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+OUTPUT
+785
+10
+1065
+470
+12
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -465,9 +524,9 @@ NIL
 BUTTON
 5
 165
-150
+182
 198
-Say: Shepherd my cows
+Say: Shepherd my Cows
 NIL
 NIL
 1
