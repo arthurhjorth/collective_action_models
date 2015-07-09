@@ -34,6 +34,7 @@ end
 
 to go
   ;; A day has three phases
+;  hubnet-broadcast "Decide on what you will do today."
   
   
 end
@@ -413,6 +414,146 @@ NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+BUTTON
+5
+15
+150
+48
+Say: Repair Fences
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+155
+15
+330
+48
+Say: Dig Water Reservoir
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+5
+85
+150
+118
+Say: Shepherd my cows
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+5
+50
+150
+83
+Say: Inspect Fences
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+155
+50
+330
+83
+Say: Survey Water Reservoir
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+5
+155
+152
+188
+Do: Shepherd Cows
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+MONITOR
+5
+205
+77
+254
+# of Cows
+NIL
+0
+1
+
+MONITOR
+85
+205
+142
+254
+$
+NIL
+3
+1
+
+BUTTON
+145
+205
+270
+255
+Buy Cow
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+VIEW
+340
+15
+740
+415
+0
+0
+0
+1
+1
+1
+1
+1
+0
+1
+1
+1
+-16
+16
+-16
+16
+
 @#$#@#$#@
 default
 0.0
@@ -426,5 +567,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@
