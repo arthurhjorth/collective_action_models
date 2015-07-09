@@ -5,7 +5,8 @@
 globals
 [
   day                ;; number of days so far
-
+  
+  
   colors             ;; list that holds the colors used for students' turtles
   color-names        ;; list that holds the names of the colors used for
                      ;; students' turtles
@@ -75,9 +76,11 @@ to setup
   clear-output
   clear-all-plots
   ;; create fences
+  ask fences [die]
   ask patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor]
   [
     sprout-fences 1 [
+      set shape "fence"
       set heading 0 
       set durability 50 + 100
       
@@ -125,6 +128,23 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 to go
+
+  ;; this is where we need to do a bunch of things differently. First, "go" is a day, and a day has three phases:
+  ;; 1. Students decide what to do out of simulation
+  ;; 1a: register it in the model so we can see statistics aftrwards
+  ;; 1b: decide what to do
+
+  ;; 2. The day plays out
+  ;; Student avatars move around, do their thing, go home.
+  
+  ;; 3. Model & Students assess outcomes of the day
+  ;; what this means is that students get to see the results of what people have done. 
+  ;; e.g. if someone decided to 'inspect the fences', then the durability of the fences is updated
+  ;; students only know 
+  
+  
+
+
   ;; get command and data from client
   listen-to-clients
 
@@ -858,6 +878,13 @@ NIL
 NIL
 1
 
+OUTPUT
+1030
+10
+1395
+645
+12
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -1310,100 +1337,100 @@ VIEW
 10
 
 MONITOR
-251
-30
-356
-79
+250
+169
+355
+218
 Current Revenue
 NIL
 3
 1
 
 MONITOR
-126
-30
-244
-79
+125
+169
+243
+218
 My Goat Population
 NIL
 3
 1
 
 MONITOR
-99
-218
-170
-267
+98
+357
+169
+406
 Grass Amt
 NIL
 0
 1
 
 MONITOR
-6
-218
-96
-267
+5
+357
+95
+406
 Cost per Goat
 NIL
 3
 1
 
 MONITOR
-363
-30
-454
-79
+362
+169
+453
+218
 Total Assets
 NIL
 3
 1
 
 MONITOR
-5
-30
-121
-79
+4
+169
+120
+218
 My Goat Color
 NIL
 3
 1
 
 MONITOR
-173
-218
-230
-267
+172
+357
+229
+406
 Milk Amt
 NIL
 3
 1
 
 TEXTBOX
-8
-199
-125
-217
+7
+338
+124
+356
 System Variables:
 11
 0.0
 0
 
 TEXTBOX
-7
-10
-124
-28
+6
+149
+123
+167
 Personal Variables:
 11
 0.0
 0
 
 SLIDER
-8
-95
-157
-128
+7
+234
+156
+267
 num-goats-to-buy
 num-goats-to-buy
 -5
@@ -1415,34 +1442,118 @@ NIL
 HORIZONTAL
 
 MONITOR
-383
-217
-440
-266
+382
+356
+439
+405
 Day
 NIL
 3
 1
 
 MONITOR
-8
-145
-454
-194
+7
+284
+453
+333
 Goat Seller Says:
 NIL
 3
 1
 
 TEXTBOX
-163
-98
-441
-130
+162
+237
+440
+269
 Selecting a negative number here will eliminate some of your goats.
 11
 0.0
 0
+
+BUTTON
+5
+10
+122
+43
+Repair Fences
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+R
+
+BUTTON
+125
+10
+275
+43
+Dig Water Reservoir
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+W
+
+BUTTON
+5
+45
+122
+78
+Inspect Fences
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+I
+
+BUTTON
+125
+45
+275
+78
+Survey Water Reservoir
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+S
+
+BUTTON
+280
+10
+410
+43
+Guide My Goats
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+G
+
+BUTTON
+280
+45
+410
+78
+Buy Goat
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+B
 
 @#$#@#$#@
 default
@@ -1457,5 +1568,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@
