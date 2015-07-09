@@ -7,6 +7,9 @@ globals
   day                ;; number of days so far
   
   
+  ;; We need a dynamic color generator that finds the n most 
+  ;; Write an extension with this method: http://stackoverflow.com/questions/470690/how-to-automatically-generate-n-distinct-colors  
+  
   colors             ;; list that holds the colors used for students' turtles
   color-names        ;; list that holds the names of the colors used for
                      ;; students' turtles
