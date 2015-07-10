@@ -44,8 +44,8 @@ patches-own[
 
 to run-a-week
   ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
-  
-  if any? farmers with [will-cheat-today? = 0 or say-will-do-today = 0] [show "Not everybody has decided yet." stop]
+  let undecided farmers with [will-cheat-today? = 0 or say-will-do-today = 0]
+  if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
   ;; we can figure out how to do the visualization later. But here are the options:
   ask farmers with [not will-cheat-today?][
     (cf:match say-will-do-today
@@ -722,7 +722,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.0-LS1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
