@@ -43,6 +43,8 @@ patches-own[
 ]
 
 to run-a-week
+  ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
+  
   if any? farmers with [will-cheat-today? = 0 or say-will-do-today = 0] [show "Not everybody has decided yet." stop]
   ;; we can figure out how to do the visualization later. But here are the options:
   ask farmers with [not will-cheat-today?][
@@ -72,6 +74,11 @@ to run-a-week
   ;; fences deteriorate 
   ask fences [set durability min (list durability (durability - random 25))]
 
+  ask farmers
+  [
+   hubnet-send user-id "$" money
+   hubnet-send user-id "# of Cows" (count my-cows)
+  ]
   tick
   ;; and reset farmers
   ask farmers [reset-farmer]
@@ -214,13 +221,21 @@ end
 
 to do-command [source tag]
   ask farmers with [user-id = source] [
-    
+    show tag
+    let update-client-display true
     ;; ifelse/case here for different kinds
     (cf:cond 
       cf:case [member? "Say:" tag] [set say-will-do-today tag print-who-says-what]
-    cf:case [tag = "Do: What I Said"] [set will-cheat-today? false]
-    cf:case [tag = "Do: Lie, and shepherd Cows"] [set will-cheat-today? false]
+      cf:case [tag = "Do: What I Said"] [set will-cheat-today? false]
+      cf:case [tag = "Do: Lie, and shepherd Cows"] [set will-cheat-today? true]
+      cf:else [ set update-client-display false ]
     )
+    if (update-client-display) [
+      show (word "my will-cheat flag is " will-cheat-today?)
+      let suffix " (the truth)"
+      if will-cheat-today? = true [ set suffix " (a lie)" ]
+      hubnet-send user-id "Action" (word say-will-do-today suffix)
+    ]
   ]
   
 end
@@ -707,7 +722,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0-LS1
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
