@@ -18,6 +18,9 @@ globals [
   cows-metabolize-week ;; the amount that cows metabolize per day
   grass-regrow ;; the amount that grass grows back
   fence-fix-points
+  shepherd-bonus ; the extra amount of food cows will try to eat if they are being shepherded
+  
+  edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
 ]
 
 cows-own
@@ -52,26 +55,20 @@ to run-a-week
   let undecided farmers with [will-cheat-today? = 0 or say-will-do-today = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
   ;; we can figure out how to do the visualization later. But here are the options:
-  ask farmers with [not will-cheat-today?][
-    (cf:match say-will-do-today
-      cf:= "Say: Repair Fences" [fix-fences]
-      cf:= "Say: Inspect Fences" [inspect-fences]
-      cf:= "Say: Dig Water Reservoir" [dig-water]
-      cf:= "Say: Survey Water Reservoir" [inspect-water]
-      )
-  ]
+  ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
+  ;; so that they can catch defectors. 
+
   ;; this is "bonus grazing" for shepherding
-  ask farmers with [will-cheat-today? or say-will-do-today = "Say: Shepherd my Cows"] [
-    ask my-cows [repeat 3 [graze]]
-    ]  
+  
+  ask farmers [do-weekly-action]
   ;; all cows graze
-  ask cows [repeat 10 [graze]]
+  repeat 7 [ask cows [graze]]
   ask cows [
-    set energy energy - 70
-    if energy < 0 [die]
+    set energy energy - cows-metabolize-week
+    if energy < 0 [
+      show (word owner "just lost a cow to starvation.")
+      die]
   ]
-  ;; grass regrows
-  ask grass-patches [grow-grass]
   
   ;; calculate how much milk they get (we need a better function for this, I think)
   ask farmers [sell-milk]
@@ -84,10 +81,26 @@ to run-a-week
    hubnet-send user-id "$" money
    hubnet-send user-id "# of Cows" (count my-cows)
   ]
-  ask patches [recolor-grass]
+  
+    ;; grass regrows
+  ask grass-patches [grow-grass]
+  ask patches [recolor-grass]  
+  
+  
   tick
-  ;; and reset farmers
+  ;; and reset farmers. Maybe shouldn't reset yet. We need to collect statistics, and students need to see the result of what happened
   ask farmers [reset-farmer]
+end
+
+
+to do-weekly-action
+  (
+    cf:match say-will-do-today
+    cf:= "Say: Repair Fences" [fix-fences]
+    cf:= "Say: Inspect Fences" [inspect-fences]
+    cf:= "Say: Dig Water Reservoir" [dig-water]
+    cf:= "Say: Survey Water Reservoir" [inspect-water]
+    )
 end
 
 
@@ -135,14 +148,29 @@ end
   
 to graze
   eat
+  cow-move
+end
+
+to cow-move
+  ;; cows wander around randomly
   rt random 30
   lt random 30
-  ifelse [ member? self grass-patches and not any? fences-here] of patch-ahead 1 [fd 1] [rt 180 fd 1]
+  ;; if there's a fence in front of them, turn around
+  if [ any? fences-here with [durability > 0]] of patch-ahead 1 [rt 180]  
+  ;; if they end up on an edge patch, they die
+  if member? patch-here edge-patches [
+    show (word owner " just lost a cow because the fences were broke.")
+    die]
+  
+  fd 1
 end
 
 to eat
+  ;; let cows eat 20% more if their owner shepherds
+  let my-max-eat ifelse-value [shepherding-this-week?] of owner [cows-eat * (1 + shepherd-bonus)] [cows-eat]
   let stomach-space-left cows-max-energy - energy
   let eaten-amount min (list stomach-space-left grass cows-eat)
+  show eaten-amount
   set energy energy  + eaten-amount
   set grass grass - eaten-amount
 end
@@ -168,14 +196,18 @@ end
 
 
 to setup-world
+  set edge-patches patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor]
   ask patches [set grass (max-grass / 3) + random-float (max-grass * 2 / 3 ) recolor-grass]
   ask fences [die]
-  ask patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor] [sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50]]
+  ask edge-patches [sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50]]
 end  
 
 to setup-globals
   set farmers-do table:make
   set farmers-say table:make
+  
+  ;; extra food that cows will try to eat if they are being shepherded
+  set shepherd-bonus .2
   
   ;; and 961 patches with grass growing on it.
   ;; we need to balance how fast grass grows back, how quickly fences deteriorate, and how how grass
@@ -203,8 +235,11 @@ to setup-globals
   
 
   ;; there are 128 fences, each with 100 points of durability
-  ;; around one fourth (maybe
+  ;; around one fifth of students should be working on repairing fences at all time. So we can either scale durability or we can
+  ;; can change 
   set fence-fix-points 500
+  
+  
   
 end
 
@@ -309,6 +344,11 @@ to test
   cf:= y [ print "x is less than y!" ]
   cf:else [ print "I don't know what's going on..." ])
 end
+
+;; farmer reporter. will they shepherd this week
+to-report shepherding-this-week?
+  report say-will-do-today = "Say: Shepherd my Cows" or will-cheat-today?
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 340
@@ -324,15 +364,15 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -16
 16
 -16
 16
-0
-0
+1
+1
 1
 Week
 30.0
