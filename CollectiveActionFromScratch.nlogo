@@ -182,6 +182,8 @@ to setup-globals
   set farmers-do table:make
   set farmers-say table:make
   
+  
+  
   set max-grass 10;; the max amount of grass on a patch
   set cows-eat 3 ;; the amount cows eat per turn
   set grass-regrow 1 ;; the amount that grass grows back
@@ -368,14 +370,41 @@ NIL
 NIL
 1
 
+SLIDER
+10
+390
+182
+423
+no-of-farmers
+no-of-farmers
+4
+35
+4
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+15
+340
+240
+380
+NB:  no-of-farmers determines the value of a bunch of globals for 'balancing' the system. Please use it.
+11
+0.0
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+This model is inspired by Elinor Ostrom's work on how people manage resource systems and set up so-called institutions for collective action.
+
+She positioned her work in opposition to The Tragedy of the Commons (TOC). 
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+
 
 ## HOW TO USE IT
 
