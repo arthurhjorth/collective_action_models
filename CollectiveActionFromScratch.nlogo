@@ -304,8 +304,6 @@ to print-who-says-what
   clear-output
   show-who-says "Say: Repair Fences" 
   show-who-says "Say: Inspect Fences" 
-  show-who-says "Say: Dig Water Reservoir"
-  show-who-says "Say: Survey Water Reservoir"
   show-who-says "Say: Shepherd my Cows"
 end
 
