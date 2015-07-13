@@ -231,7 +231,7 @@ to setup-globals
   set cows-max-energy cows-metabolize-week ;; the amount that cows can store
   ;; if the whole system should have a base-carrying capacity of 700 * 6 = 4200
   set average-cows-per-player 6
-  set grass-regrow count patches with [not any? fences-here] / ( no-of-farmers * average-cows-per-player);; the amount that grass grows back
+  set grass-regrow ( no-of-farmers * average-cows-per-player * cows-metabolize-week) / count patches with [not any? fences-here] ;; the amount that grass grows back
   
 
   ;; there are 128 fences, each with 100 points of durability
@@ -444,7 +444,7 @@ no-of-farmers
 no-of-farmers
 4
 35
-12
+1
 1
 1
 NIL
