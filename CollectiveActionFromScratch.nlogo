@@ -836,24 +836,10 @@ NIL
 NIL
 
 BUTTON
-155
-95
-330
-128
-Say: Dig Water Reservoir
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-
-BUTTON
 5
-165
-182
-198
+130
+150
+163
 Say: Shepherd my Cows
 NIL
 NIL
@@ -864,10 +850,10 @@ NIL
 NIL
 
 BUTTON
-5
-130
-150
-163
+155
+95
+280
+128
 Say: Inspect Fences
 NIL
 NIL
@@ -878,24 +864,10 @@ NIL
 NIL
 
 BUTTON
-155
-130
-330
-163
-Say: Survey Water Reservoir
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-
-BUTTON
 5
-235
+195
 207
-268
+228
 Do: Lie, and shepherd Cows
 NIL
 NIL
@@ -907,30 +879,30 @@ NIL
 
 MONITOR
 5
-360
-77
-409
+305
+95
+354
 # of Cows
 NIL
 0
 1
 
 MONITOR
-85
-360
-142
-409
+100
+305
+190
+354
 $
 NIL
-3
+2
 1
 
 BUTTON
-145
-360
-270
-410
-Buy Cow
+200
+305
+320
+355
+Buy Cow ($100)
 NIL
 NIL
 1
@@ -983,9 +955,9 @@ What you say you will do
 
 TEXTBOX
 10
-215
+175
 160
-233
+193
 Will you cheat?
 11
 0.0
@@ -993,9 +965,9 @@ Will you cheat?
 
 TEXTBOX
 5
-340
+285
 155
-358
+303
 Click here to buy cows
 11
 0.0
@@ -1003,10 +975,39 @@ Click here to buy cows
 
 BUTTON
 210
-235
+195
 335
-268
+228
 Do: What I Said
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+SLIDER
+5
+360
+190
+393
+money-to-shared-bank
+money-to-shared-bank
+0
+100
+50
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+200
+360
+320
+393
+Donate
 NIL
 NIL
 1
