@@ -10,8 +10,12 @@ globals [
   farmers-say;; this contains a list of people and what they say they will do
   farmers-do;; this contains a list of people and what they do
   
+  average-cows-per-player ;; the number of cows per average per player that the field can sustain
+  
   max-grass ;; the max amount of grass on a patch
   cows-eat ;; the amount cows eat per turn
+  cows-max-energy ;; the amount that cows can store
+  cows-metabolize-week ;; the amount that cows metabolize per day
   grass-regrow ;; the amount that grass grows back
   fence-fix-points
 ]
@@ -43,6 +47,7 @@ patches-own[
 ]
 
 to run-a-week
+  ;;
   ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
   let undecided farmers with [will-cheat-today? = 0 or say-will-do-today = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
@@ -62,7 +67,7 @@ to run-a-week
   ;; all cows graze
   ask cows [repeat 10 [graze]]
   ask cows [
-    set energy energy - 5
+    set energy energy - 70
     if energy < 0 [die]
   ]
   ;; grass regrows
@@ -79,6 +84,7 @@ to run-a-week
    hubnet-send user-id "$" money
    hubnet-send user-id "# of Cows" (count my-cows)
   ]
+  ask patches [recolor-grass]
   tick
   ;; and reset farmers
   ask farmers [reset-farmer]
@@ -131,19 +137,14 @@ to graze
   eat
   rt random 30
   lt random 30
-  ifelse [ member? self grass-patches and not any? fences-here] of patch-ahead .5 [fd .5] [rt 180 fd .5]
+  ifelse [ member? self grass-patches and not any? fences-here] of patch-ahead 1 [fd 1] [rt 180 fd 1]
 end
 
 to eat
-  let energy-diff grass - cows-eat
-  ifelse energy-diff > 0 [
-    set grass grass - cows-eat
-    set energy energy + cows-eat
-  ]
-  [
-    set energy energy  + grass
-    set grass 0
-  ]
+  let stomach-space-left cows-max-energy - energy
+  let eaten-amount min (list stomach-space-left grass cows-eat)
+  set energy energy  + eaten-amount
+  set grass grass - eaten-amount
 end
   
   
@@ -166,14 +167,8 @@ end
 
 
 
-
-
-
-
-
-
 to setup-world
-  ask patches [set grass 5 + random 5 recolor-grass]
+  ask patches [set grass (max-grass / 3) + random-float (max-grass * 2 / 3 ) recolor-grass]
   ask fences [die]
   ask patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor] [sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50]]
 end  
@@ -182,12 +177,33 @@ to setup-globals
   set farmers-do table:make
   set farmers-say table:make
   
+  ;; and 961 patches with grass growing on it.
+  ;; we need to balance how fast grass grows back, how quickly fences deteriorate, and how how grass
+  ;; can be on each patch so that the world automatically can support N people. (N = no-of-farmers.)
   
   
-  set max-grass 10;; the max amount of grass on a patch
-  set cows-eat 3 ;; the amount cows eat per turn
-  set grass-regrow 1 ;; the amount that grass grows back
+  ;; Let's assume that people start with three cows, and we want the game to go on for "a while". Let's say that 
+  ;; at its base level, the world can support 6 cows per player.
+  ;; let's just say that a cow needs 7 energy to sustain itself for a week.
+  ;; in that case, the entire system (without extra work towards it) should produce
+  ;; 7 * 6 * n-of-farmers, or 42 per player, per week. That's an odd number for this just because it would mean that
+  ;; a lot of the patches would not produce anything or they would produce a fraction of an energy's worth of food
+  ;; so maybe we should say 70 per week? that will make the numbers more on an order that makes sense.
+  set cows-metabolize-week 70
+  ;; cows metabolize 10 per day, and they should be able to eat as much as they metabolize plus... 50? let's try that  
+  set cows-eat cows-metabolize-week * 1.5 / 7  ;; the amount cows eat per turn
+  ;; let's say that cows can eat at most 33% of the grass on a patch per day, so that means max-grass is 45
+  set max-grass cows-eat * 3
+  ;; let's also say that a cow can store enough energy to not eat for one week. That means they can store a total of 
+  ;; 7 * 10  = 70.
+  set cows-max-energy cows-metabolize-week ;; the amount that cows can store
+  ;; if the whole system should have a base-carrying capacity of 700 * 6 = 4200
+  set average-cows-per-player 6
+  set grass-regrow count patches with [not any? fences-here] / ( no-of-farmers * average-cows-per-player);; the amount that grass grows back
   
+
+  ;; there are 128 fences, each with 100 points of durability
+  ;; around one fourth (maybe
   set fence-fix-points 500
   
 end
@@ -265,12 +281,12 @@ to reset-farmer
 end
 
 to grow-grass
-  set grass min (list 10 (grass + grass-regrow))
+  set grass min (list max-grass (grass + grass-regrow))
 end
 
 
 to recolor-grass
-  set pcolor scale-color green grass -2 12
+  set pcolor scale-color green grass -2 (max-grass * 1.3)
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
@@ -283,6 +299,15 @@ end
 
 to-report grass-patches 
   report patches with [shade-of? pcolor   green]
+end
+
+to test
+  let x 0
+  let y 0
+  (cf:match x
+  cf:= y [ print "x is bigger than y!" ]
+  cf:= y [ print "x is less than y!" ]
+  cf:else [ print "I don't know what's going on..." ])
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -343,7 +368,7 @@ BUTTON
 193
 NIL
 run-a-week
-NIL
+T
 1
 T
 OBSERVER
@@ -379,7 +404,7 @@ no-of-farmers
 no-of-farmers
 4
 35
-4
+12
 1
 1
 NIL
