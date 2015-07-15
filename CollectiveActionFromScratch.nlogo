@@ -7,8 +7,7 @@ breed [ fences fence]
 
 globals [
   ;; make some tables for saving this stuff for later.
-  farmers-say;; this contains a list of people and what they say they will do
-  farmers-do;; this contains a list of people and what they do
+  farmer-actions
   
   average-cows-per-player ;; the number of cows per average per player that the field can sustain
   
@@ -21,6 +20,8 @@ globals [
   shepherd-bonus ; the extra amount of food cows will try to eat if they are being shepherded
   
   edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
+  
+  common-pool-bank ;; this is money that people have pooled together
 ]
 
 cows-own
@@ -50,31 +51,23 @@ patches-own[
 ]
 
 to run-a-week
-  ;;
-  ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
+  ;; only run the week if everybody has decided what to do
   let undecided farmers with [will-cheat-today? = 0 or say-will-do-today = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
+  
+  color-student-cows 
   ;; we can figure out how to do the visualization later. But here are the options:
   ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
   ;; so that they can catch defectors. 
-
-  ;; this is "bonus grazing" for shepherding
-  
   ask farmers [do-weekly-action]
-  ;; all cows graze
+  ;; all cows graze. We do this to make sure everybody's cows get an equal chance at eating,
+  ;; and to smoothe out movement animation
   repeat 7 [ask cows [graze]]
-  ask cows [
-    set energy energy - cows-metabolize-week
-    if energy < 0 [
-      show (word owner "just lost a cow to starvation.")
-      die]
-  ]
+  ask cows [metabolize-and-maybe-die]
   
   ;; calculate how much milk they get (we need a better function for this, I think)
   ask farmers [sell-milk]
-  
-  ;; fences deteriorate 
-  ask fences [set durability min (list durability (durability - random 25))]
+ 
 
   ask farmers
   [
@@ -82,10 +75,14 @@ to run-a-week
    hubnet-send user-id "# of Cows" (count my-cows)
   ]
   
-    ;; grass regrows
-  ask grass-patches [grow-grass]
-  ask patches [recolor-grass]  
+  ;; fences deteriorate 
+  ask fences [set durability min (list durability (durability - random 25))]
   
+  ;; grass regrows
+  ask grass-patches [
+    grow-grass 
+    recolor-grass
+  ]  
   
   tick
   ;; and reset farmers. Maybe shouldn't reset yet. We need to collect statistics, and students need to see the result of what happened
@@ -98,11 +95,21 @@ to do-weekly-action
     cf:match say-will-do-today
     cf:= "Say: Repair Fences" [fix-fences]
     cf:= "Say: Inspect Fences" [inspect-fences]
-    cf:= "Say: Dig Water Reservoir" [dig-water]
-    cf:= "Say: Survey Water Reservoir" [inspect-water]
     )
 end
 
+
+to color-student-cows
+  ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
+end
+
+to metabolize-and-maybe-die
+  set energy energy - cows-metabolize-week
+  if energy < 0 [
+    show (word owner "just lost a cow to starvation.")
+    die
+  ]
+end
 
 to sell-milk
   let total-production [energy] of my-cows
@@ -111,18 +118,6 @@ to sell-milk
   set revenue-list lput profit revenue-list
 end
 
-to inspect-water
-  ask lake-patches [set label water]
-end
-
-to dig-water
-  let new-water-patch one-of patches with [pcolor = green and any? neighbors with [pcolor = blue]]
-  ask new-water-patch [set water 100]
-end
-
-to shepherd-cows  ;; this basically just adds to what the cows would normally do - they just get to walk around and eat more energy
-    ask my-cows [ repeat 15 [graze]]
-end
 
 to fix-fences
   let fix-points fence-fix-points
@@ -203,17 +198,21 @@ to setup-world
 end  
 
 to setup-globals
-  set farmers-do table:make
-  set farmers-say table:make
+  set farmer-actions table:make
+  scale-vars-for-n-players
+
   
-  ;; extra food that cows will try to eat if they are being shepherded
+  
+end
+
+
+to scale-vars-for-n-players
+  let no-of-farmers length hubnet-clients-list
+    ;; extra food that cows will try to eat if they are being shepherded
   set shepherd-bonus .2
-  
-  ;; and 961 patches with grass growing on it.
+  ;; 961 patches with grass growing on it.
   ;; we need to balance how fast grass grows back, how quickly fences deteriorate, and how how grass
   ;; can be on each patch so that the world automatically can support N people. (N = no-of-farmers.)
-  
-  
   ;; Let's assume that people start with three cows, and we want the game to go on for "a while". Let's say that 
   ;; at its base level, the world can support 6 cows per player.
   ;; let's just say that a cow needs 7 energy to sustain itself for a week.
@@ -226,7 +225,7 @@ to setup-globals
   set cows-eat cows-metabolize-week * 1.5 / 7  ;; the amount cows eat per turn
   ;; let's say that cows can eat at most 33% of the grass on a patch per day, so that means max-grass is 45
   set max-grass cows-eat * 3
-  ;; let's also say that a cow can store enough energy to not eat for one week. That means they can store a total of 
+  ;; let's also say that a cow can store enough energy to not eat at all for one week. That means they can store a total of 
   ;; 7 * 10  = 70.
   set cows-max-energy cows-metabolize-week ;; the amount that cows can store
   ;; if the whole system should have a base-carrying capacity of 700 * 6 = 4200
@@ -235,14 +234,17 @@ to setup-globals
   
 
   ;; there are 128 fences, each with 100 points of durability
-  ;; around one fifth of students should be working on repairing fences at all time. So we can either scale durability or we can
-  ;; can change 
-  set fence-fix-points 500
-  
-  
+  ;; we should scale how many points they get to fix them with, rather than the durability decline. in the case of the former
+  ;; it will just get to the point where fences need fixing sooner (if I am running this correctly in my head)
+  ;; So: 128 fences declining by up to 25 points each turn, with a mean of 12.5
+  ;; 128 * 12.5 = 1600.
+  ;; we want one fifth of players fixing fences all the time, so
+  ;; if no one has logged in, don't do this or we get division by zero
+  if length hubnet-clients-list > 0 [
+    set fence-fix-points 5 * count fences / length hubnet-clients-list
+  ]
   
 end
-
 
 
 to listen-to-clients
@@ -257,6 +259,7 @@ to listen-to-clients
 end
 
 to add-farmer [message-source]
+  table:put farmer-actions message-source table:make
   create-farmers 1 [
     set user-id message-source
     ht
@@ -326,32 +329,30 @@ to-report my-cows  ;; farmer procedure, returns agentset of their cows
     report cows with [owner = myself]
 end
 
-to-report lake-patches 
-  report patches with [pcolor = blue]
-end
-
 to-report grass-patches 
   report patches with [shade-of? pcolor   green]
-end
-
-to test
-  let x 0
-  let y 0
-  (cf:match x
-  cf:= y [ print "x is bigger than y!" ]
-  cf:= y [ print "x is less than y!" ]
-  cf:else [ print "I don't know what's going on..." ])
 end
 
 ;; farmer reporter. will they shepherd this week
 to-report shepherding-this-week?
   report say-will-do-today = "Say: Shepherd my Cows" or will-cheat-today?
 end
+
+;; AH: OK, we'll just do one large table full of 'action tables'. An
+;; action table contains the hubnet-id, the type of action, the week it happened, and a value
+to log-player-action [hubnet-id action value]
+  let action-table table:make
+  table:put action-table "week" ticks
+  table:put action-table "farmer" hubnet-id
+  table:put action-table "action" action
+  table:put action-table "value" value
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
-340
+155
 10
-779
+594
 470
 16
 16
@@ -376,16 +377,16 @@ Week
 30.0
 
 OUTPUT
-785
-10
-1065
+600
+200
+880
 470
 12
 
 BUTTON
-140
 10
-272
+10
+142
 43
 NIL
 listen-to-clients
@@ -401,12 +402,12 @@ NIL
 
 BUTTON
 10
-160
+105
 112
-193
+138
 NIL
 run-a-week
-T
+NIL
 1
 T
 OBSERVER
@@ -418,9 +419,9 @@ NIL
 
 BUTTON
 10
-10
+65
 135
-43
+98
 NIL
 setup
 NIL
@@ -431,31 +432,6 @@ NIL
 NIL
 NIL
 NIL
-1
-
-SLIDER
-10
-390
-182
-423
-no-of-farmers
-no-of-farmers
-4
-35
-1
-1
-1
-NIL
-HORIZONTAL
-
-TEXTBOX
-15
-340
-240
-380
-NB:  no-of-farmers determines the value of a bunch of globals for 'balancing' the system. Please use it.
-11
-0.0
 1
 
 @#$#@#$#@
