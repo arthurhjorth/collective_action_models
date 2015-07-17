@@ -366,6 +366,7 @@ end
 ;; plotting procedures
 to do-plot-2
   set-current-plot "Plot 2"
+  clear-plot
   let the-list get-plot-list plot-2
   foreach n-values (length the-list - 1) [?][
     plotxy ? item ? the-list
