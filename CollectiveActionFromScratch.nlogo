@@ -272,7 +272,7 @@ to add-farmer [message-source]
   create-farmers 1 [
     set user-id message-source
     ht
-    set money 0
+    set money 50
     set color one-of base-colors
     set milk-production-list []
     hatch-cows 3 [ set owner myself set shape "cow" set color [color] of myself set energy 10 move-to one-of grass-patches st]
@@ -384,6 +384,20 @@ to-report get-plot-list [plot-list-description]
     cf:= "How many sowed grass"[]
     )
 end
+
+to fine-them
+  let the-farmer one-of farmers with [user-id = fine-who]
+  ask the-farmer [
+    ifelse money >= fine-amount [
+      set money money - fine-amount
+      set common-pool-bank common-pool-bank + fine-amount
+    ]
+    [
+      show (word user-id " does not have $ " fine-amount "!")
+    ]
+  ]
+  
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 155
@@ -413,10 +427,10 @@ Week
 30.0
 
 OUTPUT
-605
-10
-885
-295
+600
+45
+880
+345
 12
 
 BUTTON
@@ -472,9 +486,9 @@ NIL
 
 MONITOR
 600
-335
+345
 770
-380
+390
 Shared Money
 common-pool-bank
 0
@@ -484,13 +498,13 @@ common-pool-bank
 SLIDER
 600
 385
-770
+760
 418
-fine
-fine
+fine-amount
+fine-amount
 0
 100
-50
+17
 1
 1
 $
@@ -499,7 +513,7 @@ HORIZONTAL
 CHOOSER
 600
 420
-770
+760
 465
 fine-who
 fine-who
@@ -520,7 +534,7 @@ PLOT
 885
 55
 1345
-205
+195
 Plot 1
 NIL
 NIL
@@ -536,9 +550,9 @@ PENS
 
 PLOT
 885
-205
+195
 1345
-355
+335
 Plot 2
 NIL
 NIL
@@ -554,19 +568,19 @@ PENS
 
 CHOOSER
 885
-355
+335
 1177
-400
+380
 plot-2
 plot-2
 "Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass"
-0
+1
 
 BUTTON
 1175
-355
+335
 1345
-400
+380
 NIL
 do-plot-2
 NIL
@@ -586,6 +600,23 @@ BUTTON
 55
 NIL
 do-plot-1
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+760
+395
+885
+465
+NIL
+fine-them
 NIL
 1
 T
