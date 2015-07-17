@@ -103,13 +103,18 @@ to do-weekly-action
     cf:match say-will-do-today
     cf:= "Do: Repair Fences ($20)" [fix-fences]
     cf:= "Do: Inspect Fences" [inspect-fences]
-
+    cf:= "Do: Sow Grass ($20)" [sow-grass]
+    cf:= "Do: Survey Grass" [survey-grass]
     )
 end
 
 
 to color-student-cows
   ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
+end
+
+to sow-grass ;; 
+  
 end
 
 to metabolize-and-maybe-die
@@ -1028,9 +1033,9 @@ NIL
 NIL
 
 MONITOR
-755
+710
 320
-845
+800
 369
 # of Cows
 NIL
@@ -1038,9 +1043,9 @@ NIL
 1
 
 MONITOR
-850
+805
 320
-940
+895
 369
 $
 NIL
@@ -1048,9 +1053,9 @@ NIL
 1
 
 BUTTON
-950
+905
 320
-1070
+1025
 370
 Buy Cow ($100)
 NIL
@@ -1062,10 +1067,10 @@ NIL
 NIL
 
 VIEW
-340
-15
-740
-415
+305
+10
+705
+410
 0
 0
 0
@@ -1086,7 +1091,7 @@ VIEW
 MONITOR
 10
 10
-325
+300
 59
 Action
 NIL
@@ -1114,9 +1119,9 @@ What you actually do.
 1
 
 TEXTBOX
-755
+710
 300
-905
+860
 318
 Click here to buy cows
 11
@@ -1124,9 +1129,9 @@ Click here to buy cows
 1
 
 SLIDER
-755
+710
 375
-940
+895
 408
 money-to-shared-bank
 money-to-shared-bank
@@ -1139,9 +1144,9 @@ NIL
 HORIZONTAL
 
 BUTTON
-950
+905
 375
-1070
+1025
 408
 Donate
 NIL
@@ -1223,10 +1228,10 @@ NIL
 NIL
 
 PLOT
-750
-15
-1130
-165
+710
+10
+1090
+160
 Plot 1
 milk-production
 NIL
