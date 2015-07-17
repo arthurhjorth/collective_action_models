@@ -268,6 +268,7 @@ end
 to add-farmer [message-source]
   table:put farmer-actions message-source table:make
   goo:set-chooser-items "fine-who" sort hubnet-clients-list
+  wait .05
   set fine-who item 0 sort hubnet-clients-list
   create-farmers 1 [
     set user-id message-source
@@ -289,15 +290,21 @@ to do-command [source tag]
     let update-client-display true
     ;; ifelse/case here for different kinds
     (cf:cond 
-      cf:case [member? "Say:" tag] [set say-will-do-today tag print-who-says-what]
+      cf:case [member? "Say:" tag] [
+        hubnet-send source "Action" (word "You " tag)
+        set say-will-do-today tag 
+        print-who-says-what
+        ]
     cf:case [member? "Do:" tag] [
       ;; only set this if they can afford it. Otherwise tell them they can't afford it.
       ifelse can-afford-action? tag
         [
+          hubnet-send source "Action" (word "You will " tag )
           set will-do-today tag print-who-says-what
         ]
         [
-          hubnet-send source "Action" "You can't afford that."
+          set will-do-today 0
+          hubnet-send source "Action" (word "You can't afford " tag)
         ]
     ]
     cf:else [ set update-client-display false ]
@@ -322,8 +329,10 @@ end
 
 to print-who-says-what
   clear-output
-  show-who-says "Say: Repair Fences" 
+  show-who-says "Say: Repair Fences ($20)"
   show-who-says "Say: Inspect Fences" 
+  show-who-says "Say: Survey Grass" 
+  show-who-says "Say: Sow Grass ($20)" 
   show-who-says "Say: Shepherd my Cows"
 end
 
@@ -529,7 +538,7 @@ CHOOSER
 465
 fine-who
 fine-who
-"Local 1" "Local 2" "Local 3" "Local 4" "Local 5"
+"Local 12" "Local 13" "Local 14" "Local 15"
 0
 
 CHOOSER
