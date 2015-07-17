@@ -22,8 +22,7 @@ globals [
   edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
   
   common-pool-bank ;; this is money that people have pooled together
-  
-  
+
   ;; some plotting lists
   known-grass-amounts
   total-milk-production
@@ -102,8 +101,9 @@ end
 to do-weekly-action
   (
     cf:match say-will-do-today
-    cf:= "Say: Repair Fences" [fix-fences]
-    cf:= "Say: Inspect Fences" [inspect-fences]
+    cf:= "Do: Repair Fences ($20)" [fix-fences]
+    cf:= "Do: Inspect Fences" [inspect-fences]
+
     )
 end
 
@@ -197,9 +197,6 @@ end
 
 
 
-
-
-
 to setup-world
   set edge-patches patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor]
   ask patches [set grass (max-grass / 3) + random-float (max-grass * 2 / 3 ) recolor-grass]
@@ -286,7 +283,6 @@ end
 
 to do-command [source tag]
   ask farmers with [user-id = source] [
-    show tag
     let update-client-display true
     ;; ifelse/case here for different kinds
     (cf:cond 
@@ -991,9 +987,9 @@ NetLogo 5.2.0-LS1
 @#$#@#$#@
 BUTTON
 5
-95
-170
-128
+145
+150
+178
 Say: Repair Fences ($20)
 NIL
 NIL
@@ -1005,9 +1001,9 @@ NIL
 
 BUTTON
 5
-130
-170
-163
+180
+150
+213
 Say: Shepherd my Cows
 NIL
 NIL
@@ -1018,10 +1014,10 @@ NIL
 NIL
 
 BUTTON
-185
-95
-310
-128
+5
+110
+150
+143
 Say: Inspect Fences
 NIL
 NIL
@@ -1031,45 +1027,31 @@ OBSERVER
 NIL
 NIL
 
-BUTTON
-5
-195
-207
-228
-Do: Lie, and shepherd Cows
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-
 MONITOR
-5
-305
-95
-354
+755
+320
+845
+369
 # of Cows
 NIL
 0
 1
 
 MONITOR
-100
-305
-190
-354
+850
+320
+940
+369
 $
 NIL
 2
 1
 
 BUTTON
-200
-305
+950
 320
-355
+1070
+370
 Buy Cow ($100)
 NIL
 NIL
@@ -1112,54 +1094,40 @@ NIL
 1
 
 TEXTBOX
-10
-75
-160
-93
+5
+85
+200
+103
 What you say you will do
-11
-0.0
-1
-
-TEXTBOX
-10
-175
-160
-193
-Will you cheat?
-11
+15
 0.0
 1
 
 TEXTBOX
 5
-285
-155
-303
+225
+165
+243
+What you actually do.
+15
+0.0
+1
+
+TEXTBOX
+755
+300
+905
+318
 Click here to buy cows
 11
 0.0
 1
 
-BUTTON
-210
-195
-335
-228
-Do: What I Said
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-
 SLIDER
-5
-360
-190
-393
+755
+375
+940
+408
 money-to-shared-bank
 money-to-shared-bank
 0
@@ -1171,10 +1139,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-200
-360
-320
-393
+950
+375
+1070
+408
 Donate
 NIL
 NIL
@@ -1185,11 +1153,113 @@ NIL
 NIL
 
 BUTTON
-185
-130
-310
-163
+155
+145
+300
+178
 Say: Sow Grass ($20)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+5
+285
+150
+318
+Do: Repair Fences ($20)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+5
+320
+150
+353
+Do: Shepherd Cows
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+5
+250
+150
+283
+Do: Inspect Fences
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+155
+285
+300
+318
+Do: Sow Grass ($20)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+PLOT
+750
+15
+1130
+165
+Plot 1
+milk-production
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"default" 1.0 0 -16777216 true
+
+BUTTON
+155
+110
+300
+143
+Say: Survey Grass
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+155
+250
+300
+283
+Do: Survey Grass
 NIL
 NIL
 1
