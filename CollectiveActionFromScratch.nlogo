@@ -1,4 +1,4 @@
-extensions [table cf]
+extensions [table cf goo]
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -22,6 +22,13 @@ globals [
   edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
   
   common-pool-bank ;; this is money that people have pooled together
+  
+  
+  ;; some plotting lists
+  known-grass-amounts
+  total-milk-production
+  known-fence-states
+  money-in-the-bank
 ]
 
 cows-own
@@ -34,8 +41,9 @@ farmers-own
 [
   user-id            ;; unique user-id, input by the client when they log in,
                      ;; to identify each student turtle
-  revenue-list        ;; list of each days' revenue collection;; ah: not sure we need this
-  current-revenue    ;; the revenue collected at the end of the last day;; ah: not sure we need this
+  milk-production-list       ;; list of each days' revenue collection
+  donations-list
+  
   say-will-do-today
   will-cheat-today?  ;; will they defect today
   money
@@ -47,6 +55,7 @@ fences-own [
 
 patches-own[
   grass
+  grass-known
   water
 ]
 
@@ -81,7 +90,7 @@ to run-a-week
   ;; grass regrows
   ask grass-patches [
     grow-grass 
-    recolor-grass
+    recolor-grass ;; we may not want to do this unless people "survey" the grass
   ]  
   
   tick
@@ -114,8 +123,9 @@ end
 to sell-milk
   let total-production [energy] of my-cows
   let profit  sum total-production
+  set milk-production-list fput profit milk-production-list 
   set money money + profit
-  set revenue-list lput profit revenue-list
+  set milk-production-list lput profit milk-production-list
 end
 
 
@@ -200,9 +210,6 @@ end
 to setup-globals
   set farmer-actions table:make
   scale-vars-for-n-players
-
-  
-  
 end
 
 
@@ -260,12 +267,14 @@ end
 
 to add-farmer [message-source]
   table:put farmer-actions message-source table:make
+  goo:set-chooser-items "fine-who" sort hubnet-clients-list
+  set fine-who item 0 sort hubnet-clients-list
   create-farmers 1 [
     set user-id message-source
     ht
     set money 0
     set color one-of base-colors
-    set revenue-list []
+    set milk-production-list []
     hatch-cows 3 [ set owner myself set shape "cow" set color [color] of myself set energy 10 move-to one-of grass-patches st]
     reset-farmer
   ]
@@ -311,7 +320,6 @@ to print-who-says-what
 end
 
 to reset-farmer
-  set current-revenue 0
   set say-will-do-today 0
   set will-cheat-today? 0
 end
@@ -340,14 +348,42 @@ end
 
 ;; AH: OK, we'll just do one large table full of 'action tables'. An
 ;; action table contains the hubnet-id, the type of action, the week it happened, and a value
+;; AH: thinking about it, i'm not even sure this is worth it. fuck it, we'll do it live. with lists.
 to log-player-action [hubnet-id action value]
-  let action-table table:make
-  table:put action-table "week" ticks
-  table:put action-table "farmer" hubnet-id
-  table:put action-table "action" action
-  table:put action-table "value" value
+  set farmer-actions lput (list hubnet-id ticks action value) farmer-actions
 end
 
+;; plotting procedures
+to do-plot-1
+  set-current-plot "Plot 1"
+  clear-plot
+  let the-list get-plot-list plot-1
+  foreach n-values (length the-list - 1) [?][
+    plotxy ? item ? the-list
+  ]
+end
+
+;; plotting procedures
+to do-plot-2
+  set-current-plot "Plot 2"
+  let the-list get-plot-list plot-2
+  foreach n-values (length the-list - 1) [?][
+    plotxy ? item ? the-list
+  ]
+end
+
+
+to-report get-plot-list [plot-list-description]
+  report (
+    cf:match-value plot-list-description
+    cf:= "Amount of grass (as far as we know)" [known-grass-amounts]
+    cf:= "Mean state of fences (as far as we know)" [known-fence-states]
+    cf:= "Total Milk Production" [total-milk-production]
+    cf:= "Money in Bank" [money-in-the-bank]
+    cf:= "How many repaired fences" []
+    cf:= "How many sowed grass"[]
+    )
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 155
@@ -377,10 +413,10 @@ Week
 30.0
 
 OUTPUT
-600
-200
-880
-470
+605
+10
+885
+295
 12
 
 BUTTON
@@ -402,9 +438,9 @@ NIL
 
 BUTTON
 10
-105
+85
 112
-138
+118
 NIL
 run-a-week
 NIL
@@ -419,11 +455,137 @@ NIL
 
 BUTTON
 10
-65
+45
 135
-98
+78
 NIL
 setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+600
+335
+770
+380
+Shared Money
+common-pool-bank
+0
+1
+11
+
+SLIDER
+600
+385
+770
+418
+fine
+fine
+0
+100
+50
+1
+1
+$
+HORIZONTAL
+
+CHOOSER
+600
+420
+770
+465
+fine-who
+fine-who
+"Local 1" "Local 2" "Local 3" "Local 4" "Local 5"
+0
+
+CHOOSER
+885
+10
+1177
+55
+plot-1
+plot-1
+"Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass"
+0
+
+PLOT
+885
+55
+1345
+205
+Plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles"
+
+PLOT
+885
+205
+1345
+355
+Plot 2
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles"
+
+CHOOSER
+885
+355
+1177
+400
+plot-2
+plot-2
+"Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass"
+0
+
+BUTTON
+1175
+355
+1345
+400
+NIL
+do-plot-2
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1175
+10
+1345
+55
+NIL
+do-plot-1
 NIL
 1
 T
@@ -798,9 +960,9 @@ NetLogo 5.2.0-LS1
 BUTTON
 5
 95
-150
+170
 128
-Say: Repair Fences
+Say: Repair Fences ($20)
 NIL
 NIL
 1
@@ -812,7 +974,7 @@ NIL
 BUTTON
 5
 130
-150
+170
 163
 Say: Shepherd my Cows
 NIL
@@ -824,9 +986,9 @@ NIL
 NIL
 
 BUTTON
-155
+185
 95
-280
+310
 128
 Say: Inspect Fences
 NIL
@@ -982,6 +1144,20 @@ BUTTON
 320
 393
 Donate
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+185
+130
+310
+163
+Say: Sow Grass ($20)
 NIL
 NIL
 1
