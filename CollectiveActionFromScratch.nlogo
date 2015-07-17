@@ -44,7 +44,7 @@ farmers-own
   donations-list
   
   say-will-do-today
-  will-cheat-today?  ;; will they defect today
+  will-do-today  ;; will they defect today
   money
 ]
 
@@ -60,8 +60,9 @@ patches-own[
 
 to run-a-week
   ;; only run the week if everybody has decided what to do
-  let undecided farmers with [will-cheat-today? = 0 or say-will-do-today = 0]
+  let undecided farmers with [will-do-today = 0 or say-will-do-today = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
+    
   
   color-student-cows 
   ;; we can figure out how to do the visualization later. But here are the options:
@@ -74,21 +75,17 @@ to run-a-week
   ask cows [metabolize-and-maybe-die]
   
   ;; calculate how much milk they get (we need a better function for this, I think)
-  ask farmers [sell-milk]
- 
-
-  ask farmers
-  [
-   hubnet-send user-id "$" money
-   hubnet-send user-id "# of Cows" (count my-cows)
-  ]
+  ask farmers [
+    sell-milk
+    update-client-info
+    ]  
   
   ;; fences deteriorate 
   ask fences [set durability min (list durability (durability - random 25))]
   
   ;; grass regrows
   ask grass-patches [
-    grow-grass 
+    grow-grass grass-regrow
     recolor-grass ;; we may not want to do this unless people "survey" the grass
   ]  
   
@@ -104,7 +101,6 @@ to do-weekly-action
     cf:= "Do: Repair Fences ($20)" [fix-fences]
     cf:= "Do: Inspect Fences" [inspect-fences]
     cf:= "Do: Sow Grass ($20)" [sow-grass]
-    cf:= "Do: Survey Grass" [survey-grass]
     )
 end
 
@@ -113,9 +109,11 @@ to color-student-cows
   ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
 end
 
-to sow-grass ;; 
-  
+to sow-grass ;; sowing grass let's grass 
+  ;; NB: THIS MIGHT NEED TWEAKING
+  ask grass-patches [grow-grass grass-regrow / 20]
 end
+
 
 to metabolize-and-maybe-die
   set energy energy - cows-metabolize-week
@@ -127,10 +125,10 @@ end
 
 to sell-milk
   let total-production [energy] of my-cows
-  let profit  sum total-production
-  set milk-production-list fput profit milk-production-list 
+  let profit sum total-production
   set money money + profit
   set milk-production-list lput profit milk-production-list
+  
 end
 
 
@@ -292,18 +290,27 @@ to do-command [source tag]
     ;; ifelse/case here for different kinds
     (cf:cond 
       cf:case [member? "Say:" tag] [set say-will-do-today tag print-who-says-what]
-      cf:case [tag = "Do: What I Said"] [set will-cheat-today? false]
-      cf:case [tag = "Do: Lie, and shepherd Cows"] [set will-cheat-today? true]
-      cf:else [ set update-client-display false ]
+    cf:case [member? "Do:" tag] [
+      ;; only set this if they can afford it. Otherwise tell them they can't afford it.
+      ifelse can-afford-action? tag
+        [
+          set will-do-today tag print-who-says-what
+        ]
+        [
+          hubnet-send source "Action" "You can't afford that."
+        ]
+    ]
+    cf:else [ set update-client-display false ]
     )
     if (update-client-display) [
-      show (word "my will-cheat flag is " will-cheat-today?)
-      let suffix " (the truth)"
-      if will-cheat-today? = true [ set suffix " (a lie)" ]
-      hubnet-send user-id "Action" (word say-will-do-today suffix)
+      ;;AH: possibly say if they need to do something here (either say they will do something, or actually decide to do something)
+      ;      hubnet-send user-id "Action" (word "
     ]
   ]
-  
+end
+
+to-report can-afford-action? [an-action-string]
+  report not member? "$" an-action-string or money > 20
 end
 
 to show-who-says [astring] 
@@ -322,16 +329,15 @@ end
 
 to reset-farmer
   set say-will-do-today 0
-  set will-cheat-today? 0
+  set will-do-today 0
 end
 
-to grow-grass
-  set grass min (list max-grass (grass + grass-regrow))
+to grow-grass [grow-amount]
+  set grass min (list max-grass (grass + grow-amount))
 end
-
 
 to recolor-grass
-  set pcolor scale-color green grass -2 (max-grass * 1.3)
+  set pcolor scale-color green grass-known -2 (max-grass * 1.3)
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
@@ -344,7 +350,7 @@ end
 
 ;; farmer reporter. will they shepherd this week
 to-report shepherding-this-week?
-  report say-will-do-today = "Say: Shepherd my Cows" or will-cheat-today?
+  report will-do-today = "Do: Shepherd my Cows"
 end
 
 ;; AH: OK, we'll just do one large table full of 'action tables'. An
@@ -398,7 +404,11 @@ to fine-them
       show (word user-id " does not have $ " fine-amount "!")
     ]
   ]
-  
+end
+
+to update-client-info 
+   hubnet-send user-id "$" money
+   hubnet-send user-id "# of Cows" (count my-cows)
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
