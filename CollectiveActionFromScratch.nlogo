@@ -20,6 +20,7 @@ globals [
   shepherd-bonus ; the extra amount of food cows will try to eat if they are being shepherded
   
   edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
+  grass-patches
   
   common-pool-bank ;; this is money that people have pooled together
 
@@ -43,8 +44,8 @@ farmers-own
   milk-production-list       ;; list of each days' revenue collection
   donations-list
   
-  say-will-do-today
-  will-do-today  ;; will they defect today
+  say-will-do
+  will-do  ;; will they defect today
   money
 ]
 
@@ -54,16 +55,15 @@ fences-own [
 
 patches-own[
   grass
-  grass-known
+  known-grass
   water
 ]
 
 to run-a-week
   ;; only run the week if everybody has decided what to do
-  let undecided farmers with [will-do-today = 0 or say-will-do-today = 0]
+  let undecided farmers with [will-do = 0 or say-will-do = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
-    
-  
+
   color-student-cows 
   ;; we can figure out how to do the visualization later. But here are the options:
   ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
@@ -79,7 +79,6 @@ to run-a-week
     sell-milk
     update-client-info
     ]  
-  
   ;; fences deteriorate 
   ask fences [set durability min (list durability (durability - random 25))]
   
@@ -87,20 +86,32 @@ to run-a-week
   ask grass-patches [
     grow-grass grass-regrow
     recolor-grass ;; we may not want to do this unless people "survey" the grass
-  ]  
+  ]
   
   tick
-  ;; and reset farmers. Maybe shouldn't reset yet. We need to collect statistics, and students need to see the result of what happened
-  ask farmers [reset-farmer]
+  ask farmers [
+    log-player-action "say" say-will-do
+    log-player-action "do" will-do
+  ]
+  log-weekly
+
+end
+
+to log-weekly
+set  known-grass-amounts lput sum [known-grass] of grass-patches known-grass-amounts
+set  total-milk-production lput sum [first milk-production-list] of farmers total-milk-production
+set  known-fence-states lput sum [durability] of fences known-fence-states
+set  money-in-the-bank lput common-pool-bank money-in-the-bank
 end
 
 
 to do-weekly-action
   (
-    cf:match say-will-do-today
+    cf:match will-do
     cf:= "Do: Repair Fences ($20)" [fix-fences]
     cf:= "Do: Inspect Fences" [inspect-fences]
     cf:= "Do: Sow Grass ($20)" [sow-grass]
+    cf:= "Do: Survey Grass" [survey-grass]
     )
 end
 
@@ -114,11 +125,15 @@ to sow-grass ;; sowing grass let's grass
   ask grass-patches [grow-grass grass-regrow / 20]
 end
 
+to survey-grass
+  ;; NB: this might need tweaking
+  ask n-of (count patches / 2) patches [set known-grass grass]
+end
 
 to metabolize-and-maybe-die
   set energy energy - cows-metabolize-week
   if energy < 0 [
-    show (word owner "just lost a cow to starvation.")
+    hubnet-send-message owner "One of your cows starved to death!"
     die
   ]
 end
@@ -128,7 +143,6 @@ to sell-milk
   let profit sum total-production
   set money money + profit
   set milk-production-list lput profit milk-production-list
-  
 end
 
 
@@ -151,7 +165,11 @@ to fix-fences
 end
 
 to inspect-fences
+  show (word user-id " checked fences")
   ask fences [set label durability]
+  let fence-fixers farmers with [will-do = "Do: Repair Fences ($20)"]
+  let fence-fixer-names ifelse-value any? fence-fixers [reduce [(word ?1 ", " ?2)] fence-fixers] ["nobody"]
+  hubnet-send-message user-id (word "While inspecting fences, you meeet " fence-fixer-names " who are repairing fences.")
 end
   
 to graze
@@ -164,13 +182,15 @@ to cow-move
   rt random 30
   lt random 30
   ;; if there's a fence in front of them, turn around
-  if [ any? fences-here with [durability > 0]] of patch-ahead 1 [rt 180]  
+  if ([ any? fences-here with [durability > 0]] of patch-ahead 1) [rt 180]  
+  fd 1
   ;; if they end up on an edge patch, they die
   if member? patch-here edge-patches [
-    show (word owner " just lost a cow because the fences were broke.")
-    die]
+    hubnet-send-message owner (word "One of your cows disappeared. A fence must be broken somewhere.")
+    die
+    ]
   
-  fd 1
+
 end
 
 to eat
@@ -202,13 +222,26 @@ end
 
 to setup-world
   set edge-patches patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor]
-  ask patches [set grass (max-grass / 3) + random-float (max-grass * 2 / 3 ) recolor-grass]
+  set grass-patches patches with [not member? self edge-patches]
+  ask grass-patches [
+    set grass (max-grass / 3) + random-float (max-grass * 2 / 3 ) 
+    set known-grass grass
+    recolor-grass]
   ask fences [die]
-  ask edge-patches [sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50]]
+  ask edge-patches [
+    sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50] 
+    set grass 0
+    set known-grass max-grass
+    set pcolor green
+    ]
 end  
 
 to setup-globals
-  set farmer-actions table:make
+  set farmer-actions (list)
+  set  known-grass-amounts (list)
+  set  total-milk-production (list)
+  set  known-fence-states (list)
+  set  money-in-the-bank  (list)
   scale-vars-for-n-players
 end
 
@@ -266,7 +299,6 @@ to listen-to-clients
 end
 
 to add-farmer [message-source]
-  table:put farmer-actions message-source table:make
   goo:set-chooser-items "fine-who" sort hubnet-clients-list
   wait .05
   set fine-who item 0 sort hubnet-clients-list
@@ -292,7 +324,7 @@ to do-command [source tag]
     (cf:cond 
       cf:case [member? "Say:" tag] [
         hubnet-send source "Action" (word "You " tag)
-        set say-will-do-today tag 
+        set say-will-do tag 
         print-who-says-what
         ]
     cf:case [member? "Do:" tag] [
@@ -300,10 +332,10 @@ to do-command [source tag]
       ifelse can-afford-action? tag
         [
           hubnet-send source "Action" (word "You will " tag )
-          set will-do-today tag print-who-says-what
+          set will-do tag print-who-says-what
         ]
         [
-          set will-do-today 0
+          set will-do 0
           hubnet-send source "Action" (word "You can't afford " tag)
         ]
     ]
@@ -317,7 +349,7 @@ to-report can-afford-action? [an-action-string]
 end
 
 to show-who-says [astring] 
-  let the-users sort [user-id] of farmers with [say-will-do-today = astring]
+  let the-users sort [user-id] of farmers with [say-will-do = astring]
     output-print (word astring " (" length the-users ")")
     output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
     output-print ""
@@ -333,8 +365,8 @@ to print-who-says-what
 end
 
 to reset-farmer
-  set say-will-do-today 0
-  set will-do-today 0
+  set say-will-do 0
+  set will-do 0
 end
 
 to grow-grass [grow-amount]
@@ -342,27 +374,23 @@ to grow-grass [grow-amount]
 end
 
 to recolor-grass
-  set pcolor scale-color green grass-known -2 (max-grass * 1.3)
+  set pcolor scale-color green known-grass -2 (max-grass * 1.3)
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
     report cows with [owner = myself]
 end
 
-to-report grass-patches 
-  report patches with [shade-of? pcolor   green]
-end
-
 ;; farmer reporter. will they shepherd this week
 to-report shepherding-this-week?
-  report will-do-today = "Do: Shepherd my Cows"
+  report will-do = "Do: Shepherd my Cows"
 end
 
 ;; AH: OK, we'll just do one large table full of 'action tables'. An
 ;; action table contains the hubnet-id, the type of action, the week it happened, and a value
 ;; AH: thinking about it, i'm not even sure this is worth it. fuck it, we'll do it live. with lists.
-to log-player-action [hubnet-id action value]
-  set farmer-actions lput (list hubnet-id ticks action value) farmer-actions
+to log-player-action [action value]
+  set farmer-actions lput (list user-id ticks action value) farmer-actions
 end
 
 ;; plotting procedures
@@ -469,9 +497,9 @@ NIL
 
 BUTTON
 10
-85
+125
 112
-118
+158
 NIL
 run-a-week
 NIL
@@ -486,9 +514,9 @@ NIL
 
 BUTTON
 10
-45
+85
 135
-78
+118
 NIL
 setup
 NIL
@@ -534,7 +562,7 @@ CHOOSER
 465
 fine-who
 fine-who
-"Local 12" "Local 13" "Local 14" "Local 15"
+"Local 24"
 0
 
 CHOOSER
@@ -1244,9 +1272,9 @@ NIL
 
 PLOT
 710
-10
+145
 1090
-160
+295
 Plot 1
 milk-production
 NIL
