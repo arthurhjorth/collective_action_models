@@ -309,10 +309,6 @@ to do-command [source tag]
     ]
     cf:else [ set update-client-display false ]
     )
-    if (update-client-display) [
-      ;;AH: possibly say if they need to do something here (either say they will do something, or actually decide to do something)
-      ;      hubnet-send user-id "Action" (word "
-    ]
   ]
 end
 
