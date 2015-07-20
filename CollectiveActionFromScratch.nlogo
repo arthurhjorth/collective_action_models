@@ -492,6 +492,37 @@ end
 to make-cow
   hatch-cows 1 [ set owner myself set shape "cow" set color [color] of myself set energy 10 move-to one-of grass-patches st]
 end
+
+to-report gini-points
+  let points []
+  let sorted-farmers sort-on [money + 1500 * count my-cows] farmers
+  let total-wealth (sum [money + 1500 * count my-cows] of farmers)
+  let sum-so-far 0
+  let %-per-farmer 100 / count farmers
+  let counter 0
+  foreach sorted-farmers [
+    set counter counter + 1
+    set sum-so-far sum-so-far + ([money + 1500 * count my-cows] of ?)
+    let %-of-total-wealth sum-so-far / total-wealth * 100
+    let point (list (counter * %-per-farmer) %-of-total-wealth)
+    set points lput point points
+  ]
+  report points
+end
+
+to show-gini
+  set-current-plot "gini-coefficient"
+  clear-plot
+  create-temporary-plot-pen "gini"
+  plotxy 0 0 
+  foreach gini-points [
+    plotxy first ? last ?
+  ]
+  create-temporary-plot-pen "baseline"
+  plotxy 0 0 
+  plotxy 100 100
+  
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 155
@@ -547,7 +578,7 @@ NIL
 BUTTON
 10
 125
-177
+135
 158
 NIL
 run-a-week\ndo-plot-1
@@ -611,7 +642,7 @@ CHOOSER
 465
 fine-who
 fine-who
-"Local 33" "Local 34" "Local 35" "Local 36" "Local 37"
+"Local 40" "Local 41" "Local 42" "Local 43" "Local 44"
 0
 
 CHOOSER
@@ -737,7 +768,6 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1246,7 +1276,7 @@ SLIDER
 money-to-shared-bank
 money-to-shared-bank
 0
-50000
+1000
 50
 1
 1
