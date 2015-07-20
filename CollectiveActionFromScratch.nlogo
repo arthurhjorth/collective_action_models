@@ -143,8 +143,10 @@ to color-student-cows
 end
 
 to sow-grass ;; sowing grass let's grass 
-  ;; NB: THIS MIGHT NEED TWEAKING
-  ask grass-patches [grow-grass grass-regrow / 20]
+             ;; NB: THIS MIGHT NEED TWEAKING
+  if length hubnet-clients-list > 0 [
+    ask grass-patches [grow-grass grass-regrow / length hubnet-clients-list]
+  ]
 end
 
 to survey-grass
