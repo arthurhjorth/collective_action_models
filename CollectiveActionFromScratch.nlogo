@@ -19,6 +19,9 @@ globals [
   fence-fix-points
   shepherd-bonus ; the extra amount of food cows will try to eat if they are being shepherded
   
+  ;; this might need balancing too
+  fence-fixing-cost
+  
   edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
   grass-patches
   
@@ -26,9 +29,12 @@ globals [
 
   ;; some plotting lists
   known-grass-amounts
+  actual-grass-amounts
   total-milk-production
   known-fence-states
+  actual-fence-states
   money-in-the-bank
+  
 ]
 
 cows-own
@@ -99,8 +105,10 @@ end
 
 to log-weekly
 set  known-grass-amounts lput sum [known-grass] of grass-patches known-grass-amounts
+set actual-grass-amounts lput sum [grass] of grass-patches actual-grass-amounts
 set  total-milk-production lput sum [first milk-production-list] of farmers total-milk-production
-set  known-fence-states lput sum [durability] of fences known-fence-states
+set  known-fence-states lput sum [ label] of fences known-fence-states
+set actual-fence-states lput sum [durability] of fences actual-fence-states
 set  money-in-the-bank lput common-pool-bank money-in-the-bank
 end
 
@@ -162,6 +170,8 @@ to fix-fences
       set fix-points 0
     ]
   ]  
+  
+  set money money - fence-fixing-cost
 end
 
 to inspect-fences
@@ -186,11 +196,9 @@ to cow-move
   fd 1
   ;; if they end up on an edge patch, they die
   if member? patch-here edge-patches [
-    hubnet-send-message owner (word "One of your cows disappeared. A fence must be broken somewhere.")
+    hubnet-send-message [user-id] of owner (word "One of your cows disappeared. A fence must be broken somewhere.")
     die
     ]
-  
-
 end
 
 to eat
@@ -198,12 +206,9 @@ to eat
   let my-max-eat ifelse-value [shepherding-this-week?] of owner [cows-eat * (1 + shepherd-bonus)] [cows-eat]
   let stomach-space-left cows-max-energy - energy
   let eaten-amount min (list stomach-space-left grass cows-eat)
-  show eaten-amount
   set energy energy  + eaten-amount
   set grass grass - eaten-amount
 end
-  
-  
   
 to setup
   ca
@@ -239,10 +244,13 @@ end
 to setup-globals
   set farmer-actions (list)
   set  known-grass-amounts (list)
+  set actual-grass-amounts (list)
   set  total-milk-production (list)
   set  known-fence-states (list)
+  set actual-fence-states (list)
   set  money-in-the-bank  (list)
   scale-vars-for-n-players
+  set fence-fixing-cost 20
 end
 
 
@@ -421,7 +429,7 @@ to-report get-plot-list [plot-list-description]
     cf:= "Mean state of fences (as far as we know)" [known-fence-states]
     cf:= "Total Milk Production" [total-milk-production]
     cf:= "Money in Bank" [money-in-the-bank]
-    cf:= "How many repaired fences" []
+    cf:= "How many repaired fences" [] ;; this needs to takea
     cf:= "How many sowed grass"[]
     )
 end
@@ -473,7 +481,7 @@ Week
 
 OUTPUT
 600
-45
+75
 880
 345
 12
@@ -549,7 +557,7 @@ fine-amount
 fine-amount
 0
 100
-17
+0
 1
 1
 $
@@ -562,7 +570,7 @@ CHOOSER
 465
 fine-who
 fine-who
-"Local 24"
+"Local 1" "Local 2"
 0
 
 CHOOSER
@@ -591,7 +599,6 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 PLOT
 885
@@ -609,7 +616,6 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 CHOOSER
 885
@@ -1286,7 +1292,6 @@ true
 true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true
 
 BUTTON
 155
