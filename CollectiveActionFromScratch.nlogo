@@ -19,7 +19,10 @@ globals [
   fence-fix-points
   shepherd-bonus ; the extra amount of food cows will try to eat if they are being shepherded
   
+  cow-price
+  
   ;; this might need balancing too
+  seed-cost
   fence-fixing-cost
   
   edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
@@ -34,6 +37,9 @@ globals [
   known-fence-states
   actual-fence-states
   money-in-the-bank
+  count-cows-history
+  ;; maybe log:
+  ;; standard deviation of milk production of farmers
   
 ]
 
@@ -77,8 +83,7 @@ to run-a-week
   ask farmers [do-weekly-action]
   ;; all cows graze. We do this to make sure everybody's cows get an equal chance at eating,
   ;; and to smoothe out movement animation
-  repeat 7 [ask cows [graze]]
-  ask cows [metabolize-and-maybe-die]
+  repeat 7 [ask cows [graze metabolize-and-maybe-die]]
   
   ;; calculate how much milk they get (we need a better function for this, I think)
   ask farmers [
@@ -86,7 +91,9 @@ to run-a-week
     update-client-info
     ]  
   ;; fences deteriorate 
-  ask fences [set durability min (list durability (durability - random 25))]
+  ask fences [
+;   deteriorate
+   ]
   
   ;; grass regrows
   ask grass-patches [
@@ -103,22 +110,29 @@ to run-a-week
 
 end
 
+to deteriorate
+  set durability durability - random 25
+  if durability < 0 [set durability 0]
+end
+
+
 to log-weekly
 set  known-grass-amounts lput sum [known-grass] of grass-patches known-grass-amounts
 set actual-grass-amounts lput sum [grass] of grass-patches actual-grass-amounts
-set  total-milk-production lput sum [first milk-production-list] of farmers total-milk-production
+set  total-milk-production lput sum [last milk-production-list] of farmers total-milk-production
 set  known-fence-states lput sum [ label] of fences known-fence-states
 set actual-fence-states lput sum [durability] of fences actual-fence-states
 set  money-in-the-bank lput common-pool-bank money-in-the-bank
+set count-cows-history lput count cows count-cows-history
 end
 
 
 to do-weekly-action
   (
     cf:match will-do
-    cf:= "Do: Repair Fences ($20)" [fix-fences]
+    cf:= "Do: Repair Fences ($500)" [fix-fences]
     cf:= "Do: Inspect Fences" [inspect-fences]
-    cf:= "Do: Sow Grass ($20)" [sow-grass]
+    cf:= "Do: Sow Grass ($500)" [sow-grass]
     cf:= "Do: Survey Grass" [survey-grass]
     )
 end
@@ -139,9 +153,9 @@ to survey-grass
 end
 
 to metabolize-and-maybe-die
-  set energy energy - cows-metabolize-week
+  set energy energy - (cows-metabolize-week / 15) ;; 15 is a magic number. it just sort of seems to work
   if energy < 0 [
-    hubnet-send-message owner "One of your cows starved to death!"
+    hubnet-send-message [user-id] of owner "One of your cows starved to death!"
     die
   ]
 end
@@ -170,14 +184,12 @@ to fix-fences
       set fix-points 0
     ]
   ]  
-  
   set money money - fence-fixing-cost
 end
 
 to inspect-fences
-  show (word user-id " checked fences")
   ask fences [set label durability]
-  let fence-fixers farmers with [will-do = "Do: Repair Fences ($20)"]
+  let fence-fixers farmers with [will-do = "Do: Repair Fences ($500)"]
   let fence-fixer-names ifelse-value any? fence-fixers [reduce [(word ?1 ", " ?2)] fence-fixers] ["nobody"]
   hubnet-send-message user-id (word "While inspecting fences, you meeet " fence-fixer-names " who are repairing fences.")
 end
@@ -192,10 +204,11 @@ to cow-move
   rt random 30
   lt random 30
   ;; if there's a fence in front of them, turn around
-  if ([ any? fences-here with [durability > 0]] of patch-ahead 1) [rt 180]  
-  fd 1
+  ifelse ([ any? fences-here with [durability > 0]] of patch-ahead 1) [rt 90]  [fd 1]
   ;; if they end up on an edge patch, they die
   if member? patch-here edge-patches [
+    set pcolor red
+    stop
     hubnet-send-message [user-id] of owner (word "One of your cows disappeared. A fence must be broken somewhere.")
     die
     ]
@@ -229,7 +242,7 @@ to setup-world
   set edge-patches patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor]
   set grass-patches patches with [not member? self edge-patches]
   ask grass-patches [
-    set grass (max-grass / 3) + random-float (max-grass * 2 / 3 ) 
+    set grass random-float max-grass
     set known-grass grass
     recolor-grass]
   ask fences [die]
@@ -249,8 +262,11 @@ to setup-globals
   set  known-fence-states (list)
   set actual-fence-states (list)
   set  money-in-the-bank  (list)
+  set count-cows-history (list) 
   scale-vars-for-n-players
-  set fence-fixing-cost 20
+  set fence-fixing-cost 500
+  set seed-cost 500
+  set cow-price 1500
 end
 
 
@@ -275,11 +291,11 @@ to scale-vars-for-n-players
   set max-grass cows-eat * 3
   ;; let's also say that a cow can store enough energy to not eat at all for one week. That means they can store a total of 
   ;; 7 * 10  = 70.
-  set cows-max-energy cows-metabolize-week ;; the amount that cows can store
+  set cows-max-energy 2 * cows-metabolize-week ;; the amount that cows can store
   ;; if the whole system should have a base-carrying capacity of 700 * 6 = 4200
-  set average-cows-per-player 6
-  set grass-regrow ( no-of-farmers * average-cows-per-player * cows-metabolize-week) / count patches with [not any? fences-here] ;; the amount that grass grows back
-  
+  set average-cows-per-player 8
+  ;; interestingly, it can only sustain around 3.5 per player with this.  I'll try to increase it
+  set grass-regrow ( no-of-farmers * average-cows-per-player * cows-metabolize-week) / (2 * count patches with [not any? fences-here]) ;; 2 is a magic number here. it just works ;; the amount that grass grows back
 
   ;; there are 128 fences, each with 100 points of durability
   ;; we should scale how many points they get to fix them with, rather than the durability decline. in the case of the former
@@ -313,16 +329,18 @@ to add-farmer [message-source]
   create-farmers 1 [
     set user-id message-source
     ht
-    set money 50
+    set money 0
     set color one-of base-colors
     set milk-production-list []
-    hatch-cows 3 [ set owner myself set shape "cow" set color [color] of myself set energy 10 move-to one-of grass-patches st]
+    repeat 3 [make-cow]
     reset-farmer
   ]
+  scale-vars-for-n-players
 end
 
 to kill-farmer [message-source]
   ask farmers with [user-id = message-source ] [die]
+  scale-vars-for-n-players
 end
 
 to do-command [source tag]
@@ -347,13 +365,28 @@ to do-command [source tag]
           hubnet-send source "Action" (word "You can't afford " tag)
         ]
     ]
+    cf:case [tag = "Buy Cow ($1500)"][
+      buy-cow
+    ]
     cf:else [ set update-client-display false ]
     )
   ]
 end
 
+to buy-cow
+  ifelse money > 1500
+  [
+    set money money - 1500
+    make-cow
+    ]
+  [
+    hubnet-send user-id "Action" "You can't afford a cow yet."
+  ]
+  
+end
+
 to-report can-afford-action? [an-action-string]
-  report not member? "$" an-action-string or money > 20
+  report not member? "$" an-action-string or money > 500
 end
 
 to show-who-says [astring] 
@@ -365,10 +398,10 @@ end
 
 to print-who-says-what
   clear-output
-  show-who-says "Say: Repair Fences ($20)"
+  show-who-says "Say: Repair Fences ($500)"
   show-who-says "Say: Inspect Fences" 
   show-who-says "Say: Survey Grass" 
-  show-who-says "Say: Sow Grass ($20)" 
+  show-who-says "Say: Sow Grass ($500)" 
   show-who-says "Say: Shepherd my Cows"
 end
 
@@ -406,6 +439,7 @@ to do-plot-1
   set-current-plot "Plot 1"
   clear-plot
   let the-list get-plot-list plot-1
+  create-temporary-plot-pen plot-1
   foreach n-values (length the-list - 1) [?][
     plotxy ? item ? the-list
   ]
@@ -416,6 +450,7 @@ to do-plot-2
   set-current-plot "Plot 2"
   clear-plot
   let the-list get-plot-list plot-2
+  create-temporary-plot-pen plot-2
   foreach n-values (length the-list - 1) [?][
     plotxy ? item ? the-list
   ]
@@ -429,6 +464,8 @@ to-report get-plot-list [plot-list-description]
     cf:= "Mean state of fences (as far as we know)" [known-fence-states]
     cf:= "Total Milk Production" [total-milk-production]
     cf:= "Money in Bank" [money-in-the-bank]
+    cf:= "Actual grass" [actual-grass-amounts]
+    cf:= "Actual state of fences" [actual-fence-states]
     cf:= "How many repaired fences" [] ;; this needs to takea
     cf:= "How many sowed grass"[]
     )
@@ -450,6 +487,10 @@ end
 to update-client-info 
    hubnet-send user-id "$" money
    hubnet-send user-id "# of Cows" (count my-cows)
+end
+
+to make-cow
+  hatch-cows 1 [ set owner myself set shape "cow" set color [color] of myself set energy 10 move-to one-of grass-patches st]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -506,11 +547,11 @@ NIL
 BUTTON
 10
 125
-112
+177
 158
 NIL
-run-a-week
-NIL
+run-a-week\ndo-plot-1
+T
 1
 T
 OBSERVER
@@ -570,7 +611,7 @@ CHOOSER
 465
 fine-who
 fine-who
-"Local 1" "Local 2"
+"Local 33" "Local 34" "Local 35" "Local 36" "Local 37"
 0
 
 CHOOSER
@@ -580,8 +621,8 @@ CHOOSER
 55
 plot-1
 plot-1
-"Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass"
-0
+"Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass" "Actual grass" "Actual state of fences"
+6
 
 PLOT
 885
@@ -599,6 +640,8 @@ true
 false
 "" ""
 PENS
+"pen-1" 1.0 0 -7500403 true "" ""
+"pen-2" 1.0 0 -2674135 true "" ""
 
 PLOT
 885
@@ -625,7 +668,7 @@ CHOOSER
 plot-2
 plot-2
 "Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass"
-1
+2
 
 BUTTON
 1175
@@ -677,6 +720,24 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+915
+400
+1115
+550
+gini-coefficient
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1084,7 +1145,7 @@ NIL
 MONITOR
 710
 320
-800
+820
 369
 # of Cows
 NIL
@@ -1092,9 +1153,9 @@ NIL
 1
 
 MONITOR
-805
+830
 320
-895
+950
 369
 $
 NIL
@@ -1102,11 +1163,11 @@ NIL
 1
 
 BUTTON
-905
+955
 320
-1025
-370
-Buy Cow ($100)
+1087
+366
+Buy Cow ($1500)
 NIL
 NIL
 1
@@ -1180,12 +1241,12 @@ Click here to buy cows
 SLIDER
 710
 375
-895
+950
 408
 money-to-shared-bank
 money-to-shared-bank
 0
-100
+50000
 50
 1
 1
@@ -1193,9 +1254,9 @@ NIL
 HORIZONTAL
 
 BUTTON
-905
+955
 375
-1025
+1085
 408
 Donate
 NIL
@@ -1225,7 +1286,7 @@ BUTTON
 285
 150
 318
-Do: Repair Fences ($20)
+Do: Repair Fences ($500)
 NIL
 NIL
 1
@@ -1267,7 +1328,7 @@ BUTTON
 285
 300
 318
-Do: Sow Grass ($20)
+Do: Sow Grass ($500)
 NIL
 NIL
 1
@@ -1292,6 +1353,8 @@ true
 true
 "" ""
 PENS
+"pen-1" 1.0 0 -7500403 true
+"pen-2" 1.0 0 -2674135 true
 
 BUTTON
 155
