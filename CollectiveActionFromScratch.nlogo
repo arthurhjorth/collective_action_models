@@ -496,7 +496,7 @@ to donate-$
   set common-pool-bank common-pool-bank - $-amount
   ]
   [
-    show (word "You don't have " $-amount " in your bank!")
+    show (word "You don't have $" $-amount " in your bank!")
   ]
 end
 
@@ -646,7 +646,7 @@ $-amount
 $-amount
 0
 1000
-0
+20
 10
 1
 $
