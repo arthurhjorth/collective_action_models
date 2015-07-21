@@ -174,7 +174,7 @@ end
 to fix-fences
   let fix-points fence-fix-points
   while [fix-points > 0 and any? fences with [durability < 100]] [    
-    let most-broken-fence min-one-of fences [durability]
+    let most-broken-fence min-one-of fences [label]
     move-to most-broken-fence
     let fix-diff 100 - [durability] of most-broken-fence
     ifelse fix-diff < fix-points 
@@ -539,7 +539,6 @@ to show-gini
   plotxy 0 0 
   plotxy 100 100
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 145
@@ -572,7 +571,7 @@ OUTPUT
 590
 30
 870
-275
+470
 12
 
 BUTTON
