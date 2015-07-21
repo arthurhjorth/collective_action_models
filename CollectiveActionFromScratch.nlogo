@@ -541,10 +541,10 @@ end
 
 to print-who-did-what
   clear-output
-  foreach all-weeks [
+  foreach all-weeks-in farmer-actions [
     let the-week ?
     output-print (word "During week " the-week )
-    foreach things-people-did [
+    foreach things-people-did-in farmer-actions [
       let the-action ?
       output-print the-action
       let farmers-who-did-that-this-week filter [item 1 ? = the-week and item 3 ? = the-action] farmer-actions
@@ -559,14 +559,25 @@ to print-who-did-what
   ]
 end
 
+to print-what-farmer-did
+  clear-output
+  output-print farmer-list
+  let actions-of-farmer filter [item 0 ? = farmer-list and item 2 ? = "do"] farmer-actions
+  let week-counter 1
+  foreach sort-by [item 1 ?1 < item 1 ?2] actions-of-farmer [
+    output-print (word "Week " week-counter)
+    output-print item 3 ?
+  ]
+end
+
 ;; reports all the things that people have done in the farmers-actions log
-to-report things-people-did
-  report remove-duplicates map [item 3 ?] filter [item 2 ? = "do"] farmer-actions
+to-report things-people-did-in [alist]
+  report remove-duplicates map [item 3 ?] filter [item 2 ? = "do"] alist
 end
 
 ;; reports all weeks from the farmers-action log
-to-report all-weeks 
-  report remove-duplicates map [item 1 ?] farmer-actions
+to-report all-weeks-in [alist]
+  report remove-duplicates map [item 1 ?] alist
 end
 
 to-report all-farmers
@@ -692,7 +703,7 @@ CHOOSER
 farmer-list
 farmer-list
 "Local 6" "Local 7"
-0
+1
 
 CHOOSER
 875
@@ -887,6 +898,33 @@ BUTTON
 538
 Show who did what
 print-who-did-what
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+CHOOSER
+875
+530
+1155
+575
+farmer-list
+farmer-list
+""
+0
+
+BUTTON
+590
+540
+870
+573
+Show what this farmer did
+print-what-farmer-did
 NIL
 1
 T
