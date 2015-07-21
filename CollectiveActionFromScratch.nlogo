@@ -328,7 +328,7 @@ end
 to add-farmer [message-source]
   goo:set-chooser-items "fine-who" sort hubnet-clients-list
   wait .05
-  set fine-who item 0 sort hubnet-clients-list
+  set farmer-list item 0 sort hubnet-clients-list
   create-farmers 1 [
     set user-id message-source
     ht
@@ -475,17 +475,31 @@ to-report get-plot-list [plot-list-description]
 end
 
 to fine-them
-  let the-farmer one-of farmers with [user-id = fine-who]
+  let the-farmer one-of farmers with [user-id = farmer-list]
   ask the-farmer [
-    ifelse money >= fine-amount [
-      set money money - fine-amount
-      set common-pool-bank common-pool-bank + fine-amount
+    ifelse money >= $-amount [
+      set money money - $-amount
+      set common-pool-bank common-pool-bank + $-amount
     ]
     [
-      show (word user-id " does not have $ " fine-amount "!")
+      show (word user-id " does not have $ " $-amount "!")
     ]
   ]
 end
+
+to donate-$
+  let the-farmer one-of farmers with [user-id = farmer-list]
+  ifelse common-pool-bank > $-amount [
+  ask the-farmer [
+   set money money + $-amount
+  ]
+  set common-pool-bank common-pool-bank - $-amount
+  ]
+  [
+    show (word "You don't have " $-amount " in your bank!")
+  ]
+end
+
 
 to update-client-info 
    hubnet-send user-id "$" money
@@ -556,9 +570,9 @@ Week
 
 OUTPUT
 600
-75
+30
 880
-345
+300
 12
 
 BUTTON
@@ -615,7 +629,7 @@ NIL
 MONITOR
 600
 345
-770
+850
 390
 Shared Money
 common-pool-bank
@@ -624,45 +638,45 @@ common-pool-bank
 11
 
 SLIDER
-600
-385
-760
-418
-fine-amount
-fine-amount
+725
+390
+850
+423
+$-amount
+$-amount
 0
-100
+1000
 0
-1
+10
 1
 $
 HORIZONTAL
 
 CHOOSER
 600
-420
-760
-465
-fine-who
-fine-who
+390
+725
+435
+farmer-list
+farmer-list
 "Local 2" "Local 3" "Local 4" "Local 5"
 0
 
 CHOOSER
 885
-10
-1177
-55
+30
+1020
+75
 plot-1
 plot-1
 "Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass" "Actual grass" "Actual state of fences"
-6
+0
 
 PLOT
-885
-55
-1345
-195
+890
+75
+1145
+215
 Plot 1
 NIL
 NIL
@@ -674,14 +688,12 @@ true
 false
 "" ""
 PENS
-"pen-1" 1.0 0 -7500403 true "" ""
-"pen-2" 1.0 0 -2674135 true "" ""
 
 PLOT
-885
-195
-1345
-335
+890
+215
+1145
+355
 Plot 2
 NIL
 NIL
@@ -695,20 +707,20 @@ false
 PENS
 
 CHOOSER
-885
-335
-1177
-380
+890
+355
+1025
+400
 plot-2
 plot-2
 "Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass"
 2
 
 BUTTON
-1175
-335
-1345
-380
+1025
+355
+1145
+400
 NIL
 do-plot-2
 NIL
@@ -722,10 +734,10 @@ NIL
 1
 
 BUTTON
-1175
-10
-1345
-55
+1020
+30
+1145
+75
 NIL
 do-plot-1
 NIL
@@ -739,10 +751,10 @@ NIL
 1
 
 BUTTON
-760
-395
-885
-465
+600
+435
+725
+470
 NIL
 fine-them
 NIL
@@ -756,10 +768,10 @@ NIL
 1
 
 PLOT
-915
-400
-1115
-550
+1170
+75
+1370
+215
 gini-coefficient
 NIL
 NIL
@@ -771,6 +783,53 @@ true
 false
 "" ""
 PENS
+
+BUTTON
+725
+435
+850
+470
+NIL
+donate-$
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+TEXTBOX
+680
+325
+830
+343
+Bank-related stuff
+11
+0.0
+1
+
+TEXTBOX
+670
+10
+820
+28
+Who says they'll do what
+11
+0.0
+1
+
+TEXTBOX
+960
+10
+1110
+28
+Historical data
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1386,8 +1445,6 @@ true
 true
 "" ""
 PENS
-"pen-1" 1.0 0 -7500403 true
-"pen-2" 1.0 0 -2674135 true
 
 BUTTON
 155
