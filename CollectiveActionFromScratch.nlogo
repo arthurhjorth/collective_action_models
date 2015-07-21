@@ -110,6 +110,7 @@ to run-a-week
   ]
   
   tick
+ show-who-was-seen-this-week
   ask farmers [
     log-player-action "say" say-will-do
     log-player-action "do" will-do
@@ -126,6 +127,7 @@ end
 
 to reset-weekly-vars
   ask farmers [set will-do 0 set say-will-do 0]
+  set seen-this-week (turtle-set)
 end
 
 
@@ -146,10 +148,42 @@ to do-weekly-action
   show user-id
   (
     cf:match will-do
-    cf:= "Do: Repair Fences ($500)" [fix-fences]
-    cf:= "Do: Inspect Fences" [inspect-fences]
-    cf:= "Do: Sow Grass ($500)" [sow-grass]
-    cf:= "Do: Survey Grass" [survey-grass]
+    cf:= "Do: Repair Fences ($500)" 
+    [
+      fix-fences
+      meet-fence-fixers-with-probability 100
+      meet-cow-shepherds-with-probability 5
+      meet-grass-surveyors-with-probability 20
+      meet-grass-sowers-with-probability 5
+      meet-fence-inspectors-with-probability 100
+    ]
+    cf:= "Do: Inspect Fences" 
+    [
+      inspect-fences
+      meet-fence-fixers-with-probability 20
+      meet-cow-shepherds-with-probability 5
+      meet-grass-surveyors-with-probability 20
+      meet-grass-sowers-with-probability 10
+      meet-fence-inspectors-with-probability 50      
+    ]
+    cf:= "Do: Sow Grass ($500)" 
+    [
+      sow-grass
+      meet-fence-fixers-with-probability  10
+      meet-cow-shepherds-with-probability 25
+      meet-grass-surveyors-with-probability 50
+      meet-grass-sowers-with-probability 25
+      meet-fence-inspectors-with-probability 10      
+    ]
+    cf:= "Do: Survey Grass" 
+    [
+      survey-grass
+      meet-fence-fixers-with-probability 10
+      meet-cow-shepherds-with-probability 50
+      meet-grass-surveyors-with-probability 20
+      meet-grass-sowers-with-probability 25
+      meet-fence-inspectors-with-probability 20      
+    ]
     cf:else [show "none matched"]
     )
 end
@@ -164,19 +198,13 @@ to sow-grass ;; sowing grass let's grass
   if length hubnet-clients-list > 0 [
     ask grass-patches [grow-grass grass-regrow / length hubnet-clients-list]
   ]
-  meet-fence-fixers-with-probability  10
-  meet-cow-shepherds-with-probability 25
-  meet-grass-surveyors-with-probability 50
-  meet-grass-sowers-with-probability 25
+
 end
 
 to survey-grass
   ;; NB: this might need tweaking
   ask n-of (count patches / 2) patches [set known-grass grass]
-  meet-fence-fixers-with-probability 10
-  meet-cow-shepherds-with-probability 50
-  meet-grass-surveyors-with-probability 20
-  meet-grass-sowers-with-probability 25
+
 
 end
 
@@ -206,20 +234,11 @@ to fix-fences
     set fix-points fix-points - repair-amount
   ]  
   set money money - fence-fixing-cost
-  meet-fence-fixers-with-probability 100
-  meet-cow-shepherds-with-probability 5
-  meet-grass-surveyors-with-probability 20
-  meet-grass-sowers-with-probability 5
 end
 
 to inspect-fences
   show "Inspecting fences"
   ask fences [set label durability]
-;  hubnet-send-message user-id (word "While inspecting fences, you meeet " [user-id] of fence-fixers " who are repairing fences.")
-  meet-fence-fixers-with-probability 100
-  meet-cow-shepherds-with-probability 5
-  meet-grass-surveyors-with-probability 20
-  meet-grass-sowers-with-probability 10
 end
 
 to meet-fence-fixers-with-probability [%-prob]
@@ -233,6 +252,9 @@ to meet-cow-shepherds-with-probability [%-prob]
 end
 to meet-grass-surveyors-with-probability [%-prob]
   ask grass-surveyors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+end
+to meet-fence-inspectors-with-probability [%-prob]
+  ask fence-inspectors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
 
   
@@ -348,7 +370,7 @@ to scale-vars-for-n-players
   ;; we want one fifth of players fixing fences all the time, so
   ;; if no one has logged in, don't do this or we get division by zero
   if length hubnet-clients-list > 0 [
-    set fence-fix-points 5 * count fences / length hubnet-clients-list
+    set fence-fix-points (1600 * 5) / length hubnet-clients-list
   ]
   
 end
@@ -657,13 +679,14 @@ end
 
 to show-who-was-seen-this-week
   output-print "People who were observed this week:"
-  ifelse any? seen-this-week  [
-    foreach sort [say-will-do] of seen-this-week [
-      output-print ?
-    ]    
-  ]
-  [
-    output-print "Week is not over yet."
+  foreach sort [will-do] of seen-this-week [
+    let farmers-who-did-this farmers with [will-do = ?]
+    output-print (word ? ": " count farmers-who-did-this)
+    output-print reduce [(word ?1 ", " ?2)] [user-id] of farmers-who-did-this
+  ]   
+  if any? farmers with [not member? self seen-this-week][
+    output-print "Famers not seen by anyone this week:"
+    output-print reduce [(word ?1 ", " ?2)] [user-id] of farmers with [not member? self seen-this-week]
   ] 
 end
 
@@ -672,6 +695,9 @@ to-report names-to-string-of [an-agentset]
   report reduce [(word ?1 ", " ?2)] names
   
 end
+
+
+
 
 to-report fence-fixers
   report farmers with [will-do = "Do: Repair Fences ($500)"]
@@ -684,6 +710,9 @@ to-report cow-shepherds
 end
 to-report grass-surveyors
     report farmers with [will-do = "Do: Survey Grass"]
+end
+to-report fence-inspectors
+  report farmers with [will-do = "Do: Inspect Fences"]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -715,7 +744,7 @@ Week
 
 OUTPUT
 590
-30
+10
 870
 470
 12
@@ -942,16 +971,6 @@ TEXTBOX
 1105
 418
 Money-related stuff
-11
-0.0
-1
-
-TEXTBOX
-645
-10
-825
-28
-What people have said and done
 11
 0.0
 1
