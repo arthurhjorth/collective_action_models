@@ -29,6 +29,8 @@ globals [
   grass-patches
   
   common-pool-bank ;; this is money that people have pooled together
+  
+  seen-this-week
 
   ;; some plotting lists
   known-grass-amounts
@@ -75,8 +77,10 @@ to run-a-week
   ;; only run the week if everybody has decided what to do
   let undecided farmers with [will-do = 0 or say-will-do = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
-  
+
   hubnet-broadcast-message (word "Week " ticks " starting!")
+  ;; clear who was seen this week
+  set seen-this-week (turtle-set)
 
   ;;adding --> cows are all brown in the upfront space, all blue to the player.
   color-student-cows 
@@ -84,6 +88,7 @@ to run-a-week
   ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
   ;; so that they can catch defectors. 
   ask farmers [do-weekly-action]
+
   ;; all cows graze. We do this to make sure everybody's cows get an equal chance at eating,
   ;; and to smoothe out movement animation
   repeat 7 [ask cows [graze metabolize-and-maybe-die]]
@@ -120,7 +125,7 @@ to deteriorate
 end
 
 to reset-weekly-vars
-  ask farmers [set will-do "" set say-will-do ""]
+  ask farmers [set will-do 0 set say-will-do 0]
 end
 
 
@@ -136,12 +141,16 @@ end
 
 
 to do-weekly-action
+  show "hep"
+  show self
+  show user-id
   (
     cf:match will-do
     cf:= "Do: Repair Fences ($500)" [fix-fences]
     cf:= "Do: Inspect Fences" [inspect-fences]
     cf:= "Do: Sow Grass ($500)" [sow-grass]
     cf:= "Do: Survey Grass" [survey-grass]
+    cf:else [show "none matched"]
     )
 end
 
@@ -155,11 +164,20 @@ to sow-grass ;; sowing grass let's grass
   if length hubnet-clients-list > 0 [
     ask grass-patches [grow-grass grass-regrow / length hubnet-clients-list]
   ]
+  meet-fence-fixers-with-probability  10
+  meet-cow-shepherds-with-probability 25
+  meet-grass-surveyors-with-probability 50
+  meet-grass-sowers-with-probability 25
 end
 
 to survey-grass
   ;; NB: this might need tweaking
   ask n-of (count patches / 2) patches [set known-grass grass]
+  meet-fence-fixers-with-probability 10
+  meet-cow-shepherds-with-probability 50
+  meet-grass-surveyors-with-probability 20
+  meet-grass-sowers-with-probability 25
+
 end
 
 to metabolize-and-maybe-die
@@ -180,33 +198,43 @@ end
 
 to fix-fences
   let fix-points fence-fix-points
-  while [fix-points > 0 and any? fences with [durability < 100]] [    
+  while [any? fences with [label < 100] and fix-points > 0] [    
     let most-broken-fence min-one-of fences [label]
     move-to most-broken-fence
-    let fix-diff 100 - [durability] of most-broken-fence
-    ifelse fix-diff < fix-points 
-    [
-      ask most-broken-fence [set durability 100]
-      set fix-points fix-points - fix-diff
-    ]
-    [
-      ask most-broken-fence [set durability durability + fix-points]
-      set fix-points 0
-    ]
+    let repair-amount min (list fix-points (100 - [durability] of most-broken-fence))
+    ask most-broken-fence [set durability durability + repair-amount set label durability]
+    set fix-points fix-points - repair-amount
   ]  
   set money money - fence-fixing-cost
+  meet-fence-fixers-with-probability 100
+  meet-cow-shepherds-with-probability 5
+  meet-grass-surveyors-with-probability 20
+  meet-grass-sowers-with-probability 5
 end
 
 to inspect-fences
+  show "Inspecting fences"
   ask fences [set label durability]
-  let fence-fixers farmers with [will-do = "Do: Repair Fences ($500)"]
-  let fence-fixer-names ifelse-value any? fence-fixers [reduce [(word ?1 ", " ?2)] fence-fixers] ["nobody"]
-  hubnet-send-message user-id (word "While inspecting fences, you meeet " fence-fixer-names " who are repairing fences.")
+;  hubnet-send-message user-id (word "While inspecting fences, you meeet " [user-id] of fence-fixers " who are repairing fences.")
+  meet-fence-fixers-with-probability 100
+  meet-cow-shepherds-with-probability 5
+  meet-grass-surveyors-with-probability 20
+  meet-grass-sowers-with-probability 10
 end
 
 to meet-fence-fixers-with-probability [%-prob]
-  
+  ask fence-fixers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
+to meet-grass-sowers-with-probability [%-prob]
+  ask grass-sowers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+end
+to meet-cow-shepherds-with-probability [%-prob]
+  ask cow-shepherds [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+end
+to meet-grass-surveyors-with-probability [%-prob]
+  ask grass-surveyors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+end
+
   
 to graze
   eat
@@ -261,7 +289,7 @@ to setup-world
     recolor-grass]
   ask fences [die]
   ask edge-patches [
-    sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50] 
+    sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50 set label durability] 
     set grass 0
     set known-grass max-grass
     set pcolor green
@@ -277,6 +305,7 @@ to setup-globals
   set actual-fence-states (list)
   set  money-in-the-bank  (list)
   set count-cows-history (list) 
+  set seen-this-week (turtle-set)
   scale-vars-for-n-players
   set fence-fixing-cost 500
   set seed-cost 500
@@ -625,6 +654,37 @@ to show-how-many-did-what-when
     ]
   ]
 end
+
+to show-who-was-seen-this-week
+  output-print "People who were observed this week:"
+  ifelse any? seen-this-week  [
+    foreach sort [say-will-do] of seen-this-week [
+      output-print ?
+    ]    
+  ]
+  [
+    output-print "Week is not over yet."
+  ] 
+end
+
+to-report names-to-string-of [an-agentset]
+  let names remove-duplicates [user-id] of an-agentset
+  report reduce [(word ?1 ", " ?2)] names
+  
+end
+
+to-report fence-fixers
+  report farmers with [will-do = "Do: Repair Fences ($500)"]
+end
+to-report grass-sowers
+  report farmers with [will-do = "Do: Sow Grass ($500)"]
+end
+to-report cow-shepherds
+  report farmers with [will-do = "Do: Shepherd Cows"]
+end
+to-report grass-surveyors
+    report farmers with [will-do = "Do: Survey Grass"]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 145
@@ -947,8 +1007,8 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 6" "Local 7"
-1
+"Local 3" "Local 4"
+0
 
 BUTTON
 590
