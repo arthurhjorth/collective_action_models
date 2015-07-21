@@ -540,7 +540,37 @@ to show-gini
 end
 
 to print-who-did-what
-  
+  clear-output
+  foreach all-weeks [
+    let the-week ?
+    output-print (word "During week " the-week )
+    foreach things-people-did [
+      let the-action ?
+      output-print the-action
+      let farmers-who-did-that-this-week filter [item 1 ? = the-week and item 3 ? = the-action] farmer-actions
+      ifelse length farmers-who-did-that-this-week > 0[
+        output-print reduce [(word ?1 ", " ?2)] map [item 0 ?] farmers-who-did-that-this-week 
+      ]
+      [
+        output-print "Nobody"
+      ]
+    ]
+    output-print ""
+  ]
+end
+
+;; reports all the things that people have done in the farmers-actions log
+to-report things-people-did
+  report remove-duplicates map [item 3 ?] filter [item 2 ? = "do"] farmer-actions
+end
+
+;; reports all weeks from the farmers-action log
+to-report all-weeks 
+  report remove-duplicates map [item 1 ?] farmer-actions
+end
+
+to-report all-farmers
+  report hubnet-clients-list 
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
