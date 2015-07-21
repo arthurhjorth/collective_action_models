@@ -93,7 +93,7 @@ to run-a-week
     ]  
   ;; fences deteriorate 
   ask fences [
-;   deteriorate
+   deteriorate
    ]
   
   ;; grass regrows
@@ -524,8 +524,8 @@ to show-gini
   create-temporary-plot-pen "baseline"
   plotxy 0 0 
   plotxy 100 100
-  
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 155
@@ -645,7 +645,7 @@ CHOOSER
 465
 fine-who
 fine-who
-"Local 2"
+"Local 2" "Local 3" "Local 4" "Local 5"
 0
 
 CHOOSER
@@ -1128,7 +1128,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.0-LS1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -1138,7 +1138,7 @@ BUTTON
 145
 150
 178
-Say: Repair Fences ($20)
+Say: Repair Fences ($500)
 NIL
 NIL
 1
@@ -1305,7 +1305,7 @@ BUTTON
 145
 300
 178
-Say: Sow Grass ($20)
+Say: Sow Grass ($500)
 NIL
 NIL
 1
