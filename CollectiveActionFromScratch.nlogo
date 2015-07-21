@@ -437,39 +437,27 @@ to log-player-action [action value]
 end
 
 ;; plotting procedures
-to do-plot-1
-  set-current-plot "Plot 1"
+to show-in-plot [plot-no]
+  set-current-plot (word "Plot " plot-no)
   clear-plot
-  let the-list get-plot-list plot-1
-  create-temporary-plot-pen plot-1
+  let the-list get-plot-list plot-value
+  create-temporary-plot-pen plot-value
   foreach n-values (length the-list - 1) [?][
     plotxy ? item ? the-list
   ]
 end
 
-;; plotting procedures
-to do-plot-2
-  set-current-plot "Plot 2"
-  clear-plot
-  let the-list get-plot-list plot-2
-  create-temporary-plot-pen plot-2
-  foreach n-values (length the-list - 1) [?][
-    plotxy ? item ? the-list
-  ]
-end
 
 
 to-report get-plot-list [plot-list-description]
   report (
     cf:match-value plot-list-description
-    cf:= "Amount of grass (as far as we know)" [known-grass-amounts]
-    cf:= "Mean state of fences (as far as we know)" [known-fence-states]
+    cf:= "Known grass amount" [known-grass-amounts]
+    cf:= "Known state of fences" [known-fence-states]
     cf:= "Total Milk Production" [total-milk-production]
     cf:= "Money in Bank" [money-in-the-bank]
     cf:= "Actual grass" [actual-grass-amounts]
     cf:= "Actual state of fences" [actual-fence-states]
-    cf:= "How many repaired fences" [] ;; this needs to takea
-    cf:= "How many sowed grass"[]
     )
 end
 
@@ -576,7 +564,7 @@ to print-counts-of-actions-per-farmer
   foreach things-people-did-in farmer-actions [
     let the-action ?
     output-print the-action
-    foreach all-farmers[
+    foreach sort all-farmers[
       let the-farmer ?
       let the-count length filter [item 0 ? = the-farmer and item 2 ? = "do" and item 3 ? = the-action] farmer-actions 
       output-print (word the-farmer " (" the-count ")")
@@ -596,6 +584,33 @@ end
 
 to-report all-farmers
   report hubnet-clients-list 
+end
+
+to-report how-many-did-what-when-in [alist]
+  let outer (list)
+  foreach things-people-did-in alist [
+    let the-action ?
+    let inner (list)
+    foreach sort all-weeks-in alist [
+      let the-week ?
+      let the-count length filter [item 1 ? = the-week and item 2 ? = "do" and item 3 ? = the-action] alist
+      set inner lput the-count inner
+    ]
+    set outer lput (list the-action inner) outer
+  ]
+  report outer
+end
+
+
+to show-how-many-did-what-when
+  set-current-plot "Plot 2"
+  clear-plot
+  foreach how-many-did-what-when-in farmer-actions [
+    create-temporary-plot-pen first ?
+    foreach last ? [
+      plot ?
+    ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -655,8 +670,8 @@ BUTTON
 135
 158
 NIL
-run-a-week\ndo-plot-1
-T
+run-a-week
+NIL
 1
 T
 OBSERVER
@@ -684,10 +699,10 @@ NIL
 1
 
 MONITOR
-1135
-30
-1385
-75
+875
+420
+1125
+465
 Shared Money
 common-pool-bank
 0
@@ -695,10 +710,10 @@ common-pool-bank
 11
 
 SLIDER
-1260
-75
-1385
-108
+1000
+465
+1125
+498
 $-amount
 $-amount
 0
@@ -710,10 +725,10 @@ $
 HORIZONTAL
 
 CHOOSER
-1135
-75
-1260
-120
+875
+465
+1000
+510
 farmer-list
 farmer-list
 "Local 6" "Local 7"
@@ -722,17 +737,17 @@ farmer-list
 CHOOSER
 875
 30
-1005
+1057
 75
-plot-1
-plot-1
-"Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass" "Actual grass" "Actual state of fences"
-0
+plot-value
+plot-value
+"Known grass amount" "Known state of fences" "Total Milk Production" "Money in Bank" "Actual grass" "Actual state of fences"
+1
 
 PLOT
 875
 75
-1130
+1390
 215
 Plot 1
 NIL
@@ -742,14 +757,14 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
 
 PLOT
 875
 215
-1130
+1390
 355
 Plot 2
 NIL
@@ -759,27 +774,17 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
 
-CHOOSER
-875
-355
-1010
-400
-plot-2
-plot-2
-"Amount of grass (as far as we know)" "Mean state of fences (as far as we know)" "Total Milk Production" "Money in Bank" "How many repaired fences" "How many sowed grass"
-2
-
 BUTTON
-1010
-355
 1130
-400
-NIL
-do-plot-2
+30
+1247
+71
+Show in Plot 2
+show-in-plot 2
 NIL
 1
 T
@@ -794,9 +799,9 @@ BUTTON
 1005
 30
 1130
-75
-NIL
-do-plot-1
+71
+Show in Plot 1
+show-in-plot 1
 NIL
 1
 T
@@ -808,10 +813,10 @@ NIL
 1
 
 BUTTON
-1135
-120
-1260
-155
+875
+510
+1000
+545
 NIL
 fine-them
 NIL
@@ -825,10 +830,10 @@ NIL
 1
 
 PLOT
-1135
-155
-1385
-290
+1140
+420
+1390
+555
 gini-coefficient
 NIL
 NIL
@@ -842,10 +847,10 @@ false
 PENS
 
 BUTTON
-1260
-120
-1385
-155
+1000
+510
+1125
+545
 NIL
 donate-$
 NIL
@@ -859,21 +864,21 @@ NIL
 1
 
 TEXTBOX
-1215
-10
-1365
-28
+955
+400
+1105
+418
 Money-related stuff
 11
 0.0
 1
 
 TEXTBOX
-660
+645
 10
-810
+825
 28
-Who says they'll do what
+What people have said and done
 11
 0.0
 1
@@ -923,10 +928,10 @@ NIL
 1
 
 CHOOSER
-875
-530
-1155
-575
+305
+535
+585
+580
 farmer-list
 farmer-list
 ""
@@ -956,6 +961,23 @@ BUTTON
 608
 Show who did what how many times
 print-counts-of-actions-per-farmer
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1130
+355
+1390
+400
+How many did what and when?
+show-how-many-did-what-when
 NIL
 1
 T
