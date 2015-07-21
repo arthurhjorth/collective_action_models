@@ -542,9 +542,9 @@ end
 
 @#$#@#$#@
 GRAPHICS-WINDOW
-155
+145
 10
-594
+584
 470
 16
 16
@@ -569,10 +569,10 @@ Week
 30.0
 
 OUTPUT
-600
+590
 30
-880
-300
+870
+275
 12
 
 BUTTON
@@ -627,10 +627,10 @@ NIL
 1
 
 MONITOR
-600
-345
-850
-390
+1135
+30
+1385
+75
 Shared Money
 common-pool-bank
 0
@@ -638,10 +638,10 @@ common-pool-bank
 11
 
 SLIDER
-725
-390
-850
-423
+1260
+75
+1385
+108
 $-amount
 $-amount
 0
@@ -653,19 +653,19 @@ $
 HORIZONTAL
 
 CHOOSER
-600
-390
-725
-435
+1135
+75
+1260
+120
 farmer-list
 farmer-list
 "Local 2" "Local 3" "Local 4" "Local 5"
 0
 
 CHOOSER
-885
+875
 30
-1020
+1005
 75
 plot-1
 plot-1
@@ -673,9 +673,9 @@ plot-1
 0
 
 PLOT
-890
+875
 75
-1145
+1130
 215
 Plot 1
 NIL
@@ -690,9 +690,9 @@ false
 PENS
 
 PLOT
-890
+875
 215
-1145
+1130
 355
 Plot 2
 NIL
@@ -707,9 +707,9 @@ false
 PENS
 
 CHOOSER
-890
+875
 355
-1025
+1010
 400
 plot-2
 plot-2
@@ -717,9 +717,9 @@ plot-2
 2
 
 BUTTON
-1025
+1010
 355
-1145
+1130
 400
 NIL
 do-plot-2
@@ -734,9 +734,9 @@ NIL
 1
 
 BUTTON
-1020
+1005
 30
-1145
+1130
 75
 NIL
 do-plot-1
@@ -751,10 +751,10 @@ NIL
 1
 
 BUTTON
-600
-435
-725
-470
+1135
+120
+1260
+155
 NIL
 fine-them
 NIL
@@ -768,10 +768,10 @@ NIL
 1
 
 PLOT
-1170
-75
-1370
-215
+1135
+155
+1385
+290
 gini-coefficient
 NIL
 NIL
@@ -785,10 +785,10 @@ false
 PENS
 
 BUTTON
-725
-435
-850
-470
+1260
+120
+1385
+155
 NIL
 donate-$
 NIL
@@ -802,19 +802,19 @@ NIL
 1
 
 TEXTBOX
-680
-325
-830
-343
-Bank-related stuff
+1215
+10
+1365
+28
+Money-related stuff
 11
 0.0
 1
 
 TEXTBOX
-670
+660
 10
-820
+810
 28
 Who says they'll do what
 11
@@ -822,9 +822,9 @@ Who says they'll do what
 1
 
 TEXTBOX
-960
+945
 10
-1110
+1095
 28
 Historical data
 11
