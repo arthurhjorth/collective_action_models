@@ -75,6 +75,8 @@ to run-a-week
   ;; only run the week if everybody has decided what to do
   let undecided farmers with [will-do = 0 or say-will-do = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
+  
+  hubnet-broadcast-message (word "Week " ticks " starting!")
 
   ;;adding --> cows are all brown in the upfront space, all blue to the player.
   color-student-cows 
@@ -108,12 +110,17 @@ to run-a-week
     log-player-action "do" will-do
   ]
   log-weekly
+  reset-weekly-vars
 
 end
 
 to deteriorate
   set durability durability - random 25
   if durability < 0 [set durability 0]
+end
+
+to reset-weekly-vars
+  ask farmers [set will-do "" set say-will-do ""]
 end
 
 
@@ -196,6 +203,10 @@ to inspect-fences
   let fence-fixer-names ifelse-value any? fence-fixers [reduce [(word ?1 ", " ?2)] fence-fixers] ["nobody"]
   hubnet-send-message user-id (word "While inspecting fences, you meeet " fence-fixer-names " who are repairing fences.")
 end
+
+to meet-fence-fixers-with-probability [%-prob]
+  
+end
   
 to graze
   eat
@@ -236,7 +247,7 @@ end
 
 
 to go
-  hubnet-broadcast "Action" "Choose what to do today"
+  hubnet-broadcast "Action" "Choose what to do this week!"
 end
 
 
@@ -401,6 +412,7 @@ end
 
 to print-who-says-what
   clear-output
+  output-print "What people say this week"
   let things-people-say sort remove-duplicates [say-will-do] of farmers
   foreach things-people-say [
     show-who-says ?
@@ -534,8 +546,9 @@ to print-who-did-what
     output-print (word "During week " the-week )
     foreach things-people-did-in farmer-actions [
       let the-action ?
-      output-print the-action
       let farmers-who-did-that-this-week filter [item 1 ? = the-week and item 3 ? = the-action] farmer-actions
+      output-print (word the-action " (" length farmers-who-did-that-this-week ")")
+      
       ifelse length farmers-who-did-that-this-week > 0[
         output-print reduce [(word ?1 ", " ?2)] map [item 0 ?] farmers-who-did-that-this-week 
       ]
@@ -779,9 +792,9 @@ true
 PENS
 
 BUTTON
-1130
+1185
 30
-1247
+1302
 71
 Show in Plot 2
 show-in-plot 2
@@ -796,9 +809,9 @@ NIL
 1
 
 BUTTON
-1005
+1060
 30
-1130
+1185
 71
 Show in Plot 1
 show-in-plot 1
@@ -934,8 +947,8 @@ CHOOSER
 580
 farmer-list
 farmer-list
-""
-0
+"Local 6" "Local 7"
+1
 
 BUTTON
 590
