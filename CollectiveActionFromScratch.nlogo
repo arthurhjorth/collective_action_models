@@ -76,6 +76,7 @@ to run-a-week
   let undecided farmers with [will-do = 0 or say-will-do = 0]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
 
+  ;;adding --> cows are all brown in the upfront space, all blue to the player.
   color-student-cows 
   ;; we can figure out how to do the visualization later. But here are the options:
   ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
@@ -139,7 +140,7 @@ end
 
 
 to color-student-cows
-  ask farmers [ hubnet-send-override user-id my-cows "color" [red] ]
+  ask farmers [ hubnet-send-override user-id my-cows "color" [blue] hubnet-send-override user-id my-cows "size" [2] ]
 end
 
 to sow-grass ;; sowing grass let's grass 
@@ -492,7 +493,7 @@ to update-client-info
 end
 
 to make-cow
-  hatch-cows 1 [ set owner myself set shape "cow" set color [color] of myself set energy 10 move-to one-of grass-patches st]
+  hatch-cows 1 [ set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st]
 end
 
 to-report gini-points
@@ -644,7 +645,7 @@ CHOOSER
 465
 fine-who
 fine-who
-"Local 40" "Local 41" "Local 42" "Local 43" "Local 44"
+"Local 2"
 0
 
 CHOOSER
@@ -1127,7 +1128,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0-LS1
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
