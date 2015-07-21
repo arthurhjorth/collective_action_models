@@ -570,6 +570,20 @@ to print-what-farmer-did
   ]
 end
 
+to print-counts-of-actions-per-farmer
+  clear-output
+  output-print "How many times people did what:"
+  foreach things-people-did-in farmer-actions [
+    let the-action ?
+    output-print the-action
+    foreach all-farmers[
+      let the-farmer ?
+      let the-count length filter [item 0 ? = the-farmer and item 2 ? = "do" and item 3 ? = the-action] farmer-actions 
+      output-print (word the-farmer " (" the-count ")")
+    ]
+  ]
+end
+
 ;; reports all the things that people have done in the farmers-actions log
 to-report things-people-did-in [alist]
   report remove-duplicates map [item 3 ?] filter [item 2 ? = "do"] alist
@@ -925,6 +939,23 @@ BUTTON
 573
 Show what this farmer did
 print-what-farmer-did
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+590
+575
+870
+608
+Show who did what how many times
+print-counts-of-actions-per-farmer
 NIL
 1
 T
