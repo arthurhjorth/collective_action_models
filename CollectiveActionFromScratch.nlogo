@@ -326,7 +326,8 @@ to listen-to-clients
 end
 
 to add-farmer [message-source]
-  goo:set-chooser-items "fine-who" sort hubnet-clients-list
+  wait .05
+  goo:set-chooser-items "farmer-list" sort hubnet-clients-list
   wait .05
   set farmer-list item 0 sort hubnet-clients-list
   create-farmers 1 [
@@ -396,16 +397,14 @@ to show-who-says [astring]
   let the-users sort [user-id] of farmers with [say-will-do = astring]
     output-print (word astring " (" length the-users ")")
     output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
-    output-print ""
 end
 
 to print-who-says-what
   clear-output
-  show-who-says "Say: Repair Fences ($500)"
-  show-who-says "Say: Inspect Fences" 
-  show-who-says "Say: Survey Grass" 
-  show-who-says "Say: Sow Grass ($500)" 
-  show-who-says "Say: Shepherd my Cows"
+  let things-people-say sort remove-duplicates [say-will-do] of farmers
+  foreach things-people-say [
+    show-who-says ?
+  ]
 end
 
 to reset-farmer
@@ -539,6 +538,10 @@ to show-gini
   plotxy 0 0 
   plotxy 100 100
 end
+
+to print-who-did-what
+  
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 145
@@ -658,7 +661,7 @@ CHOOSER
 120
 farmer-list
 farmer-list
-"Local 2" "Local 3" "Local 4" "Local 5"
+"Local 6" "Local 7"
 0
 
 CHOOSER
@@ -828,6 +831,40 @@ TEXTBOX
 Historical data
 11
 0.0
+1
+
+BUTTON
+590
+470
+870
+503
+Show who says what
+print-who-says-what
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+590
+505
+870
+538
+Show who did what
+print-who-did-what
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
 1
 
 @#$#@#$#@
