@@ -1152,7 +1152,7 @@ BUTTON
 180
 150
 213
-Say: Shepherd my Cows
+Say: Shepherd Cows
 NIL
 NIL
 1
