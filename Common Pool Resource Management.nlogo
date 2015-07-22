@@ -127,6 +127,7 @@ end
 
 to reset-weekly-vars
   ask farmers [set will-do 0 set say-will-do 0]
+  hubnet-broadcast "Action" "Choose what to say and do this week."
   set seen-this-week (turtle-set)
 end
 
@@ -436,6 +437,20 @@ to do-command [source tag]
     ]
     cf:else [ set update-client-display false ]
     )
+    ;; tell them if they still need to make a decision
+    if will-do = 0 and say-will-do = 0 [
+    hubnet-send source "Action" "Decide what to say and do this week."      
+    ]
+    if will-do != 0 and say-will-do = 0 [
+    hubnet-send source "Action" "Decide on what you say you will do."      
+    ]
+    if will-do = 0 and say-will-do != 0 [
+    hubnet-send source "Action" "Decide on what you will actually do."      
+    ]
+    if will-do != 0 and say-will-do != 0 [
+    hubnet-send source "Action" "You are ready for this week."            
+    ]
+
   ]
 end
 
@@ -1436,7 +1451,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0-LS1
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
