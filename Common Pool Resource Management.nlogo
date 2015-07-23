@@ -185,7 +185,7 @@ to do-weekly-action
       meet-grass-sowers-with-probability 25
       meet-fence-inspectors-with-probability 20      
     ]
-    cf:else [show "none matched"]
+    cf:else []
     )
 end
 
@@ -238,7 +238,6 @@ to fix-fences
 end
 
 to inspect-fences
-  show "Inspecting fences"
   ask fences [set label durability]
 end
 
@@ -495,7 +494,7 @@ to grow-grass [grow-amount]
 end
 
 to recolor-grass
-  set pcolor scale-color green known-grass -2 (max-grass * 1.3)
+  set pcolor scale-color green known-grass (max-grass * 1.3) -2 
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
@@ -519,6 +518,7 @@ to show-in-plot [plot-no]
   set-current-plot (word "Plot " plot-no)
   clear-plot
   let the-list get-plot-list plot-value
+  if length the-list = 0 [stop]
   create-temporary-plot-pen plot-value
   foreach n-values (length the-list - 1) [?][
     plotxy ? item ? the-list
@@ -572,7 +572,11 @@ to update-client-info
 end
 
 to make-cow
-  hatch-cows 1 [ set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st]
+  hatch-cows 1 [
+     set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st display
+     ]
+  update-client-info
+  hubnet-send-override user-id my-cows "color" [blue] hubnet-send-override user-id my-cows "size" [2] 
 end
 
 to-report gini-points
@@ -1041,8 +1045,8 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 3" "Local 4"
-0
+"10.105.169.216" "Adi" "Austin" "BG" "Billy Blue Sheep" "Caroline" "FRANK THE TANK" "Wyatt Earp" "christina" "corey" "gabby" "titfortat" "ümit"
+5
 
 BUTTON
 590
@@ -1515,7 +1519,7 @@ MONITOR
 369
 $
 NIL
-2
+0
 1
 
 BUTTON
