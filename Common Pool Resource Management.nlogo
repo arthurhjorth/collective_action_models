@@ -144,48 +144,82 @@ end
 
 
 to do-weekly-action
-  show "hep"
-  show self
-  show user-id
+  let people-i-met (turtle-set)
   (
     cf:match will-do
     cf:= "Do: Repair Fences ($500)" 
     [
       fix-fences
-      meet-fence-fixers-with-probability 100
-      meet-cow-shepherds-with-probability 5
-      meet-grass-surveyors-with-probability 20
-      meet-grass-sowers-with-probability 5
-      meet-fence-inspectors-with-probability 100
+      set people-i-met union people-i-met meet-fence-fixers-with-probability 10
+      set people-i-met union people-i-met meet-cow-herders-with-probability 5
+      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
+      set people-i-met union people-i-met meet-grass-sowers-with-probability 5
+      set people-i-met union people-i-met meet-fence-inspectors-with-probability 100
     ]
     cf:= "Do: Inspect Fences" 
     [
       inspect-fences
-      meet-fence-fixers-with-probability 20
-      meet-cow-shepherds-with-probability 5
-      meet-grass-surveyors-with-probability 20
-      meet-grass-sowers-with-probability 10
-      meet-fence-inspectors-with-probability 50      
+      set people-i-met union people-i-met meet-fence-fixers-with-probability 20
+      set people-i-met union people-i-met meet-cow-herders-with-probability 5
+      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
+      set people-i-met union people-i-met meet-grass-sowers-with-probability 10
+      set people-i-met union people-i-met meet-fence-inspectors-with-probability 50      
     ]
     cf:= "Do: Sow Grass ($500)" 
     [
       sow-grass
-      meet-fence-fixers-with-probability  10
-      meet-cow-shepherds-with-probability 25
-      meet-grass-surveyors-with-probability 50
-      meet-grass-sowers-with-probability 25
-      meet-fence-inspectors-with-probability 10      
+      set people-i-met union people-i-met meet-fence-fixers-with-probability  10
+      set people-i-met union people-i-met meet-cow-herders-with-probability 25
+      set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
+      set people-i-met union people-i-met meet-grass-sowers-with-probability 25
+      set people-i-met union people-i-met meet-fence-inspectors-with-probability 10      
     ]
     cf:= "Do: Survey Grass" 
     [
       survey-grass
-      meet-fence-fixers-with-probability 10
-      meet-cow-shepherds-with-probability 50
-      meet-grass-surveyors-with-probability 20
-      meet-grass-sowers-with-probability 25
-      meet-fence-inspectors-with-probability 20      
+      set people-i-met union people-i-met meet-fence-fixers-with-probability 10
+      set people-i-met union people-i-met meet-cow-herders-with-probability 50
+      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
+      set people-i-met union people-i-met meet-grass-sowers-with-probability 25
+      set people-i-met union people-i-met meet-fence-inspectors-with-probability 20      
+    ]
+    cf:= "Do: Herd Cows" 
+    [
+      survey-grass
+      set people-i-met union people-i-met meet-fence-fixers-with-probability 10
+      set people-i-met union people-i-met meet-cow-herders-with-probability 10
+      set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
+      set people-i-met union people-i-met meet-grass-sowers-with-probability 20
+      set people-i-met union people-i-met meet-fence-inspectors-with-probability 5
     ]
     cf:else []
+    )
+  ;; remove self from people I met
+  set people-i-met other people-i-met
+  show-who-i-met people-i-met
+end
+
+to show-who-i-met [people-i-met]
+  let weekly-digest (word "This week, while " present-tense-action " you met ")
+  let sorted-people sort-on [will-do] people-i-met
+  foreach remove-duplicates [will-do] of (turtle-set sorted-people) [
+    set weekly-digest (word weekly-digest people-names [user-id] of people-i-met with [will-do = ?])
+    set weekly-digest (word weekly-digest ", who were " [present-tense-action] of one-of people-i-met with [will-do = ?] ";")
+  ]
+ hubnet-send-message user-id weekly-digest 
+end
+
+to-report people-names [alist]
+  report ifelse-value (length alist > 2) [(word first alist ", " people-names butfirst alist)] [(word first alist " and " last alist)]
+end
+
+to-report  present-tense-action
+  report (cf:match-value will-do
+    cf:= "Do: Herd Cows" ["herding cows"]
+    cf:= "Do: Repair Fences ($500)" ["repairing fences"]
+    cf:= "Do: Inspect Fences" ["inspecting fences"]
+    cf:= "Do: Sow Grass ($500)" ["sowing grass"]
+    cf:= "Do: Survey Grass" ["surveying grass"]
     )
 end
 
@@ -241,20 +275,25 @@ to inspect-fences
   ask fences [set label durability]
 end
 
-to meet-fence-fixers-with-probability [%-prob]
-  ask fence-fixers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+to-report meet-fence-fixers-with-probability [%-prob]
+  report fence-fixers with [random 100 < %-prob]
+;  ask fence-fixers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
-to meet-grass-sowers-with-probability [%-prob]
-  ask grass-sowers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+to-report meet-grass-sowers-with-probability [%-prob]
+  report grass-sowers with [random 100 < %-prob]
+;  ask grass-sowers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
-to meet-cow-shepherds-with-probability [%-prob]
-  ask cow-shepherds [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+to-report meet-cow-herders-with-probability [%-prob]
+  report cow-herders with [random 100 < %-prob]
+  ask cow-herders [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
-to meet-grass-surveyors-with-probability [%-prob]
-  ask grass-surveyors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+to-report meet-grass-surveyors-with-probability [%-prob]
+  report grass-surveyors with [random 100 < %-prob]
+;  ask grass-surveyors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
-to meet-fence-inspectors-with-probability [%-prob]
-  ask fence-inspectors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
+to-report meet-fence-inspectors-with-probability [%-prob]
+  report fence-inspectors with [random 100 < %-prob]
+;  ask fence-inspectors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
 
   
@@ -264,18 +303,17 @@ to graze
 end
 
 to cow-move
+  ;; if they are on an edge patch, they die
+  if member? patch-here edge-patches [
+    set pcolor red
+    hubnet-send-message [user-id] of owner (word "One of your cows disappeared. A fence must be broken somewhere.")
+    die
+    ]  
   ;; cows wander around randomly
   rt random 30
   lt random 30
   ;; if there's a fence in front of them, turn around
   ifelse ([ any? fences-here with [durability > 0]] of patch-ahead 1) [rt 90]  [fd 1]
-  ;; if they end up on an edge patch, they die
-  if member? patch-here edge-patches [
-    set pcolor red
-    stop
-    hubnet-send-message [user-id] of owner (word "One of your cows disappeared. A fence must be broken somewhere.")
-    die
-    ]
 end
 
 to eat
@@ -716,6 +754,10 @@ to-report names-to-string-of [an-agentset]
 end
 
 
+to-report union [ts1 ts2]
+  show (list count ts1 ts2)
+  report (turtle-set ts1 ts2)
+end
 
 
 to-report fence-fixers
@@ -724,8 +766,8 @@ end
 to-report grass-sowers
   report farmers with [will-do = "Do: Sow Grass ($500)"]
 end
-to-report cow-shepherds
-  report farmers with [will-do = "Do: Shepherd Cows"]
+to-report cow-herders
+  report farmers with [will-do = "Do: Herd Cows"]
 end
 to-report grass-surveyors
     report farmers with [will-do = "Do: Survey Grass"]
@@ -1045,8 +1087,8 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"10.105.169.216" "Adi" "Austin" "BG" "Billy Blue Sheep" "Caroline" "FRANK THE TANK" "Wyatt Earp" "christina" "corey" "gabby" "titfortat" "ümit"
-5
+"Local 8" "Local 9"
+0
 
 BUTTON
 590
@@ -1455,7 +1497,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.0-LS1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -1479,7 +1521,7 @@ BUTTON
 180
 150
 213
-Say: Shepherd Cows
+Say: Herd Cows
 NIL
 NIL
 1
@@ -1660,7 +1702,7 @@ BUTTON
 320
 150
 353
-Do: Shepherd Cows
+Do: Herd Cows
 NIL
 NIL
 1
