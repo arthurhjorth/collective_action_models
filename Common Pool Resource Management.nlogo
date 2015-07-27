@@ -1,4 +1,4 @@
-extensions [table cf goo]
+extensions [table cf goo gradient]
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -202,9 +202,14 @@ end
 to show-who-i-met [people-i-met]
   let weekly-digest (word "This week, while " present-tense-action " you met ")
   let sorted-people sort-on [will-do] people-i-met
+  ifelse count people-i-met = 0[
+    set weekly-digest (word weekly-digest "nobody")
+  ]
+  [
   foreach remove-duplicates [will-do] of (turtle-set sorted-people) [
     set weekly-digest (word weekly-digest people-names [user-id] of people-i-met with [will-do = ?])
     set weekly-digest (word weekly-digest ", who were " [present-tense-action] of one-of people-i-met with [will-do = ?] ";")
+  ]
   ]
  hubnet-send-message user-id weekly-digest 
 end
@@ -532,7 +537,7 @@ to grow-grass [grow-amount]
 end
 
 to recolor-grass
-  set pcolor scale-color green known-grass (max-grass * 1.3) -2 
+  set pcolor gradient:scale [[90 60 0] [0 255 0]] grass  0 max-grass 
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
@@ -1087,7 +1092,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 8" "Local 9"
+"Local 10" "Local 11"
 0
 
 BUTTON
@@ -1497,7 +1502,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0-LS1
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
