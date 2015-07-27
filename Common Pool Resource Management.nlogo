@@ -438,10 +438,10 @@ to add-farmer [message-source]
   create-farmers 1 [
     set user-id message-source
     ht
-    set money 0
+    set money cow-price * 3
     set color one-of base-colors
     set milk-production-list []
-    repeat 3 [make-cow]
+;    repeat 3 [make-cow]
     reset-farmer
   ]
   scale-vars-for-n-players
