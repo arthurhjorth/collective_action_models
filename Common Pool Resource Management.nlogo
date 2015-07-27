@@ -75,7 +75,7 @@ patches-own[
 
 to run-a-week
   ;; only run the week if everybody has decided what to do
-  let undecided farmers with [will-do = 0 or say-will-do = 0]
+  let undecided farmers with [will-do = undecided or say-will-do = undecided]
   if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
 
   hubnet-broadcast-message (word "Week " ticks " starting!")
@@ -117,6 +117,7 @@ to run-a-week
   ]
   log-weekly
   reset-weekly-vars
+  hubnet-send-message "Action" "This is the weekly townhall meeting. Coordinate with the rest of the village, and decide what you will do next week."
 
 end
 
@@ -126,7 +127,7 @@ to deteriorate
 end
 
 to reset-weekly-vars
-  ask farmers [set will-do 0 set say-will-do 0]
+  ask farmers [set will-do undecided set say-will-do undecided]
   hubnet-broadcast "Action" "Choose what to say and do this week."
   set seen-this-week (turtle-set)
 end
@@ -441,8 +442,8 @@ to add-farmer [message-source]
     set money cow-price * 3
     set color one-of base-colors
     set milk-production-list []
-;    repeat 3 [make-cow]
     reset-farmer
+    update-client-info
   ]
   scale-vars-for-n-players
 end
@@ -470,7 +471,7 @@ to do-command [source tag]
           set will-do tag print-who-says-what
         ]
         [
-          set will-do 0
+;          set will-do 0;; AH: I'm not sure why this is set here. it should just not be changed, right
           hubnet-send source "Action" (word "You can't afford " tag)
         ]
     ]
@@ -480,16 +481,16 @@ to do-command [source tag]
     cf:else [ set update-client-display false ]
     )
     ;; tell them if they still need to make a decision
-    if will-do = 0 and say-will-do = 0 [
+    if will-do = undecided and say-will-do = undecided [
     hubnet-send source "Action" "Decide what to say and do this week."      
     ]
-    if will-do != 0 and say-will-do = 0 [
+    if will-do != undecided and say-will-do = undecided [
     hubnet-send source "Action" "Decide on what you say you will do."      
     ]
-    if will-do = 0 and say-will-do != 0 [
+    if will-do = undecided and say-will-do != undecided [
     hubnet-send source "Action" "Decide on what you will actually do."      
     ]
-    if will-do != 0 and say-will-do != 0 [
+    if will-do != undecided and say-will-do != undecided [
     hubnet-send source "Action" "You are ready for this week."            
     ]
 
@@ -497,7 +498,7 @@ to do-command [source tag]
 end
 
 to buy-cow
-  ifelse money > 1500
+  ifelse money >= 1500
   [
     set money money - 1500
     make-cow
@@ -780,6 +781,10 @@ end
 to-report fence-inspectors
   report farmers with [will-do = "Do: Inspect Fences"]
 end
+
+to-report undecided
+  report "Undecided"
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 145
@@ -878,7 +883,7 @@ common-pool-bank
 11
 
 SLIDER
-1000
+875
 465
 1125
 498
@@ -891,16 +896,6 @@ $-amount
 1
 $
 HORIZONTAL
-
-CHOOSER
-875
-465
-1000
-510
-farmer-list
-farmer-list
-"Local 6" "Local 7"
-1
 
 CHOOSER
 875
@@ -982,9 +977,9 @@ NIL
 
 BUTTON
 875
-510
+500
 1000
-545
+535
 NIL
 fine-them
 NIL
@@ -1016,9 +1011,9 @@ PENS
 
 BUTTON
 1000
-510
+500
 1125
-545
+535
 NIL
 donate-$
 NIL
@@ -1086,13 +1081,13 @@ NIL
 1
 
 CHOOSER
-305
+875
 535
-585
+1130
 580
 farmer-list
 farmer-list
-"Local 10" "Local 11"
+"Local 1" "Local 2"
 0
 
 BUTTON
