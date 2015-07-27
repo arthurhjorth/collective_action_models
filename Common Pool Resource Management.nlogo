@@ -117,7 +117,7 @@ to run-a-week
   ]
   log-weekly
   reset-weekly-vars
-  hubnet-send-message "Action" "This is the weekly townhall meeting. Coordinate with the rest of the village, and decide what you will do next week."
+  hubnet-send-message "Action" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
 
 end
 
@@ -444,6 +444,7 @@ to add-farmer [message-source]
     set milk-production-list []
     reset-farmer
     update-client-info
+    hubnet-send message-source "Action" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
   ]
   scale-vars-for-n-players
 end
@@ -784,6 +785,10 @@ end
 
 to-report undecided
   report "Undecided"
+end
+
+to send-townhall-meeting-message
+  hubnet-send hubnet-clients-list  "Action" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -1504,9 +1509,9 @@ NetLogo 5.2.0
 @#$#@#$#@
 BUTTON
 5
-145
+200
 150
-178
+233
 Say: Repair Fences ($500)
 NIL
 NIL
@@ -1518,9 +1523,9 @@ NIL
 
 BUTTON
 5
-180
+235
 150
-213
+268
 Say: Herd Cows
 NIL
 NIL
@@ -1532,9 +1537,9 @@ NIL
 
 BUTTON
 5
-110
+165
 150
-143
+198
 Say: Inspect Fences
 NIL
 NIL
@@ -1546,9 +1551,9 @@ NIL
 
 MONITOR
 710
-320
+375
 820
-369
+424
 # of Cows
 NIL
 0
@@ -1556,9 +1561,9 @@ NIL
 
 MONITOR
 830
-320
+375
 950
-369
+424
 $
 NIL
 0
@@ -1566,9 +1571,9 @@ NIL
 
 BUTTON
 955
-320
+375
 1087
-366
+421
 Buy Cow ($1500)
 NIL
 NIL
@@ -1580,9 +1585,9 @@ NIL
 
 VIEW
 305
-10
+65
 705
-410
+465
 0
 0
 0
@@ -1603,7 +1608,7 @@ VIEW
 MONITOR
 10
 10
-300
+1090
 59
 Action
 NIL
@@ -1612,9 +1617,9 @@ NIL
 
 TEXTBOX
 5
-85
+140
 200
-103
+158
 What you say you will do
 15
 0.0
@@ -1622,9 +1627,9 @@ What you say you will do
 
 TEXTBOX
 5
-225
+280
 165
-243
+298
 What you actually do.
 15
 0.0
@@ -1632,9 +1637,9 @@ What you actually do.
 
 TEXTBOX
 710
-300
+355
 860
-318
+373
 Click here to buy cows
 11
 0.0
@@ -1642,9 +1647,9 @@ Click here to buy cows
 
 SLIDER
 710
-375
+430
 950
-408
+463
 money-to-shared-bank
 money-to-shared-bank
 0
@@ -1657,9 +1662,9 @@ HORIZONTAL
 
 BUTTON
 955
-375
+430
 1085
-408
+463
 Donate
 NIL
 NIL
@@ -1671,9 +1676,9 @@ NIL
 
 BUTTON
 155
-145
+200
 300
-178
+233
 Say: Sow Grass ($500)
 NIL
 NIL
@@ -1685,9 +1690,9 @@ NIL
 
 BUTTON
 5
-285
+340
 150
-318
+373
 Do: Repair Fences ($500)
 NIL
 NIL
@@ -1699,9 +1704,9 @@ NIL
 
 BUTTON
 5
-320
+375
 150
-353
+408
 Do: Herd Cows
 NIL
 NIL
@@ -1713,9 +1718,9 @@ NIL
 
 BUTTON
 5
-250
+305
 150
-283
+338
 Do: Inspect Fences
 NIL
 NIL
@@ -1727,9 +1732,9 @@ NIL
 
 BUTTON
 155
-285
+340
 300
-318
+373
 Do: Sow Grass ($500)
 NIL
 NIL
@@ -1741,9 +1746,9 @@ NIL
 
 PLOT
 710
-145
+200
 1090
-295
+350
 Plot 1
 milk-production
 NIL
@@ -1758,9 +1763,9 @@ PENS
 
 BUTTON
 155
-110
+165
 300
-143
+198
 Say: Survey Grass
 NIL
 NIL
@@ -1772,9 +1777,9 @@ NIL
 
 BUTTON
 155
-250
+305
 300
-283
+338
 Do: Survey Grass
 NIL
 NIL
