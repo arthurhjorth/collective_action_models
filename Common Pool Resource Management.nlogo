@@ -75,8 +75,8 @@ patches-own[
 
 to run-a-week
   ;; only run the week if everybody has decided what to do
-  let undecided farmers with [will-do = undecided or say-will-do = undecided]
-  if any? undecided [show (word [user-id] of undecided " still undecided.") stop]
+  let undecided-farmers farmers with [will-do = undecided or say-will-do = undecided]
+  if any? undecided-farmers [show (word [user-id] of undecided " still undecided.") stop]
 
   hubnet-broadcast-message (word "Week " ticks " starting!")
   ;; clear who was seen this week
