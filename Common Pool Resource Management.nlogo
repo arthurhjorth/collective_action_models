@@ -437,14 +437,17 @@ to add-farmer [message-source]
   wait .05
   set farmer-list item 0 sort hubnet-clients-list
   create-farmers 1 [
+    move-to one-of grass-patches
+    set shape "person"
     set user-id message-source
-    ht
     set money cow-price * 3
     set color one-of base-colors
     set milk-production-list []
     reset-farmer
     update-client-info
     hubnet-send message-source "Action" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
+    hubnet-send-watch message-source one-of farmers with [user-id = message-source]
+    display
   ]
   scale-vars-for-n-players
 end
@@ -621,7 +624,7 @@ to make-cow
      set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st display
      ]
   update-client-info
-  hubnet-send-override user-id my-cows "color" [blue] hubnet-send-override user-id my-cows "size" [2] 
+  hubnet-send-override user-id my-cows "color" [[color] of myself] hubnet-send-override user-id my-cows "size" [2] 
 end
 
 to-report gini-points
@@ -787,7 +790,7 @@ to-report undecided
   report "Undecided"
 end
 
-to send-townhall-meeting-message
+to send-town-hall-meeting-message
   hubnet-send hubnet-clients-list  "Action" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
 end
 @#$#@#$#@
@@ -1092,7 +1095,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 1" "Local 2"
+"Local 8"
 0
 
 BUTTON
