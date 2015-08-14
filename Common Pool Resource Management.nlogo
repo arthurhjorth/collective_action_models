@@ -1,4 +1,4 @@
-extensions [table cf goo gradient]
+extensions [table cf goo gradient color-generator ]
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -767,8 +767,8 @@ end
 to-report union [ts1 ts2]
   show (list count ts1 ts2)
   report (turtle-set ts1 ts2)
-end
-
+end 
+ 
 
 to-report fence-fixers
   report farmers with [will-do = "Do: Repair Fences ($500)"]
@@ -792,6 +792,10 @@ end
 
 to send-town-hall-meeting-message
   hubnet-send hubnet-clients-list  "Action" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
+end
+
+to set-color-from-hsb-list [alist]
+  set color hsb item 0 alist item 1 alist item 2 alist
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -1095,7 +1099,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 8"
+"Local 1" "Local 2" "Local 3" "Local 4"
 0
 
 BUTTON
