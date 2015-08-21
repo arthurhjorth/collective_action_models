@@ -254,7 +254,7 @@ to survey-grass
 end
 
 to metabolize-and-maybe-die
-  set energy energy - (cows-metabolize-week / 7) ;; 15 is a magic number. it just sort of seems to work
+  set energy energy - (cows-metabolize-week / 15) ;; 15 is a magic number. it just sort of seems to work
   if energy < 0 [
     hubnet-send-message [user-id] of owner "One of your cows starved to death!"
     die
@@ -413,6 +413,8 @@ to scale-vars-for-n-players
   set average-cows-per-player 8
   ;; interestingly, it can only sustain around 3.5 per player with this.  I'll try to increase it
   set grass-regrow ( no-of-farmers * average-cows-per-player * cows-metabolize-week) / (2 * count patches with [not any? fences-here]) ;; 2 is a magic number here. it just works ;; the amount that grass grows back
+  ;; ah: grass regrow is still too high. going to take it down a bit
+  set grass-regrow grass-regrow / 4
 
   ;; there are 128 fences, each with 100 points of durability
   ;; we should scale how many points they get to fix them with, rather than the durability decline. in the case of the former
@@ -609,6 +611,7 @@ to-report get-plot-list [plot-list-description]
     cf:= "Money in Bank" [money-in-the-bank]
     cf:= "Actual grass" [actual-grass-amounts]
     cf:= "Actual state of fences" [actual-fence-states]
+    cf:= "Number of Cows" [count-cows-history]
     )
 end
 
@@ -960,8 +963,8 @@ CHOOSER
 75
 plot-value
 plot-value
-"Known grass amount" "Known state of fences" "Total Milk Production" "Money in Bank" "Actual grass" "Actual state of fences"
-4
+"Known grass amount" "Known state of fences" "Total Milk Production" "Number of Cows" "Money in Bank" "Actual grass" "Actual state of fences"
+3
 
 PLOT
 875
@@ -1143,7 +1146,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 11" "Local 12" "Local 13" "Local 14" "Local 15" "Local 16" "Local 17" "Local 18" "Local 19" "Local 20"
+"Local 21" "Local 22" "Local 23" "Local 24" "Local 25" "Local 26" "Local 27" "Local 28" "Local 29" "Local 30" "Local 31" "Local 32" "Local 33" "Local 34" "Local 35" "Local 36" "Local 37" "Local 38" "Local 39" "Local 40" "Local 41" "Local 42" "Local 43" "Local 44" "Local 45"
 0
 
 BUTTON
