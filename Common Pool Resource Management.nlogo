@@ -43,6 +43,10 @@ globals [
   ;; maybe log:
   ;; standard deviation of milk production of farmers
   
+  ;; for setting up quickly
+  do-options
+  say-options
+  
 ]
 
 cows-own
@@ -61,6 +65,10 @@ farmers-own
   say-will-do
   will-do  ;; will they defect today
   money
+  
+  is-bot? ;; is this a bot?
+  
+  money-to-bank ;;
 ]
 
 fences-own [
@@ -82,8 +90,7 @@ to run-a-week
   ;; clear who was seen this week
   set seen-this-week (turtle-set)
 
-  ;;adding --> cows are all brown in the upfront space, all blue to the player.
-  color-student-cows 
+
   ;; we can figure out how to do the visualization later. But here are the options:
   ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
   ;; so that they can catch defectors. 
@@ -117,7 +124,7 @@ to run-a-week
   ]
   log-weekly
   reset-weekly-vars
-  hubnet-send-message "Action" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
+  hubnet-send-message "Status" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
 
 end
 
@@ -128,7 +135,7 @@ end
 
 to reset-weekly-vars
   ask farmers [set will-do undecided set say-will-do undecided]
-  hubnet-broadcast "Action" "Choose what to say and do this week."
+  hubnet-broadcast "Status" "Choose what to say and do this week."
   set seen-this-week (turtle-set)
 end
 
@@ -230,9 +237,6 @@ to-report  present-tense-action
 end
 
 
-to color-student-cows
-  ask farmers [ hubnet-send-override user-id my-cows "color" [blue] hubnet-send-override user-id my-cows "size" [2] ]
-end
 
 to sow-grass ;; sowing grass let's grass 
              ;; NB: THIS MIGHT NEED TWEAKING
@@ -250,7 +254,7 @@ to survey-grass
 end
 
 to metabolize-and-maybe-die
-  set energy energy - (cows-metabolize-week / 15) ;; 15 is a magic number. it just sort of seems to work
+  set energy energy - (cows-metabolize-week / 7) ;; 15 is a magic number. it just sort of seems to work
   if energy < 0 [
     hubnet-send-message [user-id] of owner "One of your cows starved to death!"
     die
@@ -259,7 +263,7 @@ end
 
 to sell-milk
   let total-production [energy] of my-cows
-  let profit sum total-production
+  let profit round sum total-production
   set money money + profit
   set milk-production-list lput profit milk-production-list
 end
@@ -341,7 +345,7 @@ end
 
 
 to go
-  hubnet-broadcast "Action" "Choose what to do this week!"
+  hubnet-broadcast "Status" "Choose what to do this week!"
 end
 
 
@@ -372,15 +376,19 @@ to setup-globals
   set  money-in-the-bank  (list)
   set count-cows-history (list) 
   set seen-this-week (turtle-set)
+  set common-pool-bank 500
   scale-vars-for-n-players
   set fence-fixing-cost 500
   set seed-cost 500
   set cow-price 1500
+  set do-options (list "Do: Herd Cows" "Do: Repair Fences ($500)" "Do: Inspect Fences" "Do: Sow Grass ($500)" "Do: Survey Grass" )
+  set say-options (list "Say: Herd Cows" "Say: Repair Fences ($500)" "Say: Inspect Fences" "Say: Sow Grass ($500)" "Say: Survey Grass" )
+
 end
 
 
 to scale-vars-for-n-players
-  let no-of-farmers length hubnet-clients-list
+  let no-of-farmers count farmers
     ;; extra food that cows will try to eat if they are being shepherded
   set shepherd-bonus .2
   ;; 961 patches with grass growing on it.
@@ -421,13 +429,15 @@ end
 
 
 to listen-to-clients
-  while [ hubnet-message-waiting? ]
-  [
-    hubnet-fetch-message
-    (cf:cond
-     cf:case [ hubnet-enter-message? ] [ add-farmer hubnet-message-source ]
-     cf:case [hubnet-exit-message?] [kill-farmer hubnet-message-source]
-     cf:else [ do-command hubnet-message-source hubnet-message-tag])
+  every .1 [
+    while [hubnet-message-waiting?]
+    [
+      hubnet-fetch-message
+      (cf:cond
+        cf:case [ hubnet-enter-message? ] [ add-farmer hubnet-message-source ]
+      cf:case [hubnet-exit-message?] [kill-farmer hubnet-message-source]
+      cf:else [ do-command hubnet-message-source hubnet-message-tag])
+    ]
   ]
 end
 
@@ -437,6 +447,7 @@ to add-farmer [message-source]
   wait .05
   set farmer-list item 0 sort hubnet-clients-list
   create-farmers 1 [
+    set is-bot? false
     move-to one-of grass-patches
     set shape "person"
     set user-id message-source
@@ -444,12 +455,14 @@ to add-farmer [message-source]
     set color one-of base-colors
     set milk-production-list []
     reset-farmer
+    set money-to-bank 20 ;; this is what it inits to in the client view
     update-client-info
-    hubnet-send message-source "Action" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
+    hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
     hubnet-send-watch message-source one-of farmers with [user-id = message-source]
     display
   ]
   scale-vars-for-n-players
+
 end
 
 to kill-farmer [message-source]
@@ -463,7 +476,7 @@ to do-command [source tag]
     ;; ifelse/case here for different kinds
     (cf:cond 
       cf:case [member? "Say:" tag] [
-        hubnet-send source "Action" (word "You " tag)
+        hubnet-send source "Status" (word "You " tag)
         set say-will-do tag 
         print-who-says-what
         ]
@@ -471,31 +484,39 @@ to do-command [source tag]
       ;; only set this if they can afford it. Otherwise tell them they can't afford it.
       ifelse can-afford-action? tag
         [
-          hubnet-send source "Action" (word "You will " tag )
+          hubnet-send source "Status" (word "You will " tag )
           set will-do tag print-who-says-what
         ]
         [
-;          set will-do 0;; AH: I'm not sure why this is set here. it should just not be changed, right
-          hubnet-send source "Action" (word "You can't afford " tag)
+          hubnet-send source "Status" (word "You can't afford " tag)
         ]
     ]
     cf:case [tag = "Buy Cow ($1500)"][
       buy-cow
     ]
+    cf:case [tag = "money-to-shared-bank"]
+    [
+      ask farmers with [user-id = source] [set money-to-bank hubnet-message]
+    ]
+    cf:case [tag = "Donate"][
+      ask farmers with [user-id = source] [
+      donate-to-common-$  money-to-bank
+      ]
+    ]
     cf:else [ set update-client-display false ]
     )
     ;; tell them if they still need to make a decision
     if will-do = undecided and say-will-do = undecided [
-    hubnet-send source "Action" "Decide what to say and do this week."      
+    hubnet-send source "Status" "Decide what to say and do this week."      
     ]
     if will-do != undecided and say-will-do = undecided [
-    hubnet-send source "Action" "Decide on what you say you will do."      
+    hubnet-send source "Status" "Decide on what you say you will do."      
     ]
     if will-do = undecided and say-will-do != undecided [
-    hubnet-send source "Action" "Decide on what you will actually do."      
+    hubnet-send source "Status" "Decide on what you will actually do."      
     ]
     if will-do != undecided and say-will-do != undecided [
-    hubnet-send source "Action" "You are ready for this week."            
+    hubnet-send source "Status" "You are ready for this week."
     ]
 
   ]
@@ -508,7 +529,7 @@ to buy-cow
     make-cow
     ]
   [
-    hubnet-send user-id "Action" "You can't afford a cow yet."
+    hubnet-send user-id "Status" "You can't afford a cow yet."
   ]
   
 end
@@ -533,8 +554,8 @@ to print-who-says-what
 end
 
 to reset-farmer
-  set say-will-do 0
-  set will-do 0
+  set say-will-do undecided
+  set will-do undecided
 end
 
 to grow-grass [grow-amount]
@@ -566,11 +587,15 @@ to show-in-plot [plot-no]
   set-current-plot (word "Plot " plot-no)
   clear-plot
   let the-list get-plot-list plot-value
-  if length the-list = 0 [stop]
+  if length the-list = 0 or sum the-list = 0 [stop]
+  set-plot-x-range 0 length the-list
+  set-plot-y-range 0 precision ((max the-list) * 1.1) 0
   create-temporary-plot-pen plot-value
-  foreach n-values (length the-list - 1) [?][
-    plotxy ? item ? the-list
+  plotxy 0 0 
+  foreach the-list [
+    plot ?
   ]
+  update-plots
 end
 
 
@@ -593,6 +618,7 @@ to fine-them
     ifelse money >= $-amount [
       set money money - $-amount
       set common-pool-bank common-pool-bank + $-amount
+      hubnet-send user-id "$" money      
     ]
     [
       show (word user-id " does not have $ " $-amount "!")
@@ -600,16 +626,28 @@ to fine-them
   ]
 end
 
-to donate-$
-  let the-farmer one-of farmers with [user-id = farmer-list]
-  ifelse common-pool-bank > $-amount [
-  ask the-farmer [
-   set money money + $-amount
-  ]
-  set common-pool-bank common-pool-bank - $-amount
+to donate-to-common-$ [$-to-donate]
+  show "trying to donate"
+  ifelse money >= $-to-donate [
+    set money money - $-to-donate
+    set common-pool-bank common-pool-bank + $-to-donate 
+    hubnet-send user-id "$" money
   ]
   [
-    show (word "You don't have $" $-amount " in your bank!")
+    hubnet-send-message user-id (word "You don't have $" $-to-donate " in your bank!")
+  ]
+end
+
+to give-$-to-farmer 
+  ifelse common-pool-bank >= $-amount [
+    ask farmers with [user-id = farmer-list] [
+      set money money + $-amount
+      set common-pool-bank common-pool-bank - $-amount
+      hubnet-send user-id "$" money    
+    ]
+  ]
+  [
+    show "The common pool bank doesn't have that much money!"
   ]
 end
 
@@ -617,6 +655,8 @@ end
 to update-client-info 
    hubnet-send user-id "$" money
    hubnet-send user-id "# of Cows" (count my-cows)
+   hubnet-send-override user-id my-cows "color" [red] 
+   hubnet-send-override user-id my-cows "size" [2] 
 end
 
 to make-cow
@@ -624,7 +664,6 @@ to make-cow
      set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st display
      ]
   update-client-info
-  hubnet-send-override user-id my-cows "color" [[color] of myself] hubnet-send-override user-id my-cows "size" [2] 
 end
 
 to-report gini-points
@@ -765,9 +804,14 @@ end
 
 
 to-report union [ts1 ts2]
-  show (list count ts1 ts2)
   report (turtle-set ts1 ts2)
 end 
+
+
+to create-bot
+  create-farmers 1 [
+  ]
+end
  
 
 to-report fence-fixers
@@ -791,7 +835,7 @@ to-report undecided
 end
 
 to send-town-hall-meeting-message
-  hubnet-send hubnet-clients-list  "Action" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
+  hubnet-send hubnet-clients-list  "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
 end
 
 to set-color-from-hsb-list [alist]
@@ -807,7 +851,7 @@ GRAPHICS-WINDOW
 16
 13.0
 1
-10
+8
 1
 1
 1
@@ -835,7 +879,7 @@ OUTPUT
 BUTTON
 10
 10
-142
+135
 43
 NIL
 listen-to-clients
@@ -903,7 +947,7 @@ $-amount
 $-amount
 0
 1000
-20
+150
 10
 1
 $
@@ -917,7 +961,7 @@ CHOOSER
 plot-value
 plot-value
 "Known grass amount" "Known state of fences" "Total Milk Production" "Money in Bank" "Actual grass" "Actual state of fences"
-1
+4
 
 PLOT
 875
@@ -1026,8 +1070,8 @@ BUTTON
 500
 1125
 535
-NIL
-donate-$
+Give to farmer
+give-$-to-farmer
 NIL
 1
 T
@@ -1095,11 +1139,11 @@ NIL
 CHOOSER
 875
 535
-1130
+1125
 580
 farmer-list
 farmer-list
-"Local 1" "Local 2" "Local 3" "Local 4"
+"Local 11" "Local 12" "Local 13" "Local 14" "Local 15" "Local 16" "Local 17" "Local 18" "Local 19" "Local 20"
 0
 
 BUTTON
@@ -1143,6 +1187,23 @@ BUTTON
 400
 How many did what and when?
 show-how-many-did-what-when
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+10
+190
+132
+223
+run a test week
+ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
 NIL
 1
 T
@@ -1515,10 +1576,10 @@ NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 BUTTON
-5
-200
-150
-233
+15
+120
+160
+153
 Say: Repair Fences ($500)
 NIL
 NIL
@@ -1529,10 +1590,10 @@ NIL
 NIL
 
 BUTTON
-5
-235
-150
-268
+15
+155
+160
+188
 Say: Herd Cows
 NIL
 NIL
@@ -1543,10 +1604,10 @@ NIL
 NIL
 
 BUTTON
-5
-165
-150
-198
+15
+85
+160
+118
 Say: Inspect Fences
 NIL
 NIL
@@ -1557,30 +1618,30 @@ NIL
 NIL
 
 MONITOR
-710
-375
 820
-424
+240
+930
+289
 # of Cows
 NIL
 0
 1
 
 MONITOR
-830
-375
-950
-424
+940
+240
+1060
+289
 $
 NIL
 0
 1
 
 BUTTON
-955
-375
-1087
-421
+1065
+240
+1197
+286
 Buy Cow ($1500)
 NIL
 NIL
@@ -1591,10 +1652,10 @@ NIL
 NIL
 
 VIEW
-305
+315
 65
-705
-465
+815
+565
 0
 0
 0
@@ -1613,50 +1674,50 @@ VIEW
 16
 
 MONITOR
+15
 10
-10
-1090
+1200
 59
-Action
+Status
 NIL
 0
 1
 
 TEXTBOX
-5
-140
-200
-158
+15
+60
+210
+78
 What you say you will do
 15
 0.0
 1
 
 TEXTBOX
-5
-280
-165
-298
+15
+200
+175
+218
 What you actually do.
 15
 0.0
 1
 
 TEXTBOX
-710
-355
-860
-373
+820
+220
+970
+238
 Click here to buy cows
 11
 0.0
 1
 
 SLIDER
-710
-430
-950
-463
+820
+295
+1060
+328
 money-to-shared-bank
 money-to-shared-bank
 0
@@ -1668,10 +1729,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-955
-430
-1085
-463
+1065
+295
+1195
+328
 Donate
 NIL
 NIL
@@ -1682,10 +1743,10 @@ NIL
 NIL
 
 BUTTON
-155
-200
-300
-233
+165
+120
+310
+153
 Say: Sow Grass ($500)
 NIL
 NIL
@@ -1696,10 +1757,10 @@ NIL
 NIL
 
 BUTTON
-5
-340
-150
-373
+15
+260
+160
+293
 Do: Repair Fences ($500)
 NIL
 NIL
@@ -1710,10 +1771,10 @@ NIL
 NIL
 
 BUTTON
-5
-375
-150
-408
+15
+295
+160
+328
 Do: Herd Cows
 NIL
 NIL
@@ -1724,10 +1785,10 @@ NIL
 NIL
 
 BUTTON
-5
-305
-150
-338
+15
+225
+160
+258
 Do: Inspect Fences
 NIL
 NIL
@@ -1738,10 +1799,10 @@ NIL
 NIL
 
 BUTTON
-155
-340
-300
-373
+165
+260
+310
+293
 Do: Sow Grass ($500)
 NIL
 NIL
@@ -1752,10 +1813,10 @@ NIL
 NIL
 
 PLOT
-710
-200
-1090
-350
+820
+65
+1200
+215
 Plot 1
 milk-production
 NIL
@@ -1769,10 +1830,10 @@ true
 PENS
 
 BUTTON
-155
 165
-300
-198
+85
+310
+118
 Say: Survey Grass
 NIL
 NIL
@@ -1783,10 +1844,10 @@ NIL
 NIL
 
 BUTTON
-155
-305
-300
-338
+165
+225
+310
+258
 Do: Survey Grass
 NIL
 NIL
