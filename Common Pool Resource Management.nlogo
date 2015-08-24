@@ -778,11 +778,14 @@ end
 to show-how-many-did-what-when
   set-current-plot "Plot 2"
   clear-plot
+  let the-colors base-colors
   foreach how-many-did-what-when-in farmer-actions [
     create-temporary-plot-pen first ?
+    set-plot-pen-color first the-colors
     foreach last ? [
       plot ?
     ]
+    set the-colors remove first the-colors the-colors
   ]
 end
 
