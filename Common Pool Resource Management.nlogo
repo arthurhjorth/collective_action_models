@@ -121,6 +121,8 @@ to run-a-week
   ]
   update-fence-labels
   log-weekly
+  show [user-id] of seen-this-week
+  
   reset-weekly-vars
   hubnet-send-message "Status" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
 
@@ -768,11 +770,12 @@ to show-how-many-did-what-when
   ]
 end
 
-to show-who-was-seen-this-week
+to show-who-was-seen-this-week 
+  ;; this had a bug that showed all farmers who were doing something, and not just the ones who are doing something AND were seen doing it
   output-print (word "For week " ticks)
   output-print "People who were observed this week:"
   foreach remove-duplicates sort [will-do] of seen-this-week [
-    let farmers-who-did-this farmers with [will-do = ?]
+    let farmers-who-did-this farmers with [will-do = ? and member? self seen-this-week]
     output-print (word ? ": " count farmers-who-did-this)
     output-print reduce [(word ?1 ", " ?2)] [user-id] of farmers-who-did-this
   ]   
