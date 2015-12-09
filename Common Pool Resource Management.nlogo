@@ -33,10 +33,8 @@ globals [
   seen-this-week
 
   ;; some plotting lists
-  known-grass-amounts
   actual-grass-amounts
   total-milk-production
-  known-fence-states
   actual-fence-states
   money-in-the-bank
   count-cows-history
@@ -77,7 +75,6 @@ fences-own [
 
 patches-own[
   grass
-  known-grass
   water
 ]
 
@@ -122,6 +119,7 @@ to run-a-week
     log-player-action "say" say-will-do
     log-player-action "do" will-do
   ]
+  update-fence-labels
   log-weekly
   reset-weekly-vars
   hubnet-send-message "Status" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
@@ -141,10 +139,8 @@ end
 
 
 to log-weekly
-set  known-grass-amounts lput sum [known-grass] of grass-patches known-grass-amounts
 set actual-grass-amounts lput sum [grass] of grass-patches actual-grass-amounts
 set  total-milk-production lput sum [last milk-production-list] of farmers total-milk-production
-set  known-fence-states lput sum [ label] of fences known-fence-states
 set actual-fence-states lput sum [durability] of fences actual-fence-states
 set  money-in-the-bank lput common-pool-bank money-in-the-bank
 set count-cows-history lput count cows count-cows-history
@@ -164,15 +160,15 @@ to do-weekly-action
       set people-i-met union people-i-met meet-grass-sowers-with-probability 5
       set people-i-met union people-i-met meet-fence-inspectors-with-probability 100
     ]
-    cf:= "Do: Inspect Fences" 
-    [
-      inspect-fences
-      set people-i-met union people-i-met meet-fence-fixers-with-probability 20
-      set people-i-met union people-i-met meet-cow-herders-with-probability 5
-      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
-      set people-i-met union people-i-met meet-grass-sowers-with-probability 10
-      set people-i-met union people-i-met meet-fence-inspectors-with-probability 50      
-    ]
+;    cf:= "Do: Inspect Fences" 
+;    [
+;      inspect-fences
+;      set people-i-met union people-i-met meet-fence-fixers-with-probability 20
+;      set people-i-met union people-i-met meet-cow-herders-with-probability 5
+;      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
+;      set people-i-met union people-i-met meet-grass-sowers-with-probability 10
+;      set people-i-met union people-i-met meet-fence-inspectors-with-probability 50      
+;    ]
     cf:= "Do: Sow Grass ($500)" 
     [
       sow-grass
@@ -182,24 +178,15 @@ to do-weekly-action
       set people-i-met union people-i-met meet-grass-sowers-with-probability 25
       set people-i-met union people-i-met meet-fence-inspectors-with-probability 10      
     ]
-    cf:= "Do: Survey Grass" 
-    [
-      survey-grass
-      set people-i-met union people-i-met meet-fence-fixers-with-probability 10
-      set people-i-met union people-i-met meet-cow-herders-with-probability 50
-      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
-      set people-i-met union people-i-met meet-grass-sowers-with-probability 25
-      set people-i-met union people-i-met meet-fence-inspectors-with-probability 20      
-    ]
-    cf:= "Do: Herd Cows" 
-    [
-      survey-grass
-      set people-i-met union people-i-met meet-fence-fixers-with-probability 10
-      set people-i-met union people-i-met meet-cow-herders-with-probability 10
-      set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
-      set people-i-met union people-i-met meet-grass-sowers-with-probability 20
-      set people-i-met union people-i-met meet-fence-inspectors-with-probability 5
-    ]
+;    cf:= "Do: Herd Cows" 
+;    [
+;      survey-grass
+;      set people-i-met union people-i-met meet-fence-fixers-with-probability 10
+;      set people-i-met union people-i-met meet-cow-herders-with-probability 10
+;      set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
+;      set people-i-met union people-i-met meet-grass-sowers-with-probability 20
+;      set people-i-met union people-i-met meet-fence-inspectors-with-probability 5
+;    ]
     cf:else []
     )
   show (word "people I met " count people-i-met)
@@ -248,13 +235,6 @@ to sow-grass ;; sowing grass let's grass
 
 end
 
-to survey-grass
-  ;; NB: this might need tweaking
-  ask n-of (count patches / 2) patches [set known-grass grass]
-
-
-end
-
 to metabolize-and-maybe-die
   set energy energy - (cows-metabolize-week / 15) ;; 15 is a magic number. it just sort of seems to work
   if energy < 0 [
@@ -264,7 +244,9 @@ to metabolize-and-maybe-die
 end
 
 to sell-milk
-  let total-production [energy] of my-cows
+  ;; this is a bit silly but only take energy from cows that are alive. we kill off the ones that are about to die
+  ;; later.
+  let total-production [energy] of my-cows with [energy > 0]
   let profit round sum total-production
   set money money + profit
   set milk-production-list lput profit milk-production-list
@@ -283,29 +265,24 @@ to fix-fences
   set money money - fence-fixing-cost
 end
 
-to inspect-fences
+to update-fence-labels
   ask fences [set label durability]
 end
 
 to-report meet-fence-fixers-with-probability [%-prob]
   report fence-fixers with [random 100 < %-prob]
-;  ask fence-fixers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
 to-report meet-grass-sowers-with-probability [%-prob]
   report grass-sowers with [random 100 < %-prob]
-;  ask grass-sowers [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
 to-report meet-cow-herders-with-probability [%-prob]
   report cow-herders with [random 100 < %-prob]
-  ask cow-herders [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
 to-report meet-grass-surveyors-with-probability [%-prob]
   report grass-surveyors with [random 100 < %-prob]
-;  ask grass-surveyors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
 to-report meet-fence-inspectors-with-probability [%-prob]
   report fence-inspectors with [random 100 < %-prob]
-;  ask fence-inspectors [if random 100 < %-prob [set seen-this-week (turtle-set seen-this-week self)]]
 end
 
   
@@ -357,23 +334,19 @@ to setup-world
   set grass-patches patches with [not member? self edge-patches]
   ask grass-patches [
     set grass random-float max-grass
-    set known-grass grass
     recolor-grass]
   ask fences [die]
   ask edge-patches [
     sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50 set label durability] 
     set grass 0
-    set known-grass max-grass
     set pcolor green
     ]
 end  
 
 to setup-globals
   set farmer-actions (list)
-  set  known-grass-amounts (list)
   set actual-grass-amounts (list)
   set  total-milk-production (list)
-  set  known-fence-states (list)
   set actual-fence-states (list)
   set  money-in-the-bank  (list)
   set count-cows-history (list) 
@@ -383,8 +356,8 @@ to setup-globals
   set fence-fixing-cost 500
   set seed-cost 500
   set cow-price 1500
-  set do-options (list "Do: Herd Cows" "Do: Repair Fences ($500)" "Do: Inspect Fences" "Do: Sow Grass ($500)" "Do: Survey Grass" )
-  set say-options (list "Say: Herd Cows" "Say: Repair Fences ($500)" "Say: Inspect Fences" "Say: Sow Grass ($500)" "Say: Survey Grass" )
+  set do-options (list "Do: Herd Cows" "Do: Repair Fences ($500)" "Do: Sow Grass ($500)" )
+  set say-options (list "Say: Herd Cows" "Say: Repair Fences ($500)" "Say: Sow Grass ($500)" )
 
 end
 
@@ -425,8 +398,8 @@ to scale-vars-for-n-players
   ;; 128 * 12.5 = 1600.
   ;; we want one fifth of players fixing fences all the time, so
   ;; if no one has logged in, don't do this or we get division by zero
-  if length hubnet-clients-list > 0 [
-    set fence-fix-points (1600 * 5) / length hubnet-clients-list
+  if count farmers  > 0 [
+    set fence-fix-points (1600 * 5) / count farmers
   ]
   
 end
@@ -438,20 +411,17 @@ to listen-to-clients
     [
       hubnet-fetch-message
       (cf:cond
-        cf:case [ hubnet-enter-message? ] [ add-farmer hubnet-message-source ]
+        cf:case [ hubnet-enter-message? ] [ add-farmer hubnet-message-source false ]
       cf:case [hubnet-exit-message?] [kill-farmer hubnet-message-source]
       cf:else [ do-command hubnet-message-source hubnet-message-tag])
     ]
   ]
 end
 
-to add-farmer [message-source]
-  wait .05
-  goo:set-chooser-items "farmer-list" sort hubnet-clients-list
-  wait .05
-  set farmer-list item 0 sort hubnet-clients-list
+to add-farmer [message-source bot?]
+
   create-farmers 1 [
-    set is-bot? false
+    set is-bot? bot?
     move-to one-of grass-patches
     set shape "person"
     set user-id message-source
@@ -460,11 +430,20 @@ to add-farmer [message-source]
     set milk-production-list []
     reset-farmer
     set money-to-bank 20 ;; this is what it inits to in the client view
-    update-client-info
-    hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
-    hubnet-send-watch message-source one-of farmers with [user-id = message-source]
+    if not is-bot?[
+      update-client-info
+      hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
+      hubnet-send-watch message-source one-of farmers with [user-id = message-source]
+    ]
     display
+
   ]
+  
+  wait .05
+  goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
+  wait .05
+  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list  
+  
   scale-vars-for-n-players
 
 end
@@ -607,12 +586,10 @@ end
 to-report get-plot-list [plot-list-description]
   report (
     cf:match-value plot-list-description
-    cf:= "Known grass amount" [known-grass-amounts]
-    cf:= "Known state of fences" [known-fence-states]
     cf:= "Total Milk Production" [total-milk-production]
     cf:= "Money in Bank" [money-in-the-bank]
-    cf:= "Actual grass" [actual-grass-amounts]
-    cf:= "Actual state of fences" [actual-fence-states]
+    cf:= "Grass Amount" [actual-grass-amounts]
+    cf:= "State of Fences" [actual-fence-states]
     cf:= "Number of Cows" [count-cows-history]
     )
 end
@@ -794,7 +771,7 @@ end
 to show-who-was-seen-this-week
   output-print (word "For week " ticks)
   output-print "People who were observed this week:"
-  foreach sort [will-do] of seen-this-week [
+  foreach remove-duplicates sort [will-do] of seen-this-week [
     let farmers-who-did-this farmers with [will-do = ?]
     output-print (word ? ": " count farmers-who-did-this)
     output-print reduce [(word ?1 ", " ?2)] [user-id] of farmers-who-did-this
@@ -850,6 +827,11 @@ end
 
 to set-color-from-hsb-list [alist]
   set color hsb item 0 alist item 1 alist item 2 alist
+end
+
+
+to export-data
+  
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -970,8 +952,8 @@ CHOOSER
 75
 plot-value
 plot-value
-"Known grass amount" "Known state of fences" "Total Milk Production" "Number of Cows" "Money in Bank" "Actual grass" "Actual state of fences"
-3
+"Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences"
+0
 
 PLOT
 875
@@ -1153,7 +1135,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 10" "Local 11" "Local 12" "Local 7" "Local 8" "Local 9" "corey"
+"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9"
 0
 
 BUTTON
@@ -1214,6 +1196,23 @@ BUTTON
 223
 run a test week
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+20
+240
+105
+273
+setup test run
+setup\nforeach n-values 25 [?]  [\nadd-farmer (word ?) true\n]\nask farmers [repeat 2 [buy-cow]]
 NIL
 1
 T
@@ -1587,9 +1586,9 @@ NetLogo 5.2.0
 @#$#@#$#@
 BUTTON
 15
-120
+85
 160
-153
+118
 Say: Repair Fences ($500)
 NIL
 NIL
@@ -1601,24 +1600,10 @@ NIL
 
 BUTTON
 15
-155
+120
 160
-188
+153
 Say: Herd Cows
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-
-BUTTON
-15
-85
-160
-118
-Say: Inspect Fences
 NIL
 NIL
 1
@@ -1705,9 +1690,9 @@ What you say you will do
 
 TEXTBOX
 15
-200
+160
 175
-218
+178
 What you actually do.
 15
 0.0
@@ -1754,9 +1739,9 @@ NIL
 
 BUTTON
 165
-120
+85
 310
-153
+118
 Say: Sow Grass ($500)
 NIL
 NIL
@@ -1768,9 +1753,9 @@ NIL
 
 BUTTON
 15
-260
+185
 160
-293
+218
 Do: Repair Fences ($500)
 NIL
 NIL
@@ -1782,9 +1767,9 @@ NIL
 
 BUTTON
 15
-295
+220
 160
-328
+253
 Do: Herd Cows
 NIL
 NIL
@@ -1795,24 +1780,10 @@ NIL
 NIL
 
 BUTTON
-15
-225
-160
-258
-Do: Inspect Fences
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-
-BUTTON
 165
-260
+185
 310
-293
+218
 Do: Sow Grass ($500)
 NIL
 NIL
@@ -1838,34 +1809,6 @@ true
 true
 "" ""
 PENS
-
-BUTTON
-165
-85
-310
-118
-Say: Survey Grass
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-
-BUTTON
-165
-225
-310
-258
-Do: Survey Grass
-NIL
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
 
 @#$#@#$#@
 default
