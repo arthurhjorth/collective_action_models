@@ -202,8 +202,10 @@ to do-weekly-action
     ]
     cf:else []
     )
+  show (word "people I met " count people-i-met)
   ;; remove self from people I met
   set people-i-met other people-i-met
+  set seen-this-week (turtle-set seen-this-week people-i-met)
   show-who-i-met people-i-met
 end
 
@@ -543,7 +545,7 @@ end
 to show-who-says [astring] 
   let the-users sort [user-id] of farmers with [say-will-do = astring]
     output-print (word astring " (" length the-users ")")
-    output-print ifelse-value (length the-users > 0) [the-users] ["Nobody"]
+    output-print ifelse-value (length the-users > 0) [people-names the-users] ["Nobody"]
 end
 
 to print-who-says-what
@@ -790,6 +792,7 @@ to show-how-many-did-what-when
 end
 
 to show-who-was-seen-this-week
+  output-print (word "For week " ticks)
   output-print "People who were observed this week:"
   foreach sort [will-do] of seen-this-week [
     let farmers-who-did-this farmers with [will-do = ?]
@@ -800,6 +803,7 @@ to show-who-was-seen-this-week
     output-print "Famers not seen by anyone this week:"
     output-print reduce [(word ?1 ", " ?2)] [user-id] of farmers with [not member? self seen-this-week]
   ] 
+  output-print ""
 end
 
 to-report names-to-string-of [an-agentset]
@@ -880,7 +884,7 @@ OUTPUT
 10
 870
 470
-12
+15
 
 BUTTON
 10
@@ -953,7 +957,7 @@ $-amount
 $-amount
 0
 1000
-150
+290
 10
 1
 $
@@ -1149,7 +1153,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"Local 21" "Local 22" "Local 23" "Local 24" "Local 25" "Local 26" "Local 27" "Local 28" "Local 29" "Local 30" "Local 31" "Local 32" "Local 33" "Local 34" "Local 35" "Local 36" "Local 37" "Local 38" "Local 39" "Local 40" "Local 41" "Local 42" "Local 43" "Local 44" "Local 45"
+"Local 10" "Local 11" "Local 12" "Local 7" "Local 8" "Local 9" "corey"
 0
 
 BUTTON
