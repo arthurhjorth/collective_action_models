@@ -45,6 +45,15 @@ globals [
   do-options
   say-options
   
+  ;; logs
+  who-herded
+  who-monitored
+  who-repaired
+  who-sowed
+  who-said-herded
+  who-said-monitored
+  who-said-repaired
+  who-said-sowed
 ]
 
 cows-own
@@ -121,15 +130,15 @@ to run-a-week
   ]
   update-fence-labels
   log-weekly
-  show [user-id] of seen-this-week
   
   reset-weekly-vars
+  update-plots
   hubnet-send-message "Status" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
 
 end
 
 to deteriorate
-  set durability durability - random 25
+  set durability round (durability - random 25)
   if durability < 0 [set durability 0]
 end
 
@@ -146,6 +155,15 @@ set  total-milk-production lput sum [last milk-production-list] of farmers total
 set actual-fence-states lput sum [durability] of fences actual-fence-states
 set  money-in-the-bank lput common-pool-bank money-in-the-bank
 set count-cows-history lput count cows count-cows-history
+set who-monitored lput farmers with [will-do = "Do: Monitor Peers"] who-monitored
+set who-herded lput farmers with [will-do = "Do: Herd Cows"] who-herded
+set who-repaired lput farmers with [will-do = "Do: Repair Fences"] who-repaired
+set who-sowed lput farmers with [will-do = "Do: Sow Grass"] who-sowed
+set who-said-monitored lput farmers with [will-do = "Say: Monitor Peers"] who-said-monitored
+set who-said-herded lput farmers with [will-do = "Say: Herd Cows"] who-said-herded
+set who-said-repaired lput farmers with [will-do = "Say: Repair Fences"] who-said-repaired
+set who-said-sowed lput farmers with [will-do = "Say: Sow Grass"] who-said-sowed
+
 end
 
 
@@ -162,15 +180,14 @@ to do-weekly-action
       set people-i-met union people-i-met meet-grass-sowers-with-probability 5
       set people-i-met union people-i-met meet-fence-inspectors-with-probability 100
     ]
-;    cf:= "Do: Inspect Fences" 
-;    [
-;      inspect-fences
-;      set people-i-met union people-i-met meet-fence-fixers-with-probability 20
-;      set people-i-met union people-i-met meet-cow-herders-with-probability 5
-;      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
-;      set people-i-met union people-i-met meet-grass-sowers-with-probability 10
-;      set people-i-met union people-i-met meet-fence-inspectors-with-probability 50      
-;    ]
+    cf:= "Do: Monitor Peers" 
+    [
+      set people-i-met union people-i-met meet-fence-fixers-with-probability 50
+      set people-i-met union people-i-met meet-cow-herders-with-probability 50
+      set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
+      set people-i-met union people-i-met meet-grass-sowers-with-probability 50
+      set people-i-met union people-i-met meet-fence-inspectors-with-probability 50
+    ]
     cf:= "Do: Sow Grass ($500)" 
     [
       sow-grass
@@ -180,18 +197,9 @@ to do-weekly-action
       set people-i-met union people-i-met meet-grass-sowers-with-probability 25
       set people-i-met union people-i-met meet-fence-inspectors-with-probability 10      
     ]
-;    cf:= "Do: Herd Cows" 
-;    [
-;      survey-grass
-;      set people-i-met union people-i-met meet-fence-fixers-with-probability 10
-;      set people-i-met union people-i-met meet-cow-herders-with-probability 10
-;      set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
-;      set people-i-met union people-i-met meet-grass-sowers-with-probability 20
-;      set people-i-met union people-i-met meet-fence-inspectors-with-probability 5
-;    ]
     cf:else []
     )
-  show (word "people I met " count people-i-met)
+;  show (word "people I met " count people-i-met)
   ;; remove self from people I met
   set people-i-met other people-i-met
   set seen-this-week (turtle-set seen-this-week people-i-met)
@@ -199,7 +207,7 @@ to do-weekly-action
 end
 
 to show-who-i-met [people-i-met]
-  let weekly-digest (word "This week, while " present-tense-action " you met ")
+  let weekly-digest (word "This week, while " present-tense-action " you see ")
   let sorted-people sort-on [will-do] people-i-met
   ifelse count people-i-met = 0[
     set weekly-digest (word weekly-digest "nobody")
@@ -218,12 +226,14 @@ to-report people-names [alist]
 end
 
 to-report  present-tense-action
+;  show will-do
   report (cf:match-value will-do
     cf:= "Do: Herd Cows" ["herding cows"]
     cf:= "Do: Repair Fences ($500)" ["repairing fences"]
     cf:= "Do: Inspect Fences" ["inspecting fences"]
     cf:= "Do: Sow Grass ($500)" ["sowing grass"]
     cf:= "Do: Survey Grass" ["surveying grass"]
+    cf:= "Do: Monitor Peers" ["monitoring peers"]
     )
 end
 
@@ -320,6 +330,7 @@ to setup
   ca
   setup-globals
   setup-world
+  setup-plots
   hubnet-reset
   reset-ticks
 end
@@ -352,14 +363,24 @@ to setup-globals
   set actual-fence-states (list)
   set  money-in-the-bank  (list)
   set count-cows-history (list) 
+  
+  set who-herded (list)
+  set   who-monitored (list)
+  set   who-repaired (list)
+  set   who-sowed (list)
+  set   who-said-herded (list)
+  set   who-said-monitored (list)
+  set   who-said-repaired (list)
+  set   who-said-sowed   (list)
+  
   set seen-this-week (turtle-set)
   set common-pool-bank 500
   scale-vars-for-n-players
   set fence-fixing-cost 500
   set seed-cost 500
   set cow-price 1500
-  set do-options (list "Do: Herd Cows" "Do: Repair Fences ($500)" "Do: Sow Grass ($500)" )
-  set say-options (list "Say: Herd Cows" "Say: Repair Fences ($500)" "Say: Sow Grass ($500)" )
+  set do-options (list "Do: Herd Cows" "Do: Repair Fences ($500)" "Do: Sow Grass ($500)" "Do: Monitor Peers" )
+  set say-options (list "Say: Herd Cows" "Say: Repair Fences ($500)" "Say: Sow Grass ($500)" "Say: Monitor Peers" )
 
 end
 
@@ -414,7 +435,7 @@ to listen-to-clients
       hubnet-fetch-message
       (cf:cond
         cf:case [ hubnet-enter-message? ] [ add-farmer hubnet-message-source false ]
-      cf:case [hubnet-exit-message?] [kill-farmer hubnet-message-source]
+      cf:case [hubnet-exit-message?] [];kill-farmer hubnet-message-source]
       cf:else [ do-command hubnet-message-source hubnet-message-tag])
     ]
   ]
@@ -427,7 +448,7 @@ to add-farmer [message-source bot?]
     move-to one-of grass-patches
     set shape "person"
     set user-id message-source
-    set money cow-price * 3
+    set money cow-price * 2 + 250 ; give everybody enough money to buy two cows, plus change.
     set color one-of base-colors
     set milk-production-list []
     reset-farmer
@@ -644,7 +665,9 @@ to update-client-info
 end
 
 to make-cow
+  show self
   hatch-cows 1 [
+    show myself
      set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st display
      ]
   update-client-info
@@ -652,16 +675,16 @@ end
 
 to-report gini-points
   let points []
-  let sorted-farmers sort-on [money + 1500 * count my-cows] farmers
-  let total-wealth (sum [money + 1500 * count my-cows] of farmers)
+  let sorted-farmers sort-on [wealth] farmers
+  let total-wealth (sum [wealth] of farmers)
   let sum-so-far 0
   let %-per-farmer 100 / count farmers
   let counter 0
   foreach sorted-farmers [
     set counter counter + 1
     set sum-so-far sum-so-far + ([money + 1500 * count my-cows] of ?)
-    let %-of-total-wealth sum-so-far / total-wealth * 100
-    let point (list (counter * %-per-farmer) %-of-total-wealth)
+    let %-of-total-wealth sum-so-far / total-wealth
+    let point (list (counter * %-per-farmer / 100) %-of-total-wealth)
     set points lput point points
   ]
   report points
@@ -832,9 +855,28 @@ to set-color-from-hsb-list [alist]
   set color hsb item 0 alist item 1 alist item 2 alist
 end
 
+to-report wealth ; this returns a farmer's total wealth; 1500 per cow + their money
+  report money + 1500 * count my-cows
+end
 
-to export-data
-  
+to-report historical-data;; depending on what we end up doing with the data, this should spit out either a CSV or a json with all these data
+  let data-lists (list 
+    "actual-grass-amounts"
+    "total-milk-production" 
+    "actual-fence-states"
+    "money-in-the-bank"
+    "count-cows-history"   
+    "who-herded"
+    "who-monitored"
+    "who-repaired"
+    "who-sowed"
+    "who-said-herded"
+    "who-said-monitored"
+    "who-said-repaired"
+    "who-said-sowed"
+    )
+  ;; currently this returns lists of agentsets sometimes - in those cases, it should return a map [count ?]
+  report map [(list ? (ifelse-value (is-agentset? item 1 run-result ?) [map [count  ?] runresult ?] [?]))] data-lists
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -890,9 +932,9 @@ NIL
 
 BUTTON
 10
-125
+80
 135
-158
+113
 NIL
 run-a-week
 NIL
@@ -907,9 +949,9 @@ NIL
 
 BUTTON
 10
-85
+45
 135
-118
+78
 NIL
 setup
 NIL
@@ -956,7 +998,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences"
-0
+4
 
 PLOT
 875
@@ -1044,21 +1086,23 @@ NIL
 1
 
 PLOT
-1140
+1130
 420
-1390
-555
+1380
+580
 gini-coefficient
 NIL
 NIL
 0.0
-10.0
+1.0
 0.0
-10.0
-true
+1.0
 false
-"" ""
+true
+"" "clear-plot"
 PENS
+"Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[foreach gini-points [plotxy first ? last ?]]"
+"Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
 
 BUTTON
 1000
@@ -1138,7 +1182,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9"
+"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9" "Local 37"
 0
 
 BUTTON
@@ -1194,12 +1238,12 @@ NIL
 
 BUTTON
 10
-190
-132
-223
-run a test week
-ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
-T
+115
+162
+148
+setup test week data
+ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
+NIL
 1
 T
 OBSERVER
@@ -1210,12 +1254,12 @@ NIL
 1
 
 BUTTON
-20
-240
-105
-273
+10
+150
+135
+183
 setup test run
-setup\nforeach n-values 25 [?]  [\nadd-farmer (word ?) true\n]\nask farmers [repeat 2 [buy-cow]]
+setup\nforeach n-values 25 [?]  [\nadd-farmer (word ?) true\n]\nask farmers [repeat 3 [buy-cow]]
 NIL
 1
 T
@@ -1812,6 +1856,34 @@ true
 true
 "" ""
 PENS
+
+BUTTON
+165
+120
+310
+153
+Say: Monitor Peers
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+165
+220
+310
+253
+Do: Monitor Peers
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
 
 @#$#@#$#@
 default
