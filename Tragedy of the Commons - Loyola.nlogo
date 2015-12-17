@@ -939,7 +939,7 @@ BUTTON
 113
 NIL
 run-a-week
-T
+NIL
 1
 T
 OBSERVER
@@ -1018,7 +1018,7 @@ false
 true
 "" "clear-plot"
 PENS
-"Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[foreach gini-points [plotxy first ? last ?]]"
+"Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[plotxy 0 0 foreach gini-points [plotxy first ? last ?] plotxy 1 1]"
 "Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
 
 BUTTON
