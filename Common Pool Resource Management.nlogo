@@ -1,4 +1,4 @@
-extensions [table cf goo gradient color-generator ]
+extensions [table cf goo gradient ] ;color-generator ]
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -8,9 +8,9 @@ breed [ fences fence]
 globals [
   ;; make some tables for saving this stuff for later.
   farmer-actions
-  
+
   average-cows-per-player ;; the number of cows per average per player that the field can sustain
-  
+
   max-grass ;; the max amount of grass on a patch
   cows-eat ;; the amount cows eat per turn
   cows-max-energy ;; the amount that cows can store
@@ -18,18 +18,18 @@ globals [
   grass-regrow ;; the amount that grass grows back
   fence-fix-points
   shepherd-bonus ; the extra amount of food cows will try to eat if they are being shepherded
-  
+
   cow-price
-  
+
   ;; this might need balancing too
   seed-cost
   fence-fixing-cost
-  
+
   edge-patches ;; all patches along the edge. might as well just put them in one patchset to begin with
   grass-patches
-  
+
   common-pool-bank ;; this is money that people have pooled together
-  
+
   seen-this-week
 
   ;; some plotting lists
@@ -40,11 +40,11 @@ globals [
   count-cows-history
   ;; maybe log:
   ;; standard deviation of milk production of farmers
-  
+
   ;; for setting up quickly
   do-options
   say-options
-  
+
   ;; logs
   who-herded
   who-monitored
@@ -68,18 +68,18 @@ farmers-own
                      ;; to identify each student turtle
   milk-production-list       ;; list of each days' revenue collection
   donations-list
-  
+
   say-will-do
   will-do  ;; will they defect today
   money
-  
+
   is-bot? ;; is this a bot?
-  
+
   money-to-bank ;;
 ]
 
 fences-own [
- durability 
+ durability
 ]
 
 patches-own[
@@ -99,29 +99,29 @@ to run-a-week
 
   ;; we can figure out how to do the visualization later. But here are the options:
   ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
-  ;; so that they can catch defectors. 
+  ;; so that they can catch defectors.
   ask farmers [do-weekly-action]
 
   ;; all cows graze. We do this to make sure everybody's cows get an equal chance at eating,
   ;; and to smoothe out movement animation
   repeat 7 [ask cows [graze metabolize-and-maybe-die]]
-  
+
   ;; calculate how much milk they get (we need a better function for this, I think)
   ask farmers [
     sell-milk
     update-client-info
-    ]  
-  ;; fences deteriorate 
+    ]
+  ;; fences deteriorate
   ask fences [
    deteriorate
    ]
-  
+
   ;; grass regrows
   ask grass-patches [
     grow-grass grass-regrow
     recolor-grass ;; we may not want to do this unless people "survey" the grass
   ]
-  
+
   tick
  show-who-was-seen-this-week
   ask farmers [
@@ -130,7 +130,7 @@ to run-a-week
   ]
   update-fence-labels
   log-weekly
-  
+
   reset-weekly-vars
   update-plots
   hubnet-send-message "Status" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
@@ -171,7 +171,7 @@ to do-weekly-action
   let people-i-met (turtle-set)
   (
     cf:match will-do
-    cf:= "Do: Repair Fences ($500)" 
+    cf:= "Do: Repair Fences ($500)"
     [
       fix-fences
       set people-i-met union people-i-met meet-fence-fixers-with-probability 10
@@ -180,7 +180,7 @@ to do-weekly-action
       set people-i-met union people-i-met meet-grass-sowers-with-probability 5
       set people-i-met union people-i-met meet-fence-inspectors-with-probability 100
     ]
-    cf:= "Do: Monitor Peers" 
+    cf:= "Do: Monitor Peers"
     [
       set people-i-met union people-i-met meet-fence-fixers-with-probability 50
       set people-i-met union people-i-met meet-cow-herders-with-probability 50
@@ -188,14 +188,14 @@ to do-weekly-action
       set people-i-met union people-i-met meet-grass-sowers-with-probability 50
       set people-i-met union people-i-met meet-fence-inspectors-with-probability 50
     ]
-    cf:= "Do: Sow Grass ($500)" 
+    cf:= "Do: Sow Grass ($500)"
     [
       sow-grass
       set people-i-met union people-i-met meet-fence-fixers-with-probability  10
       set people-i-met union people-i-met meet-cow-herders-with-probability 25
       set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
       set people-i-met union people-i-met meet-grass-sowers-with-probability 25
-      set people-i-met union people-i-met meet-fence-inspectors-with-probability 10      
+      set people-i-met union people-i-met meet-fence-inspectors-with-probability 10
     ]
     cf:else []
     )
@@ -218,7 +218,7 @@ to show-who-i-met [people-i-met]
     set weekly-digest (word weekly-digest ", who were " [present-tense-action] of one-of people-i-met with [will-do = ?] ";")
   ]
   ]
- hubnet-send-message user-id weekly-digest 
+ hubnet-send-message user-id weekly-digest
 end
 
 to-report people-names [alist]
@@ -239,7 +239,7 @@ end
 
 
 
-to sow-grass ;; sowing grass let's grass 
+to sow-grass ;; sowing grass let's grass
              ;; NB: THIS MIGHT NEED TWEAKING
   if length hubnet-clients-list > 0 [
     ask grass-patches [grow-grass grass-regrow / length hubnet-clients-list]
@@ -267,13 +267,13 @@ end
 
 to fix-fences
   let fix-points fence-fix-points
-  while [any? fences with [label < 100] and fix-points > 0] [    
+  while [any? fences with [label < 100] and fix-points > 0] [
     let most-broken-fence min-one-of fences [label]
     move-to most-broken-fence
     let repair-amount min (list fix-points (100 - [durability] of most-broken-fence))
     ask most-broken-fence [set durability durability + repair-amount set label durability]
     set fix-points fix-points - repair-amount
-  ]  
+  ]
   set money money - fence-fixing-cost
 end
 
@@ -297,7 +297,7 @@ to-report meet-fence-inspectors-with-probability [%-prob]
   report fence-inspectors with [random 100 < %-prob]
 end
 
-  
+
 to graze
   eat
   cow-move
@@ -309,7 +309,7 @@ to cow-move
     set pcolor red
     hubnet-send-message [user-id] of owner (word "One of your cows disappeared. A fence must be broken somewhere.")
     die
-    ]  
+    ]
   ;; cows wander around randomly
   rt random 30
   lt random 30
@@ -325,7 +325,7 @@ to eat
   set energy energy  + eaten-amount
   set grass grass - eaten-amount
 end
-  
+
 to setup
   ca
   setup-globals
@@ -350,11 +350,11 @@ to setup-world
     recolor-grass]
   ask fences [die]
   ask edge-patches [
-    sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50 set label durability] 
+    sprout-fences 1 [set shape "fence" set heading 0 set color brown set durability 50 + random 50 set label durability]
     set grass 0
     set pcolor green
     ]
-end  
+end
 
 to setup-globals
   set farmer-actions (list)
@@ -362,8 +362,8 @@ to setup-globals
   set  total-milk-production (list)
   set actual-fence-states (list)
   set  money-in-the-bank  (list)
-  set count-cows-history (list) 
-  
+  set count-cows-history (list)
+
   set who-herded (list)
   set   who-monitored (list)
   set   who-repaired (list)
@@ -372,7 +372,7 @@ to setup-globals
   set   who-said-monitored (list)
   set   who-said-repaired (list)
   set   who-said-sowed   (list)
-  
+
   set seen-this-week (turtle-set)
   set common-pool-bank 500
   scale-vars-for-n-players
@@ -392,7 +392,7 @@ to scale-vars-for-n-players
   ;; 961 patches with grass growing on it.
   ;; we need to balance how fast grass grows back, how quickly fences deteriorate, and how how grass
   ;; can be on each patch so that the world automatically can support N people. (N = no-of-farmers.)
-  ;; Let's assume that people start with three cows, and we want the game to go on for "a while". Let's say that 
+  ;; Let's assume that people start with three cows, and we want the game to go on for "a while". Let's say that
   ;; at its base level, the world can support 6 cows per player.
   ;; let's just say that a cow needs 7 energy to sustain itself for a week.
   ;; in that case, the entire system (without extra work towards it) should produce
@@ -400,11 +400,11 @@ to scale-vars-for-n-players
   ;; a lot of the patches would not produce anything or they would produce a fraction of an energy's worth of food
   ;; so maybe we should say 70 per week? that will make the numbers more on an order that makes sense.
   set cows-metabolize-week 70
-  ;; cows metabolize 10 per day, and they should be able to eat as much as they metabolize plus... 50? let's try that  
+  ;; cows metabolize 10 per day, and they should be able to eat as much as they metabolize plus... 50? let's try that
   set cows-eat cows-metabolize-week * 1.5 / 7  ;; the amount cows eat per turn
   ;; let's say that cows can eat at most 33% of the grass on a patch per day, so that means max-grass is 45
   set max-grass cows-eat * 3
-  ;; let's also say that a cow can store enough energy to not eat at all for one week. That means they can store a total of 
+  ;; let's also say that a cow can store enough energy to not eat at all for one week. That means they can store a total of
   ;; 7 * 10  = 70.
   set cows-max-energy 2 * cows-metabolize-week ;; the amount that cows can store
   ;; if the whole system should have a base-carrying capacity of 700 * 6 = 4200
@@ -424,7 +424,7 @@ to scale-vars-for-n-players
   if count farmers  > 0 [
     set fence-fix-points (1600 * 5) / count farmers
   ]
-  
+
 end
 
 
@@ -455,18 +455,18 @@ to add-farmer [message-source bot?]
     set money-to-bank 20 ;; this is what it inits to in the client view
     if not is-bot?[
       update-client-info
-      hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
+      hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
       hubnet-send-watch message-source one-of farmers with [user-id = message-source]
     ]
     display
 
   ]
-  
+
   wait .05
   goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
   wait .05
-  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list  
-  
+  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list
+
   scale-vars-for-n-players
 
 end
@@ -480,10 +480,10 @@ to do-command [source tag]
   ask farmers with [user-id = source] [
     let update-client-display true
     ;; ifelse/case here for different kinds
-    (cf:cond 
+    (cf:cond
       cf:case [member? "Say:" tag] [
         hubnet-send source "Status" (word "You " tag)
-        set say-will-do tag 
+        set say-will-do tag
         print-who-says-what
         ]
     cf:case [member? "Do:" tag] [
@@ -513,13 +513,13 @@ to do-command [source tag]
     )
     ;; tell them if they still need to make a decision
     if will-do = undecided and say-will-do = undecided [
-    hubnet-send source "Status" "Decide what to say and do this week."      
+    hubnet-send source "Status" "Decide what to say and do this week."
     ]
     if will-do != undecided and say-will-do = undecided [
-    hubnet-send source "Status" "Decide on what you say you will do."      
+    hubnet-send source "Status" "Decide on what you say you will do."
     ]
     if will-do = undecided and say-will-do != undecided [
-    hubnet-send source "Status" "Decide on what you will actually do."      
+    hubnet-send source "Status" "Decide on what you will actually do."
     ]
     if will-do != undecided and say-will-do != undecided [
     hubnet-send source "Status" "You are ready for this week."
@@ -537,14 +537,14 @@ to buy-cow
   [
     hubnet-send user-id "Status" "You can't afford a cow yet."
   ]
-  
+
 end
 
 to-report can-afford-action? [an-action-string]
   report not member? "$" an-action-string or money > 500
 end
 
-to show-who-says [astring] 
+to show-who-says [astring]
   let the-users sort [user-id] of farmers with [say-will-do = astring]
     output-print (word astring " (" length the-users ")")
     output-print ifelse-value (length the-users > 0) [people-names the-users] ["Nobody"]
@@ -569,7 +569,7 @@ to grow-grass [grow-amount]
 end
 
 to recolor-grass
-  set pcolor gradient:scale [[90 60 0] [0 255 0]] grass  0 max-grass 
+  set pcolor gradient:scale [[90 60 0] [0 255 0]] grass  0 max-grass
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
@@ -597,7 +597,7 @@ to show-in-plot [plot-no]
   set-plot-x-range 0 length the-list
   set-plot-y-range 0 precision ((max the-list) * 1.1) 0
   create-temporary-plot-pen plot-value
-  plotxy 0 0 
+  plotxy 0 0
   foreach the-list [
     plot ?
   ]
@@ -623,7 +623,7 @@ to fine-them
     ifelse money >= $-amount [
       set money money - $-amount
       set common-pool-bank common-pool-bank + $-amount
-      hubnet-send user-id "$" money      
+      hubnet-send user-id "$" money
     ]
     [
       show (word user-id " does not have $ " $-amount "!")
@@ -635,7 +635,7 @@ to donate-to-common-$ [$-to-donate]
   show "trying to donate"
   ifelse money >= $-to-donate [
     set money money - $-to-donate
-    set common-pool-bank common-pool-bank + $-to-donate 
+    set common-pool-bank common-pool-bank + $-to-donate
     hubnet-send user-id "$" money
   ]
   [
@@ -643,12 +643,12 @@ to donate-to-common-$ [$-to-donate]
   ]
 end
 
-to give-$-to-farmer 
+to give-$-to-farmer
   ifelse common-pool-bank >= $-amount [
     ask farmers with [user-id = farmer-list] [
       set money money + $-amount
       set common-pool-bank common-pool-bank - $-amount
-      hubnet-send user-id "$" money    
+      hubnet-send user-id "$" money
     ]
   ]
   [
@@ -657,11 +657,11 @@ to give-$-to-farmer
 end
 
 
-to update-client-info 
+to update-client-info
    hubnet-send user-id "$" money
    hubnet-send user-id "# of Cows" (count my-cows)
-   hubnet-send-override user-id my-cows "color" [red] 
-   hubnet-send-override user-id my-cows "size" [2] 
+   hubnet-send-override user-id my-cows "color" [red]
+   hubnet-send-override user-id my-cows "size" [2]
 end
 
 to make-cow
@@ -694,12 +694,12 @@ to show-gini
   set-current-plot "gini-coefficient"
   clear-plot
   create-temporary-plot-pen "gini"
-  plotxy 0 0 
+  plotxy 0 0
   foreach gini-points [
     plotxy first ? last ?
   ]
   create-temporary-plot-pen "baseline"
-  plotxy 0 0 
+  plotxy 0 0
   plotxy 100 100
 end
 
@@ -712,9 +712,9 @@ to print-who-did-what
       let the-action ?
       let farmers-who-did-that-this-week filter [item 1 ? = the-week and item 3 ? = the-action] farmer-actions
       output-print (word the-action " (" length farmers-who-did-that-this-week ")")
-      
+
       ifelse length farmers-who-did-that-this-week > 0[
-        output-print reduce [(word ?1 ", " ?2)] map [item 0 ?] farmers-who-did-that-this-week 
+        output-print reduce [(word ?1 ", " ?2)] map [item 0 ?] farmers-who-did-that-this-week
       ]
       [
         output-print "Nobody"
@@ -743,7 +743,7 @@ to print-counts-of-actions-per-farmer
     output-print the-action
     foreach sort all-farmers[
       let the-farmer ?
-      let the-count length filter [item 0 ? = the-farmer and item 2 ? = "do" and item 3 ? = the-action] farmer-actions 
+      let the-count length filter [item 0 ? = the-farmer and item 2 ? = "do" and item 3 ? = the-action] farmer-actions
       output-print (word the-farmer " (" the-count ")")
     ]
   ]
@@ -760,7 +760,7 @@ to-report all-weeks-in [alist]
 end
 
 to-report all-farmers
-  report hubnet-clients-list 
+  report hubnet-clients-list
 end
 
 to-report how-many-did-what-when-in [alist]
@@ -793,7 +793,7 @@ to show-how-many-did-what-when
   ]
 end
 
-to show-who-was-seen-this-week 
+to show-who-was-seen-this-week
   ;; this had a bug that showed all farmers who were doing something, and not just the ones who are doing something AND were seen doing it
   output-print (word "For week " ticks)
   output-print "People who were observed this week:"
@@ -801,31 +801,31 @@ to show-who-was-seen-this-week
     let farmers-who-did-this farmers with [will-do = ? and member? self seen-this-week]
     output-print (word ? ": " count farmers-who-did-this)
     output-print reduce [(word ?1 ", " ?2)] [user-id] of farmers-who-did-this
-  ]   
+  ]
   if any? farmers with [not member? self seen-this-week][
     output-print "Famers not seen by anyone this week:"
     output-print reduce [(word ?1 ", " ?2)] [user-id] of farmers with [not member? self seen-this-week]
-  ] 
+  ]
   output-print ""
 end
 
 to-report names-to-string-of [an-agentset]
   let names remove-duplicates [user-id] of an-agentset
   report reduce [(word ?1 ", " ?2)] names
-  
+
 end
 
 
 to-report union [ts1 ts2]
   report (turtle-set ts1 ts2)
-end 
+end
 
 
 to create-bot
   create-farmers 1 [
   ]
 end
- 
+
 
 to-report fence-fixers
   report farmers with [will-do = "Do: Repair Fences ($500)"]
@@ -848,7 +848,7 @@ to-report undecided
 end
 
 to send-town-hall-meeting-message
-  hubnet-send hubnet-clients-list  "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
+  hubnet-send hubnet-clients-list  "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
 end
 
 to set-color-from-hsb-list [alist]
@@ -860,12 +860,12 @@ to-report wealth ; this returns a farmer's total wealth; 1500 per cow + their mo
 end
 
 to-report historical-data;; depending on what we end up doing with the data, this should spit out either a CSV or a json with all these data
-  let data-lists (list 
+  let data-lists (list
     "actual-grass-amounts"
-    "total-milk-production" 
+    "total-milk-production"
     "actual-fence-states"
     "money-in-the-bank"
-    "count-cows-history"   
+    "count-cows-history"
     "who-herded"
     "who-monitored"
     "who-repaired"
@@ -911,7 +911,7 @@ OUTPUT
 10
 870
 470
-15
+13
 
 BUTTON
 10
@@ -1239,7 +1239,7 @@ NIL
 BUTTON
 10
 115
-162
+135
 148
 setup test week data
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
@@ -1275,7 +1275,7 @@ NIL
 
 This model is inspired by Elinor Ostrom's work on how people manage resource systems and set up so-called institutions for collective action.
 
-She positioned her work in opposition to The Tragedy of the Commons (TOC). 
+She positioned her work in opposition to The Tragedy of the Commons (TOC).
 
 ## HOW IT WORKS
 
@@ -1626,7 +1626,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
