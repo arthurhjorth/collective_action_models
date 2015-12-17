@@ -458,7 +458,7 @@ to add-farmer [message-source bot?]
       hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."  
       hubnet-send-watch message-source one-of farmers with [user-id = message-source]
     ]
-    display
+;    display
 
   ]
   
@@ -565,7 +565,12 @@ to reset-farmer
 end
 
 to grow-grass [grow-amount]
-  set grass min (list max-grass (grass + grow-amount))
+  ;; we can try to make it depend on neighbors here
+  let neighbors-grass mean [grass] of neighbors
+  set grass min (list 
+    max-grass 
+    (grass + (neighbors-grass / max-grass * 4 * grow-amount))
+    )
 end
 
 to recolor-grass
@@ -1494,24 +1499,6 @@ Status
 NIL
 0
 1
-
-PLOT
-15
-170
-305
-320
-Plot 1
-milk-production
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"Grass                   " 1.0 0 -10899396 true
 
 @#$#@#$#@
 default

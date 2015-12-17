@@ -665,9 +665,9 @@ to update-client-info
 end
 
 to make-cow
-  show self
+;  show self
   hatch-cows 1 [
-    show myself
+;    show myself
      set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st display
      ]
   update-client-info
@@ -1182,7 +1182,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9" "Local 37"
+"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9" "Local 1" "Local 2" "Local 3"
 0
 
 BUTTON
@@ -1660,9 +1660,9 @@ NIL
 NIL
 
 MONITOR
-820
+840
 240
-930
+950
 289
 # of Cows
 NIL
@@ -1670,9 +1670,9 @@ NIL
 1
 
 MONITOR
-940
+960
 240
-1060
+1080
 289
 $
 NIL
@@ -1680,9 +1680,9 @@ NIL
 1
 
 BUTTON
-1065
+1085
 240
-1197
+1217
 286
 Buy Cow ($1500)
 NIL
@@ -1694,9 +1694,9 @@ NIL
 NIL
 
 VIEW
-315
+335
 65
-815
+835
 565
 0
 0
@@ -1718,7 +1718,7 @@ VIEW
 MONITOR
 15
 10
-1200
+1220
 59
 Status
 NIL
@@ -1746,9 +1746,9 @@ What you actually do.
 1
 
 TEXTBOX
-820
+840
 220
-970
+990
 238
 Click here to buy cows
 11
@@ -1756,9 +1756,9 @@ Click here to buy cows
 1
 
 SLIDER
-820
+840
 295
-1060
+1080
 328
 money-to-shared-bank
 money-to-shared-bank
@@ -1771,9 +1771,9 @@ NIL
 HORIZONTAL
 
 BUTTON
-1065
+1085
 295
-1195
+1215
 328
 Donate
 NIL
@@ -1787,9 +1787,9 @@ NIL
 BUTTON
 165
 85
-310
+325
 118
-Say: Sow Grass ($500)
+Say: Spread Fertilizer ($500)
 NIL
 NIL
 1
@@ -1829,9 +1829,9 @@ NIL
 BUTTON
 165
 185
-310
+325
 218
-Do: Sow Grass ($500)
+Do: Spread Fertilizer ($500)
 NIL
 NIL
 1
@@ -1841,9 +1841,9 @@ NIL
 NIL
 
 PLOT
-820
+840
 65
-1200
+1220
 215
 Plot 1
 milk-production
@@ -1860,7 +1860,7 @@ PENS
 BUTTON
 165
 120
-310
+325
 153
 Say: Monitor Peers
 NIL
@@ -1874,7 +1874,7 @@ NIL
 BUTTON
 165
 220
-310
+325
 253
 Do: Monitor Peers
 NIL
