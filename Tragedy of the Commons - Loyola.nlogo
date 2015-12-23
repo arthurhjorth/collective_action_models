@@ -326,12 +326,16 @@ to eat
   set grass grass - eaten-amount
 end
 
+to start-hubnet
+  hubnet-reset
+end
+
 to setup
   ca
   setup-globals
   setup-world
   setup-plots
-  hubnet-reset
+;  hubnet-reset
   reset-ticks
 end
 
@@ -445,19 +449,13 @@ to add-farmer [message-source bot?]
 
   create-farmers 1 [
     set is-bot? bot?
-    move-to one-of grass-patches
+    move-to one-of grass-patches with [not any? farmers-here]
     set shape "person"
     set user-id message-source
-    set money cow-price * 2 + 250 ; give everybody enough money to buy two cows, plus change.
     set color one-of base-colors
-    set milk-production-list []
     reset-farmer
-    set money-to-bank 20 ;; this is what it inits to in the client view
-    if not is-bot?[
-      update-client-info
-      hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
-      hubnet-send-override message-source one-of farmers with [user-id = message-source] "size" [3]
-    ]
+    init-farmer
+    hubnet-send-override message-source one-of farmers with [user-id = message-source] "size" [3]    
     display
 
   ]
@@ -465,10 +463,17 @@ to add-farmer [message-source bot?]
   wait .05
   goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
   wait .05
-;  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list
-
   scale-vars-for-n-players
 
+end
+
+to init-farmer
+  set money cow-price * 2 + 250
+  set milk-production-list []
+  set money-to-bank 20
+    if not is-bot?[
+      update-client-info
+    ]
 end
 
 to kill-farmer [message-source]
