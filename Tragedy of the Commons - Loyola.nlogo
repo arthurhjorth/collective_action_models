@@ -456,9 +456,9 @@ to add-farmer [message-source bot?]
     if not is-bot?[
       update-client-info
       hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
-      hubnet-send-watch message-source one-of farmers with [user-id = message-source]
+      hubnet-send-override message-source one-of farmers with [user-id = message-source] "size" [3]
     ]
-;    display
+    display
 
   ]
 
@@ -667,6 +667,7 @@ to update-client-info
    hubnet-send user-id "# of Cows" (count my-cows)
    hubnet-send-override user-id my-cows "color" [red]
    hubnet-send-override user-id my-cows "size" [2]
+
 end
 
 to make-cow
@@ -1429,7 +1430,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.1
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
