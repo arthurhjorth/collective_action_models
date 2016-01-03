@@ -1,4 +1,4 @@
-extensions [table cf goo gradient ] ;color-generator ]
+extensions [table cf goo gradient profiler] ;color-generator ]
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -6,6 +6,7 @@ breed [ farmers farmer ] ;; created and controlled by clients
 breed [ fences fence]
 
 globals [
+  client-info-task
   ;; make some tables for saving this stuff for later.
   farmer-actions
 
@@ -327,14 +328,24 @@ to eat
 end
 
 to start-hubnet
+  ca
   hubnet-reset
 end
 
 to setup
-  ca
   setup-globals
   setup-world
+  clear-all-plots
   setup-plots
+  
+  set client-info-task task [ hubnet-send ? "$" ? hubnet-send ? "# of Cows" ?  hubnet-send-override ? ? "color" [red]  hubnet-send-override ? ? "size" [2]]
+
+  
+  
+  ask farmers [
+    init-farmer ; we need to find some way of resetting farmers without killing them. 
+    reset-farmer]
+  
 ;  hubnet-reset
   reset-ticks
 end
@@ -343,8 +354,6 @@ end
 to go
   hubnet-broadcast "Status" "Choose what to do this week!"
 end
-
-
 
 to setup-world
   set edge-patches patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor]
@@ -446,6 +455,7 @@ to listen-to-clients
 end
 
 to add-farmer [message-source bot?]
+  show message-source
 
   create-farmers 1 [
     set is-bot? bot?
@@ -665,6 +675,17 @@ end
 ;    show "The common pool bank doesn't have that much money!"
 ;  ]
 ;end
+
+to update-client-info2
+  let atask  task [
+    hubnet-send ? "$" ?
+    hubnet-send ? "# of Cows" ?
+    hubnet-send-override ? ? "color" [red]
+    hubnet-send-override user-id my-cows "size" [2]
+  ]
+;  (run atask user-id money user-id count my-cows user-id my- )
+;  (run client-info-task user-id money user-id (count my-cows)  user-id my-cows user-id my-cows)
+end
 
 
 to update-client-info
@@ -922,10 +943,10 @@ Week
 30.0
 
 BUTTON
-10
-10
-135
-43
+5
+85
+130
+118
 NIL
 listen-to-clients
 T
@@ -939,13 +960,13 @@ NIL
 1
 
 BUTTON
-10
-80
-135
-113
+5
+155
+130
+188
 NIL
 run-a-week
-NIL
+T
 1
 T
 OBSERVER
@@ -956,10 +977,10 @@ NIL
 1
 
 BUTTON
-10
-45
-135
-78
+5
+120
+130
+153
 NIL
 setup
 NIL
@@ -1009,10 +1030,10 @@ PENS
 "Cows                   " 1.0 0 -6459832 true "" "plot count cows"
 
 PLOT
-20
-200
-270
-360
+15
+275
+265
+435
 gini-coefficient
 NIL
 NIL
@@ -1026,40 +1047,6 @@ true
 PENS
 "Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[plotxy 0 0 foreach gini-points [plotxy first ? last ?] plotxy 1 1]"
 "Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
-
-BUTTON
-10
-115
-162
-148
-setup test week data
-ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-10
-150
-135
-183
-setup test run
-setup\nforeach n-values 25 [?]  [\nadd-farmer (word ?) true\n]\nask farmers [repeat 3 [buy-cow]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 PLOT
 715
@@ -1078,6 +1065,23 @@ true
 "" ""
 PENS
 "Milk Production" 1.0 0 -5825686 true "" "plot latest-milk-production"
+
+BUTTON
+80
+45
+187
+78
+NIL
+start-hubnet
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
