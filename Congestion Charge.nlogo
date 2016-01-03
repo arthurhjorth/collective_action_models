@@ -92,6 +92,7 @@ end
 
 
 to go
+  if any? turtles with [shape = "person"] [
   ;; switch over yesterdays time travel
   set yesterdays-travel-time-added travel-time-added
   ;; calculate number of cars and busses
@@ -108,6 +109,7 @@ to go
   ask turtles with [not will-drive?] [set shape "train"]
  
   calc-pollution
+  ]
 end
 
 to color-code
@@ -214,7 +216,7 @@ to calculate-delay-created
 end
 
 to-report wishes-to-drive? ;; this determines if the turtle would ideally drive
-  report car-love - (yesterdays-travel-time-added / willing-to-wait) > 0
+  report car-love - (yesterdays-travel-time-added / (willing-to-wait + 0.01 )) > 0
 end
 
 to-report can-afford-to-drive? ;; this determines if the turtle can afford to drive. This needs to be tweaked to take into
@@ -254,7 +256,6 @@ end
 to remove-person
   ask max-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
 end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 223
@@ -359,7 +360,7 @@ congestion-charge-cost
 congestion-charge-cost
 0
 100
-0
+99
 1
 1
 NIL

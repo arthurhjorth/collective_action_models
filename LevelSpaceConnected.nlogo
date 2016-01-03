@@ -1,9 +1,11 @@
 extensions [ls]
 globals [
+  ;; model ids
   milk 
   climate 
   congestion
-  
+  ;; variables for keeping track of inter-model logic
+  food-surplus
   ]
 
 
@@ -19,7 +21,7 @@ to setup
   set congestion 2
   ls:ask ls:models "setup"
   ls:ask climate "repeat 10 [add-co2] repeat 2 [add-cloud] no-display repeat 5000 [go] clear-all-plots display"
-  
+  reset-ticks
 end
 
 
@@ -27,7 +29,16 @@ end
 
 to go
   ls:ask (list milk congestion) "go"
-  ls:ask climate "repeat 10 [go]"
+;  ls:ask climate "repeat 10 [go]"
+  ; maybe add people to our village
+  ;; get our food production
+  set food-surplus food-surplus + "total-eaten" ls:of milk
+  ;; then people eat:
+  set food-surplus food-surplus - ("count turtles" ls:of congestion / 10)
+  ;; then if we have enough, we create more people
+  if food-surplus > 100 [ls:ask congestion "add-person" set food-surplus food-surplus - 100]
+  if food-surplus < -100 [ls:ask congestion "remove-person" set food-surplus food-surplus + 100]
+tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -90,6 +101,24 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+335
+85
+905
+370
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot food-surplus"
 
 @#$#@#$#@
 ## WHAT IS IT?

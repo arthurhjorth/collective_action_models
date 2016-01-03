@@ -19,12 +19,11 @@ cows-own [energy]
 
 to setup
   ca
-
   ask patches with [pxcor < 0 and pycor > 0] [change-type "forest"]
   set cows-max-energy 25
   set cows-eat 1
   set grow-amount .25
-  create-cows 15 [set energy 5 + random 20 set shape "cow" move-to one-of patches with [patch-type != "forest"]]
+;  create-cows 15 [set energy 5 + random 20 set shape "cow" move-to one-of patches with [patch-type != "forest"]]
   set max-grass 15
   ask patches [set grass random 9]
   ask patches [recolor-grass]
@@ -101,7 +100,7 @@ to change-type [a-type]
 end
 
 to buy-cow
-create-cows 15 [set energy 10 set shape "cow" move-to one-of patches with [patch-type != "forest"]]
+create-cows 1 [set energy 10 set shape "cow" move-to one-of patches with [patch-type != "forest"]]
 end
 
 to plant-tree
