@@ -80,50 +80,12 @@ to setup
   set population 1089
   
   set color? false
+  ask patch 0 0 [sprout 1 [set shape "house"]]
   
   
 
 
-  ;; create population
-  create-turtles 1088
-  [
-    ;; setting shape person
-    set shape "person"
-    ;; placing randomly on map in unoccupied location
-    move-to one-of patches with [any? turtles-here = false]
-    ;;move-to first patches with  [any? turtles-here = false]
-    
 
-    
-    ;; setting income randomly (will be changed as part of gini coefficient implementation)
-    set income random 99
-    set color white
-    set car-love random 99
-    set willing-to-wait random 99
-
-    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this. 
-    set income income + 1
-    set car-love car-love + 1
-    set willing-to-wait willing-to-wait + 1
-  ]
-  
-    create-turtles 1
-  [
-    ;; setting shape person
-    set shape "person"
-
-    ;; setting income randomly (will be changed as part of gini coefficient implementation)
-    set income random 99
-    set color white
-    set car-love random 99
-    set willing-to-wait random 99
-
-    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this. 
-    set income income + 1
-    set car-love car-love + 1
-    set willing-to-wait willing-to-wait + 1
-  ]
-  
   
 end
 
@@ -132,8 +94,6 @@ end
 to go
   ;; switch over yesterdays time travel
   set yesterdays-travel-time-added travel-time-added
-  ;; ask all turtles to decide on going by car or not
-;  ask turtles [decide]
   ;; calculate number of cars and busses
   calc-vehicles
   ;; calculate the time delay created by number of cars
@@ -144,7 +104,8 @@ to go
   calculate-preference-met
   ;; calculate median income for those who traveled by preferred and those who did not.
   calculate-median-preference-met
-
+  ask turtles with [will-drive?] [set shape "car"]
+  ask turtles with [not will-drive?] [set shape "train"]
  
   calc-pollution
 end
@@ -258,21 +219,50 @@ end
 
 to-report can-afford-to-drive? ;; this determines if the turtle can afford to drive. This needs to be tweaked to take into
                        ;; consideration feedback effect from congestion charge lowering price of public transp
-  report congestion-charge-cost / 2 > income
+  report congestion-charge-cost / 2 < income
 end
 
 to-report will-drive? ;; this determines if the turle will actually drive
   report wishes-to-drive? and can-afford-to-drive?
 end
 
+to add-person
+    ;; create population
+  create-turtles 1
+  [
+    ;; setting shape person
+    set shape "person"
+    ;; placing randomly on map in unoccupied location
+    move-to min-one-of patches with [not any? turtles-here] [sum (list abs pxcor abs pycor)]
+    ;;move-to first patches with  [any? turtles-here = false]
+    
+
+    
+    ;; setting income randomly (will be changed as part of gini coefficient implementation)
+    set income random 99
+    set color white
+    set car-love random 99
+    set willing-to-wait random 99
+
+    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this. 
+    set income income + 1
+    set car-love car-love + 1
+    set willing-to-wait willing-to-wait + 1
+  ]
+end
+
+to remove-person
+  ask max-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
+end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
-224
+223
 113
-663
+662
 573
--1
--1
+16
+16
 13.0
 1
 10
@@ -283,10 +273,10 @@ GRAPHICS-WINDOW
 1
 1
 1
-0
-32
-0
-32
+-16
+16
+-16
+16
 0
 0
 1
@@ -369,7 +359,7 @@ congestion-charge-cost
 congestion-charge-cost
 0
 100
-51
+0
 1
 1
 NIL
@@ -887,6 +877,23 @@ Circle -16777216 true false 30 30 240
 Circle -7500403 true true 60 60 180
 Circle -16777216 true false 90 90 120
 Circle -7500403 true true 120 120 60
+
+train
+false
+0
+Rectangle -7500403 true true 30 105 240 150
+Polygon -7500403 true true 240 105 270 30 180 30 210 105
+Polygon -7500403 true true 195 180 270 180 300 210 195 210
+Circle -7500403 true true 0 165 90
+Circle -7500403 true true 240 225 30
+Circle -7500403 true true 90 165 90
+Circle -7500403 true true 195 225 30
+Rectangle -7500403 true true 0 30 105 150
+Rectangle -16777216 true false 30 60 75 105
+Polygon -7500403 true true 195 180 165 150 240 150 240 180
+Rectangle -7500403 true true 135 75 165 105
+Rectangle -7500403 true true 225 120 255 150
+Rectangle -16777216 true false 30 203 150 218
 
 tree
 false
