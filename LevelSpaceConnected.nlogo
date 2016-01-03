@@ -1,5 +1,10 @@
 extensions [ls]
-globals [milk climate congestion]
+globals [
+  milk 
+  climate 
+  congestion
+  
+  ]
 
 
 ;; Load the CC model, the traffic model, and the milk production model
@@ -18,6 +23,12 @@ to setup
 end
 
 
+
+
+to go
+  ls:ask (list milk congestion) "go"
+  ls:ask climate "repeat 10 [go]"
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
@@ -47,13 +58,30 @@ ticks
 30.0
 
 BUTTON
-7
+5
 10
-73
+75
 43
 NIL
 setup\n
 NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+5
+60
+75
+93
+NIL
+go
+T
 1
 T
 OBSERVER
@@ -424,5 +452,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@

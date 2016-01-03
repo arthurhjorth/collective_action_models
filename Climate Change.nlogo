@@ -2,6 +2,8 @@ globals [
   sky-top      ;; y coordinate of top row of sky
   earth-top    ;; y coordinate of top row of earth
   temperature  ;; overall temperature
+  albedo       ;; albedo of surface
+  sun-brightness; how many rays are created
 ]
 
 breed [rays ray]     ;; packets of sunlight
@@ -25,6 +27,9 @@ to setup
   set-default-shape CO2s "CO2-molecule"
   setup-world
   set temperature 12
+  set albedo .6
+  set sun-brightness 1
+
   reset-ticks
 end
 
@@ -217,10 +222,10 @@ to run-CO2
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-317
-12
-866
-384
+195
+15
+744
+387
 24
 -1
 11.0
@@ -244,10 +249,10 @@ ticks
 30.0
 
 BUTTON
-6
-12
-101
-45
+5
+15
+100
+48
 setup
 Setup
 NIL
@@ -261,10 +266,10 @@ NIL
 1
 
 BUTTON
-103
-12
-198
-45
+100
+15
+195
+48
 go
 go
 T
@@ -277,41 +282,11 @@ NIL
 NIL
 0
 
-SLIDER
-18
-47
-191
-80
-sun-brightness
-sun-brightness
-0
-5
-1
-0.2
-1
-NIL
-HORIZONTAL
-
-SLIDER
-18
-82
-191
-115
-albedo
-albedo
-0
-1
-0.6
-0.05
-1
-NIL
-HORIZONTAL
-
 PLOT
-9
-212
-278
-423
+5
+95
+195
+385
 Global Temperature
 NIL
 NIL
@@ -325,112 +300,27 @@ false
 PENS
 "default" 1.0 0 -2674135 true "" "plot temperature"
 
-BUTTON
-7
-152
-102
-185
-add CO2
-add-CO2
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-BUTTON
-104
-152
-199
-185
-remove CO2
-remove-CO2
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
 MONITOR
-210
-87
-303
-132
+5
+50
+100
+95
 NIL
 temperature
 1
 1
 11
 
-BUTTON
-7
-118
-102
-151
-add cloud
-add-cloud
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-BUTTON
-104
-118
-199
-151
-remove cloud
-remove-cloud
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
 MONITOR
-210
-133
-303
-178
+100
+50
+195
+95
 CO2 amount
 count CO2s
 2
 1
 11
-
-BUTTON
-208
-41
-309
-75
-watch a ray
-watch one-of rays\nask subject [ pd ]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -819,7 +709,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.5
+NetLogo 5.2.0
 @#$#@#$#@
 setup add-cloud add-cloud add-cloud repeat 800 [ go ]
 @#$#@#$#@
@@ -838,5 +728,5 @@ Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 
 @#$#@#$#@
-0
+1
 @#$#@#$#@
