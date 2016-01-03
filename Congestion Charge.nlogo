@@ -54,9 +54,9 @@ turtles-own [
   car-love                               ;; how much the person wants to drive their car, 1-100
   willing-to-wait                        ;; how willing the person is to spend extra time on travelling by car
                                          ;; rather than travelling by public transport, 1-100
-  wishes-to-drive?                       ;; would this person ideally drive today?
-  can-afford-to-drive?                   ;; can this person afford to drive today
-  will-drive-today?                      ;; will this person actually drive today
+;  wishes-to-drive?                       ;; would this person ideally drive today?
+;  can-afford-to-drive?                   ;; can this person afford to drive today
+;  will-drive-today?                      ;; will this person actually drive today
   preference-met?                        ;; true if person travels by preferred medians
 ]
 
@@ -133,7 +133,7 @@ to go
   ;; switch over yesterdays time travel
   set yesterdays-travel-time-added travel-time-added
   ;; ask all turtles to decide on going by car or not
-  ask turtles [decide]
+;  ask turtles [decide]
   ;; calculate number of cars and busses
   calc-vehicles
   ;; calculate the time delay created by number of cars
@@ -160,21 +160,21 @@ to color-code
 end
 
 to calc-vehicles
-  set cars count turtles with [will-drive-today? = true] / avg-passengers-per-car
-  set busses count turtles with [will-drive-today? = false] / avg-passengers-per-bus
+  set cars count turtles with [will-drive?] / avg-passengers-per-car
+  set busses count turtles with [will-drive?] / avg-passengers-per-bus
 end
 
 to calculate-median-incomes
-  ifelse any? turtles with [will-drive-today? = true]
+  ifelse any? turtles with [will-drive?]
   [
-    set median-income-drivers median [income] of turtles with [will-drive-today? = true]
+    set median-income-drivers median [income] of turtles with [will-drive? ]
   ]
   [
     set median-income-drivers 0
   ]  
-  ifelse any? turtles with [will-drive-today? = false]
+  ifelse any? turtles with [will-drive?]
   [
-    set median-income-bussers median [income] of turtles with [will-drive-today? = false]
+    set median-income-bussers median [income] of turtles with [will-drive?]
   ]
   [
     set median-income-bussers 0
@@ -182,26 +182,26 @@ to calculate-median-incomes
 end
   
 to calculate-preference-met
-  set turtles-preference-met (count turtles - count turtles with [wishes-to-drive? = true and will-drive-today? = false])
+  set turtles-preference-met (count turtles - count turtles with [wishes-to-drive? and will-drive?])
   set turtles-preference-not-met population - turtles-preference-met
 end
 
 to calculate-median-preference-met
   ;; if clause to avoid null pointer exc
   
-  ifelse any? turtles with [(wishes-to-drive? = true and will-drive-today? = true) or wishes-to-drive? = false]
+  ifelse any? turtles with [(wishes-to-drive? and will-drive?) or not wishes-to-drive?]
   [
      set median-income-preference-met median [income] of turtles with 
-           [(wishes-to-drive? = true and will-drive-today? = true) or wishes-to-drive? = false]
+           [(wishes-to-drive? and will-drive?) or not wishes-to-drive?]
   ]
   [
     set median-income-preference-met 0
   ]
   
   ;; if clause to avoid null pointer exc
-  ifelse any? turtles with [wishes-to-drive? = true and will-drive-today? = false]
+  ifelse any? turtles with [wishes-to-drive? and not will-drive?]
   [
-     set median-income-preference-not-met median [income] of turtles with [wishes-to-drive? = true and will-drive-today? = false]
+     set median-income-preference-not-met median [income] of turtles with [wishes-to-drive? and not will-drive?]
   ]
   [
     set median-income-preference-not-met 0
@@ -252,50 +252,19 @@ to calculate-delay-created
   
 end
 
-to decide ;; turtle procedure. Decide on whether to drive that day or not.
-    would-prefer-car
-    can-afford-to-drive
-    will-drive
-
+to-report wishes-to-drive? ;; this determines if the turtle would ideally drive
+  report car-love - (yesterdays-travel-time-added / willing-to-wait) > 0
 end
 
-to would-prefer-car ;; this determines if the turtle would ideally drive
-  ifelse (car-love - (yesterdays-travel-time-added / willing-to-wait)) > 0
-  [
-    set wishes-to-drive? true
-  ]
-  
-  [
-    set wishes-to-drive? false
-  ]
-  
-  
-end
-
-to can-afford-to-drive ;; this determines if the turtle can afford to drive. This needs to be tweaked to take into
+to-report can-afford-to-drive? ;; this determines if the turtle can afford to drive. This needs to be tweaked to take into
                        ;; consideration feedback effect from congestion charge lowering price of public transp
-  ifelse congestion-charge-cost / 2 > income
-  [
-    set can-afford-to-drive? false
-  ]
-  
-  [
-    set can-afford-to-drive? true
-  ]
-  
+  report congestion-charge-cost / 2 > income
 end
 
-to will-drive ;; this determines if the turle will actually drive
-  ifelse wishes-to-drive? and can-afford-to-drive?
-  [
-    set will-drive-today? true
-    set shape "car"
-  ]
-  [
-    set will-drive-today? false
-    set shape "bus"
-  ]
+to-report will-drive? ;; this determines if the turle will actually drive
+  report wishes-to-drive? and can-afford-to-drive?
 end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 224
@@ -375,7 +344,7 @@ MONITOR
 774
 376
 People
-count turtles with [will-drive-today? = true]
+count turtles with [will-drive?]
 0
 1
 11
@@ -386,7 +355,7 @@ MONITOR
 898
 377
 People
-count turtles with [will-drive-today? = false]
+count turtles with [not will-drive?]
 0
 1
 11
@@ -400,7 +369,7 @@ congestion-charge-cost
 congestion-charge-cost
 0
 100
-7
+51
 1
 1
 NIL
@@ -985,7 +954,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.2
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -993,9 +962,9 @@ NetLogo 5.0.2
 @#$#@#$#@
 default
 0.0
--0.2 0 1.0 0.0
+-0.2 0 0.0 1.0
 0.0 1 1.0 0.0
-0.2 0 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
