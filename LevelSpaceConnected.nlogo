@@ -29,15 +29,15 @@ end
 
 to go
   ls:ask (list milk congestion) "go"
-;  ls:ask climate "repeat 10 [go]"
+  ls:ask climate "no-display repeat 10 [go] display"
   ; maybe add people to our village
   ;; get our food production
-  set food-surplus food-surplus + "total-eaten" ls:of milk
+  set food-surplus food-surplus + "food-production" ls:of milk
   ;; then people eat:
-  set food-surplus food-surplus - ("count turtles" ls:of congestion / 10)
+  set food-surplus food-surplus - ("count turtles with [shape != \"house\"]" ls:of congestion / 10)
   ;; then if we have enough, we create more people
   if food-surplus > 100 [ls:ask congestion "add-person" set food-surplus food-surplus - 100]
-  if food-surplus < -100 [ls:ask congestion "remove-person" set food-surplus food-surplus + 100]
+  if food-surplus < -100 [ls:ask congestion "remove-person" set food-surplus food-surplus + 100 show "one died"]
 tick
 end
 @#$#@#$#@
@@ -103,11 +103,11 @@ NIL
 1
 
 PLOT
-335
-85
-905
-370
-plot 1
+330
+10
+805
+130
+CO2
 NIL
 NIL
 0.0
@@ -118,7 +118,81 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot food-surplus"
+"default" 1.0 0 -16777216 true "" "plot \"count co2s\" ls:of climate"
+
+PLOT
+330
+130
+805
+250
+Temperature
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot \"temperature\" ls:of climate"
+
+PLOT
+330
+250
+805
+370
+Cows
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot \"count cows\" ls:of milk"
+
+PLOT
+330
+370
+805
+495
+Food 
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot \"food-production\" ls:of milk"
+
+PLOT
+330
+495
+805
+625
+People
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Public transit" 1.0 0 -16777216 true "" "plot \"count turtles with [shape = \\\"bus\\\"]\" ls:of congestion"
+"Car drivers" 1.0 0 -7500403 true "" "plot \"count turtles with [shape = \\\"car\\\"]\" ls:of congestion"
+"Total population" 1.0 0 -2674135 true "" "plot \"count turtles with [shape != \\\"house\\\"]\" ls:of congestion"
 
 @#$#@#$#@
 ## WHAT IS IT?

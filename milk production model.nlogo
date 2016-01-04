@@ -10,6 +10,7 @@ globals [
   cows-eat 
   grow-amount
   total-eaten
+  eaten-history
   ]
 patches-own [
   grass
@@ -23,7 +24,7 @@ to setup
   set cows-max-energy 25
   set cows-eat 1
   set grow-amount .25
-;  create-cows 15 [set energy 5 + random 20 set shape "cow" move-to one-of patches with [patch-type != "forest"]]
+  set eaten-history (list)
   set max-grass 15
   ask patches [set grass random 9]
   ask patches [recolor-grass]
@@ -39,7 +40,8 @@ to go
     regrow 
     recolor-grass
     ]
-;  show total-eaten
+  set eaten-history fput total-eaten eaten-history
+  if length eaten-history > 10 [set eaten-history sublist eaten-history 0 10 ]
   update-plots
   tick
 end
@@ -105,6 +107,10 @@ end
 
 to plant-tree
   if not any? trees-here [sprout-trees 1 [set size .2 set shape "tree" set color green]]
+end
+
+to-report food-production
+  report mean eaten-history
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -228,7 +234,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot total-eaten"
+"default" 1.0 0 -16777216 true "" "plot food-production"
 
 @#$#@#$#@
 ## WHAT IS IT?
