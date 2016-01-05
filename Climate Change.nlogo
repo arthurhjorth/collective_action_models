@@ -224,11 +224,11 @@ end
 GRAPHICS-WINDOW
 195
 15
-744
-387
+548
+263
 24
 -1
-11.0
+7.0
 1
 10
 1
@@ -286,7 +286,7 @@ PLOT
 5
 95
 195
-385
+260
 Global Temperature
 NIL
 NIL

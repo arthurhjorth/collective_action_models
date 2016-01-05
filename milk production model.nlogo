@@ -20,9 +20,11 @@ cows-own [energy]
 
 to setup
   ca
-  ask patches with [pxcor < 0 and pycor > 0] [change-type "forest"]
+  ask patches with [pxcor < 0 ] [change-type "forest"]
+  ask patches with [pxcor >= 0] [change-type "grass" set grass random 15]
+  ask trees [set size 1]
   set cows-max-energy 25
-  set cows-eat 1
+  set cows-eat 2
   set grow-amount .25
   set eaten-history (list)
   set max-grass 15
@@ -33,13 +35,14 @@ end
 
 
 
-to go
+to go [grow-multiplier]
   set total-eaten 0
   ask cows [graze metabolize-and-maybe-die]
-  ask patches [
-    regrow 
+  ask patches with [patch-type = "grass"] 
+  [
+    regrow grow-multiplier 
     recolor-grass
-    ]
+  ]
   set eaten-history fput total-eaten eaten-history
   if length eaten-history > 10 [set eaten-history sublist eaten-history 0 10 ]
   update-plots
@@ -67,12 +70,12 @@ end
 
 
 to metabolize-and-maybe-die
-  set energy energy - .5
+  set energy energy - 1.5
   if energy <= 0 [die]
 end
 
 
-to regrow
+to regrow [multiplier] 
   set grass min (list max-grass (grass + grow-amount))
   if any? trees-here [ask trees-here with [size < 1][set size size + 0.01]]
 end
@@ -110,17 +113,17 @@ to plant-tree
 end
 
 to-report food-production
-  report mean eaten-history
+  report ifelse-value (length eaten-history > 0) [mean eaten-history] [0]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-645
-466
+5
+95
+250
+330
 8
 8
-25.0
+12.0
 1
 10
 1
@@ -141,27 +144,10 @@ ticks
 30.0
 
 BUTTON
+5
 10
-55
-73
-88
-NIL
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-10
-95
-120
-128
+220
+43
 NIL
 change-area
 T
@@ -175,66 +161,14 @@ NIL
 1
 
 CHOOSER
-10
-135
-148
-180
+5
+45
+220
+90
 plant-type
 plant-type
 "grass" "forest"
-0
-
-BUTTON
-10
-15
-76
-48
-NIL
-setup\n
-NIL
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-35
-225
-117
-258
-NIL
-buy-cow
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-PLOT
-745
-55
-945
-205
-Food production
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot food-production"
 
 @#$#@#$#@
 ## WHAT IS IT?

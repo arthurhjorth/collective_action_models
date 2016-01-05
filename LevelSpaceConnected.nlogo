@@ -20,21 +20,29 @@ to setup
   set climate 1
   set congestion 2
   ls:ask ls:models "setup"
-  ls:ask climate "repeat 10 [add-co2] repeat 2 [add-cloud] no-display repeat 5000 [go] clear-all-plots display"
+  ls:ask climate "import-world \"cc-start\""
   reset-ticks
 end
 
-
-
+;; before we do anything, let's talk about a few heuristics for balancing the system
+;; Questions: 
+;; how may people can one cow sustain? let's just say 3'ish
+;; how much co2 should people produce? and how many trees should 
+;; there are 136 trees in the food production model
+;; 
 
 to go
-  ls:ask (list milk congestion) "go"
+  ;; the go procedure does a few things. First it runs the go in congestion and climate:
+  ls:ask congestion "go"
   ls:ask climate "no-display repeat 10 [go] display"
+  ;; depending on the temperature 
+  ls:ask milk "go 1" ; 1 here 
+
   ; maybe add people to our village
   ;; get our food production
   set food-surplus food-surplus + "food-production" ls:of milk
   ;; then people eat:
-  set food-surplus food-surplus - ("count turtles with [shape != \"house\"]" ls:of congestion / 10)
+  set food-surplus food-surplus - "count turtles with [shape != \"house\"]" ls:of congestion
   ;; then if we have enough, we create more people
   if food-surplus > 100 [ls:ask congestion "add-person" set food-surplus food-surplus - 100]
   if food-surplus < -100 [ls:ask congestion "remove-person" set food-surplus food-surplus + 100 show "one died"]
@@ -42,10 +50,10 @@ tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
 10
-455
-41
+60
+255
+91
 16
 16
 0.0
@@ -86,10 +94,10 @@ NIL
 1
 
 BUTTON
-5
-60
-75
-93
+200
+10
+270
+43
 NIL
 go
 T
@@ -103,10 +111,10 @@ NIL
 1
 
 PLOT
-330
-10
-805
-130
+5
+60
+480
+180
 CO2
 NIL
 NIL
@@ -121,10 +129,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"count co2s\" ls:of climate"
 
 PLOT
-330
-130
-805
-250
+5
+310
+480
+430
 Temperature
 NIL
 NIL
@@ -139,10 +147,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"temperature\" ls:of climate"
 
 PLOT
-330
-250
-805
-370
+5
+430
+480
+550
 Cows
 NIL
 NIL
@@ -157,11 +165,11 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"count cows\" ls:of milk"
 
 PLOT
-330
-370
-805
-495
-Food 
+5
+550
+480
+675
+Food Production
 NIL
 NIL
 0.0
@@ -175,10 +183,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"food-production\" ls:of milk"
 
 PLOT
-330
-495
-805
-625
+5
+180
+480
+310
 People
 NIL
 NIL
@@ -190,9 +198,26 @@ true
 false
 "" ""
 PENS
-"Public transit" 1.0 0 -16777216 true "" "plot \"count turtles with [shape = \\\"bus\\\"]\" ls:of congestion"
+"Public transit" 1.0 0 -16777216 true "" "plot \"count turtles with [shape = \\\"train\\\"]\" ls:of congestion"
 "Car drivers" 1.0 0 -7500403 true "" "plot \"count turtles with [shape = \\\"car\\\"]\" ls:of congestion"
 "Total population" 1.0 0 -2674135 true "" "plot \"count turtles with [shape != \\\"house\\\"]\" ls:of congestion"
+
+BUTTON
+410
+10
+480
+43
+Buy Cow
+ls:ask milk \"buy-cow\"
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
