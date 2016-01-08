@@ -76,7 +76,7 @@ end
 
 
 to regrow [multiplier] 
-  set grass min (list max-grass (grass + grow-amount))
+  set grass min (list max-grass (grass + grow-amount * multiplier))
   if any? trees-here [ask trees-here with [size < 1][set size size + 0.01]]
 end
 

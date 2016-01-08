@@ -89,53 +89,22 @@ patches-own[
 ]
 
 to run-a-week
-  ;; only run the week if everybody has decided what to do
-;  let undecided-farmers farmers with [will-do = undecided or say-will-do = undecided]
-;  if any? undecided-farmers [show (word [user-id] of undecided " still undecided.") stop]
-
-;  hubnet-broadcast-message (word "Week " ticks " starting!")
-  ;; clear who was seen this week
-;  set seen-this-week (turtle-set)
-
-
-;  ;; we can figure out how to do the visualization later. But here are the options:
-;  ;; I wonder if we should actually let people do other things too. They could decide to inspect fences without telling anyone
-;  ;; so that they can catch defectors.
-;  ask farmers [do-weekly-action]
-
-  ;; all cows graze. We do this to make sure everybody's cows get an equal chance at eating,
-  ;; and to smoothe out movement animation
   repeat 7 [ask cows [graze metabolize-and-maybe-die]]
 
   ;; calculate how much milk they get (we need a better function for this, I think)
   ask farmers [
     sell-milk
-    update-client-info
     ]
-;  ;; fences deteriorate
-;  ask fences [
-;   deteriorate
-;   ]
-;
-  ;; grass regrows
+
   ask grass-patches [
     grow-grass grass-regrow
     recolor-grass ;; we may not want to do this unless people "survey" the grass
   ]
 
   tick
-; show-who-was-seen-this-week
-;  ask farmers [
-;    log-player-action "say" say-will-do
-;    log-player-action "do" will-do
-;  ]
-;  update-fence-labels
   log-weekly
-
   reset-weekly-vars
   update-plots
-;  hubnet-send-message "Status" "This is the weekly town hall meeting. Coordinate with the rest of the village, and decide what you will do next week."
-
 end
 
 ;to deteriorate
@@ -455,7 +424,7 @@ to listen-to-clients
 end
 
 to add-farmer [message-source bot?]
-  show message-source
+;  show message-source
 
   create-farmers 1 [
     set is-bot? bot?
@@ -539,7 +508,6 @@ to do-command [source tag]
     if will-do != undecided and say-will-do != undecided [
     hubnet-send source "Status" "You are ready for this week."
     ]
-
   ]
 end
 
@@ -914,11 +882,21 @@ end
 to-report latest-milk-production
   report ifelse-value (length total-milk-production > 0) [last total-milk-production] [0]
 end
+
+to show-leaderboard
+  ;; sort people by money
+  let farmers-by-wealth reverse sort-on  [wealth] farmers
+  clear-output
+  output-print "Leaderboard"
+  foreach farmers-by-wealth [
+    output-print [(word user-id ": $" wealth)] of ?
+  ]
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-275
+115
 10
-714
+554
 470
 16
 16
@@ -944,9 +922,9 @@ Week
 
 BUTTON
 5
-85
-130
-118
+45
+110
+78
 NIL
 listen-to-clients
 T
@@ -961,9 +939,9 @@ NIL
 
 BUTTON
 5
-155
-130
-188
+115
+110
+148
 NIL
 run-a-week
 T
@@ -978,9 +956,9 @@ NIL
 
 BUTTON
 5
-120
-130
-153
+80
+110
+113
 NIL
 setup
 NIL
@@ -994,11 +972,11 @@ NIL
 1
 
 PLOT
-715
+555
 10
-1230
+920
 150
-Plot 1
+Grass
 NIL
 NIL
 0.0
@@ -1012,9 +990,9 @@ PENS
 "Grass                   " 1.0 0 -10899396 true "" "plot sum [grass] of patches"
 
 PLOT
-715
+555
 165
-1230
+920
 305
 Number of Cows
 NIL
@@ -1030,28 +1008,9 @@ PENS
 "Cows                   " 1.0 0 -6459832 true "" "plot count cows"
 
 PLOT
-15
-275
-265
-435
-gini-coefficient
-NIL
-NIL
-0.0
-1.0
-0.0
-1.0
-false
-true
-"" "clear-plot"
-PENS
-"Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[plotxy 0 0 foreach gini-points [plotxy first ? last ?] plotxy 1 1]"
-"Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
-
-PLOT
-715
+555
 320
-1230
+920
 470
 Milk Production
 NIL
@@ -1067,12 +1026,36 @@ PENS
 "Milk Production" 1.0 0 -5825686 true "" "plot latest-milk-production"
 
 BUTTON
-80
-45
-187
-78
+5
+10
+110
+43
 NIL
 start-hubnet
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+OUTPUT
+925
+10
+1165
+470
+12
+
+BUTTON
+5
+225
+110
+258
+Who's Winning?
+show-leaderboard
 NIL
 1
 T

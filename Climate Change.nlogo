@@ -156,7 +156,7 @@ end
 
 to run-heat    ;; advances the heat energy turtles
   ;; the temperature is related to the number of heat turtles
-  set temperature 0.99 * temperature + 0.01 * (12 + 0.1 * count heats)
+  set temperature 0.99 * temperature + 0.01 * (12 + 0.35 * count heats)
   ask heats
   [
     let dist 0.5 * random-float 1
@@ -192,9 +192,9 @@ to run-IR
   ]
 end
 
-to add-CO2  ;; randomly adds 25 CO2 molecules to atmosphere
+to add-CO2 [n] ;; randomly adds 25 CO2 molecules to atmosphere
   let sky-height sky-top - earth-top
-  create-CO2s 25 [
+  create-CO2s n [
     set color green
     ;; pick a random position in the sky area
     setxy random-xcor
@@ -202,7 +202,7 @@ to add-CO2  ;; randomly adds 25 CO2 molecules to atmosphere
   ]
 end
 
-to remove-CO2 ;; randomly remove 25 CO2 molecules
+to remove-CO2 [n];; randomly remove 25 CO2 molecules
   repeat 25 [
     if any? CO2s [
       ask one-of CO2s [ die ]
@@ -217,15 +217,15 @@ to run-CO2
     ;; keep the CO2 in the sky area
     if [not shade-of? blue pcolor] of patch-ahead dist
       [ set heading 180 - heading ]
-    fd dist ;; move forward a bit
+    fd dist * .9 ;; move forward a bit
   ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-195
-15
-548
-263
+0
+10
+353
+258
 24
 -1
 7.0
@@ -247,80 +247,6 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
-
-BUTTON
-5
-15
-100
-48
-setup
-Setup
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-100
-15
-195
-48
-go
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-PLOT
-5
-95
-195
-260
-Global Temperature
-NIL
-NIL
-0.0
-10.0
-10.0
-20.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -2674135 true "" "plot temperature"
-
-MONITOR
-5
-50
-100
-95
-NIL
-temperature
-1
-1
-11
-
-MONITOR
-100
-50
-195
-95
-CO2 amount
-count CO2s
-2
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?

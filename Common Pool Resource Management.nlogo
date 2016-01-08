@@ -90,7 +90,7 @@ patches-own[
 to run-a-week
   ;; only run the week if everybody has decided what to do
   let undecided-farmers farmers with [will-do = undecided or say-will-do = undecided]
-  if any? undecided-farmers [show (word [user-id] of undecided " still undecided.") stop]
+  if any? undecided-farmers [show (word [user-id] of undecided-farmers " still undecided.") stop]
 
   hubnet-broadcast-message (word "Week " ticks " starting!")
   ;; clear who was seen this week
@@ -1086,10 +1086,10 @@ NIL
 1
 
 PLOT
-1130
-420
-1380
-580
+140
+475
+390
+635
 gini-coefficient
 NIL
 NIL
@@ -1182,7 +1182,7 @@ CHOOSER
 580
 farmer-list
 farmer-list
-"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9" "Local 1" "Local 2" "Local 3"
+"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9" "Local 3" "jenny"
 0
 
 BUTTON
@@ -1626,7 +1626,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.1
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

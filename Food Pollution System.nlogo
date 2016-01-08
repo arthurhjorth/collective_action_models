@@ -3,9 +3,10 @@ globals [
   ;; model ids
   milk 
   climate 
-  congestion
+  population
   ;; variables for keeping track of inter-model logic
   food-surplus
+  pollution
   ]
 
 
@@ -15,12 +16,18 @@ to setup
   ca
   ls:load-gui-model "milk production model.nlogo"
   ls:load-gui-model "Climate Change.nlogo"
-  ls:load-gui-model "Congestion Charge.nlogo"
+  ls:load-gui-model "Population Model.nlogo"
+  soft-setup
+end
+
+
+to soft-setup
   set milk 0
   set climate 1
-  set congestion 2
+  set population 2
   ls:ask ls:models "setup"
   ls:ask climate "import-world \"cc-start\""
+  clear-all-plots
   reset-ticks
 end
 
@@ -32,31 +39,47 @@ end
 ;; 
 
 to go
+  
+  
   ;; the go procedure does a few things. First it runs the go in congestion and climate:
-  ls:ask congestion "go"
+  ls:ask population "go"
   ls:ask climate "no-display repeat 10 [go] display"
-  ;; depending on the temperature 
-  ls:ask milk "go 1" ; 1 here 
+  ;; then it runs the food production model. Two things affect this - 
+  ;;;; first, the temperature in the climate model; second, the amount of fertilizer used
+  ;;;; in the model
+  
+  ;; this variable is central to the balancing of the model, so this needs to be carefully calculated.
+  ;; 60 is the ideal growth temperature for grass. SO we take the absolute difference between that and
+  ;; the actual temperature and calculate some coefficient for that.
+  let temp  "temperature" ls:of climate
+  ;; let's try with the ratio -^1
+  let grow-coeff abs (60 - temp)
+  set grow-coeff  60 / (60 - grow-coeff)
+  set grow-coeff grow-coeff * (1 + fertilization-rate / 100)
+;  show grow-coeff
+  (ls:ask milk "go ?" grow-coeff) ; 1 here
+
+  
 
   ; maybe add people to our village
   ;; get our food production
   set food-surplus food-surplus + "food-production" ls:of milk
   ;; then people eat:
-  set food-surplus food-surplus - "count turtles with [shape != \"house\"]" ls:of congestion
+  set food-surplus food-surplus - "count turtles" ls:of population
   ;; then if we have enough, we create more people
-  if food-surplus > 100 [ls:ask congestion "add-person" set food-surplus food-surplus - 100]
-  if food-surplus < -100 [ls:ask congestion "remove-person" set food-surplus food-surplus + 100 show "one died"]
+  if food-surplus > 100 [ls:ask population "add-person" set food-surplus food-surplus - 100]
+  if food-surplus < -100 [ls:ask population "remove-person" set food-surplus food-surplus + 100 show "one died"]
 tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
+180
 10
-60
-255
-91
+425
+206
 16
 16
-0.0
+5.0
 1
 10
 1
@@ -94,10 +117,10 @@ NIL
 1
 
 BUTTON
-200
-10
-270
-43
+5
+45
+75
+78
 NIL
 go
 T
@@ -111,10 +134,10 @@ NIL
 1
 
 PLOT
-5
-60
-480
-180
+155
+10
+475
+130
 CO2
 NIL
 NIL
@@ -129,10 +152,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"count co2s\" ls:of climate"
 
 PLOT
-5
-310
-480
-430
+155
+250
+475
+370
 Temperature
 NIL
 NIL
@@ -147,10 +170,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"temperature\" ls:of climate"
 
 PLOT
-5
-430
-480
-550
+155
+370
+475
+490
 Cows
 NIL
 NIL
@@ -165,10 +188,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"count cows\" ls:of milk"
 
 PLOT
-5
-550
-480
-675
+155
+490
+475
+610
 Food Production
 NIL
 NIL
@@ -183,10 +206,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"food-production\" ls:of milk"
 
 PLOT
-5
-180
-480
-310
+155
+130
+475
+250
 People
 NIL
 NIL
@@ -198,17 +221,82 @@ true
 false
 "" ""
 PENS
-"Public transit" 1.0 0 -16777216 true "" "plot \"count turtles with [shape = \\\"train\\\"]\" ls:of congestion"
-"Car drivers" 1.0 0 -7500403 true "" "plot \"count turtles with [shape = \\\"car\\\"]\" ls:of congestion"
-"Total population" 1.0 0 -2674135 true "" "plot \"count turtles with [shape != \\\"house\\\"]\" ls:of congestion"
+"Public transit" 1.0 0 -16777216 true "" "plot \"count turtles\" ls:of population"
 
 BUTTON
-410
-10
-480
-43
+5
+185
+75
+218
 Buy Cow
 ls:ask milk \"buy-cow\"
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+5
+220
+145
+253
+fertilization-rate
+fertilization-rate
+0
+1000
+0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+475
+10
+795
+130
+Pollution
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count turtles"
+
+BUTTON
+5
+80
+117
+113
+Run 400 ticks
+repeat 400 [go]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+5
+115
+127
+148
+Run 1000 ticks
+repeat 1000 [go]
 NIL
 1
 T

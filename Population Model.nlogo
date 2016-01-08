@@ -4,6 +4,8 @@
 ;; and the interpretation of policies.
 ;; TODOS: price sensitivity 
 
+extensions [gradient]
+
 globals [
   
   global-pollution-per-day               ;; pollution variable
@@ -80,8 +82,8 @@ to setup
   set population 1089
   
   set color? false
-  ask patch 0 0 [sprout 1 [set shape "house"]]
-  
+;  ask patch 0 0 [sprout 1 [set shape "house"]]
+  ask patches with [distancexy -11 11 < 10] [set pcolor blue]
   
 
 
@@ -221,7 +223,8 @@ end
 
 to-report can-afford-to-drive? ;; this determines if the turtle can afford to drive. This needs to be tweaked to take into
                        ;; consideration feedback effect from congestion charge lowering price of public transp
-  report congestion-charge-cost / 2 < income
+                       report 1
+;  report congestion-charge-cost / 2 < income
 end
 
 to-report will-drive? ;; this determines if the turle will actually drive
@@ -233,9 +236,10 @@ to add-person
   create-turtles 1
   [
     ;; setting shape person
-    set shape "person"
+    set shape "house"
     ;; placing randomly on map in unoccupied location
-    move-to min-one-of patches with [not any? turtles-here] [sum (list abs pxcor abs pycor)]
+    move-to min-one-of patches with [not any? turtles-here and pcolor != blue] [distancexy -4 3]
+;    move-to min-one-of patches with [not any? turtles-here] [sum (list abs pxcor abs pycor)]
     ;;move-to first patches with  [any? turtles-here = false]
     
 
@@ -259,9 +263,9 @@ end
 @#$#@#$#@
 GRAPHICS-WINDOW
 5
-85
+10
 250
-346
+271
 11
 11
 10.0
@@ -271,8 +275,8 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
+0
+0
 1
 -11
 11
@@ -284,101 +288,7 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
-BUTTON
-5
-10
-125
-43
-NIL
-setup
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-125
-10
-245
-43
-NIL
-go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-5
-45
-245
-78
-congestion-charge-cost
-congestion-charge-cost
-0
-100
-99
-1
-1
-NIL
-HORIZONTAL
-
 @#$#@#$#@
-## WHAT IS IT?
-
-This is a model illustrating the indeterminacy of the concept of  public goods.
-
-While at first sight, the purpose of the model may appear to be to test congestion charge as a policy, the underlying idea is illustrate how the same model may be interpreted differently by selecting and weighing some data over other.
-
-## HOW IT WORKS
-
-Agents every morning make two choices:  
-1. Would I like to drive to work?  
-2. Can I afford to?
-
-Question 1 is answered by comparing 
-
-## HOW TO USE IT
-
-This section could explain how to use the model, including a description of each of the items in the interface tab.
-
-## THINGS TO NOTICE
-
-I found it interesting that the higher the 
-
-From a more practical policy-making point, the lesson is that people react to the result of policy, not to the problems solved by policy.
-
-## THINGS TO TRY
-
-This section could give some ideas of things for the user to try to do (move sliders, switches, etc.) with the model.
-
-## EXTENDING THE MODEL
-
-Pollution and average passengers are currently hard coded (car pollution: 7, average passengers per car: 1.5; bus pollution: 50, average passengers per bus: 35). 
-
-The number of busses is a result of 
-
-## RELATED MODELS
-
-This section could give the names of models in the NetLogo Models Library or elsewhere which are of related interest.
-
-## CREDITS AND REFERENCES
-
-This model was built by Arthur Hjorth (arthur.hjorth at stx.oxon.org) and released under Creative Commons Attribution-NonCommercial-ShareAlike 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
-
-It is based on an example by Professor of Ideology Michael Freeden.
-
-Freeden, M. (2005), What Should the 'Political' in Political Theory Explore?. Journal of Political Philosophy
 @#$#@#$#@
 default
 true
