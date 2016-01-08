@@ -1,4 +1,4 @@
-extensions [table cf goo gradient profiler] ;color-generator ]
+extensions [table cf goo gradient profiler] ;
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -892,6 +892,22 @@ to show-leaderboard
     output-print [(word user-id ": $" wealth)] of ?
   ]
 end
+
+to show-time-marker
+  let plots ["Grass"  "Number of Cows" "Milk Production"]
+  
+  foreach plots [
+    ;; the x-value is the max-x-value multiplied by marker divided by 100
+    let x-value plot-x-max * marker / 100
+    set-current-plot ?
+    create-temporary-plot-pen "time"
+    plot-pen-up
+    plotxy x-value plot-y-min
+    plot-pen-down
+    plotxy x-value plot-y-max
+  ]
+  
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 115
@@ -975,7 +991,7 @@ PLOT
 555
 10
 920
-150
+130
 Grass
 NIL
 NIL
@@ -991,9 +1007,9 @@ PENS
 
 PLOT
 555
-165
+135
 920
-305
+255
 Number of Cows
 NIL
 NIL
@@ -1009,9 +1025,9 @@ PENS
 
 PLOT
 555
-320
+260
 920
-470
+380
 Milk Production
 NIL
 NIL
@@ -1056,6 +1072,38 @@ BUTTON
 258
 Who's Winning?
 show-leaderboard
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+570
+380
+820
+413
+marker
+marker
+0
+100
+48
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+570
+415
+825
+448
+Show Time Marker
+show-time-marker
 NIL
 1
 T
@@ -1492,6 +1540,60 @@ Status
 NIL
 0
 1
+
+PLOT
+15
+165
+305
+295
+Grass
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Grass                   " 1.0 0 -10899396 true
+
+PLOT
+15
+300
+305
+430
+Number of Cows
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Cows                   " 1.0 0 -6459832 true
+
+PLOT
+15
+435
+305
+565
+Milk Production
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"Milk Production" 1.0 0 -5825686 true
 
 @#$#@#$#@
 default
