@@ -1,4 +1,4 @@
-extensions [table cf goo gradient profiler] ;
+extensions [table cf palette ] ;
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -6,6 +6,7 @@ breed [ farmers farmer ] ;; created and controlled by clients
 breed [ fences fence]
 
 globals [
+  old-marker
   client-info-task
   ;; make some tables for saving this stuff for later.
   farmer-actions
@@ -306,15 +307,15 @@ to setup
   setup-world
   clear-all-plots
   setup-plots
-  
+
   set client-info-task task [ hubnet-send ? "$" ? hubnet-send ? "# of Cows" ?  hubnet-send-override ? ? "color" [red]  hubnet-send-override ? ? "size" [2]]
 
-  
-  
+
+
   ask farmers [
-    init-farmer ; we need to find some way of resetting farmers without killing them. 
+    init-farmer ; we need to find some way of resetting farmers without killing them.
     reset-farmer]
-  
+
 ;  hubnet-reset
   reset-ticks
 end
@@ -434,13 +435,13 @@ to add-farmer [message-source bot?]
     set color one-of base-colors
     reset-farmer
     init-farmer
-    hubnet-send-override message-source one-of farmers with [user-id = message-source] "size" [3]    
+    hubnet-send-override message-source one-of farmers with [user-id = message-source] "size" [3]
     display
 
   ]
 
   wait .05
-  goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
+;  goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
   wait .05
   scale-vars-for-n-players
 
@@ -557,7 +558,7 @@ to grow-grass [grow-amount]
 end
 
 to recolor-grass
-  set pcolor gradient:scale [[90 60 0] [0 255 0]] grass  0 max-grass
+  set pcolor palette:scale-gradient [[90 60 0] [0 255 0]] grass  0 max-grass
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
@@ -893,21 +894,47 @@ to show-leaderboard
   ]
 end
 
-to show-time-marker
+to time-stamp
   let plots ["Grass"  "Number of Cows" "Milk Production"]
-  
+
   foreach plots [
     ;; the x-value is the max-x-value multiplied by marker divided by 100
-    let x-value plot-x-max * marker / 100
     set-current-plot ?
-    create-temporary-plot-pen "time"
+    set-current-plot-pen "Time Stamp"
+    let x-value plot-x-max * marker / 100
     plot-pen-up
     plotxy x-value plot-y-min
     plot-pen-down
     plotxy x-value plot-y-max
   ]
-  
+
 end
+
+to clear-stamp
+    let plots ["Grass"  "Number of Cows" "Milk Production"]
+
+  foreach plots [
+    ;; the x-value is the max-x-value multiplied by marker divided by 100
+    set-current-plot ?
+    set-current-plot-pen "Time Stamp"
+    plot-pen-reset
+  ]
+
+end
+
+
+ to-report the-marker
+   if (old-marker != marker)
+   [
+   set old-marker marker
+   set-current-plot "Grass"
+   set-current-plot-pen "Time Marker"
+   plot-pen-reset
+   update-plots
+   ]
+   report marker
+ end
+ 
 @#$#@#$#@
 GRAPHICS-WINDOW
 115
@@ -938,9 +965,9 @@ Week
 
 BUTTON
 5
-45
+85
 110
-78
+118
 NIL
 listen-to-clients
 T
@@ -955,9 +982,9 @@ NIL
 
 BUTTON
 5
-115
+250
 110
-148
+283
 NIL
 run-a-week
 T
@@ -972,9 +999,9 @@ NIL
 
 BUTTON
 5
-80
+50
 110
-113
+83
 NIL
 setup
 NIL
@@ -1004,6 +1031,8 @@ true
 "" ""
 PENS
 "Grass                   " 1.0 0 -10899396 true "" "plot sum [grass] of patches"
+"Time Marker" 1.0 0 -7500403 true "" "let x-value plot-x-max * marker / 100\nplot-pen-reset\n    plot-pen-up\n    plotxy x-value plot-y-min\n    plot-pen-down\n    plotxy x-value plot-y-max"
+"Time Stamp" 1.0 0 -2674135 true "" ""
 
 PLOT
 555
@@ -1022,6 +1051,8 @@ true
 "" ""
 PENS
 "Cows                   " 1.0 0 -6459832 true "" "plot count cows"
+"Time Marker" 1.0 0 -7500403 true "" "let x-value plot-x-max * marker / 100\nplot-pen-reset\n    plot-pen-up\n    plotxy x-value plot-y-min\n    plot-pen-down\n    plotxy x-value plot-y-max"
+"Time Stamp" 1.0 0 -2674135 true "" ""
 
 PLOT
 555
@@ -1040,12 +1071,14 @@ true
 "" ""
 PENS
 "Milk Production" 1.0 0 -5825686 true "" "plot latest-milk-production"
+"Timer Marker" 1.0 0 -7500403 true "" "let x-value plot-x-max * marker / 100\nplot-pen-reset\n    plot-pen-up\n    plotxy x-value plot-y-min\n    plot-pen-down\n    plotxy x-value plot-y-max"
+"Time Stamp" 1.0 0 -2674135 true "" ""
 
 BUTTON
 5
-10
+15
 110
-43
+48
 NIL
 start-hubnet
 NIL
@@ -1067,9 +1100,9 @@ OUTPUT
 
 BUTTON
 5
-225
+305
 110
-258
+338
 Who's Winning?
 show-leaderboard
 NIL
@@ -1091,7 +1124,7 @@ marker
 marker
 0
 100
-48
+25
 1
 1
 NIL
@@ -1100,10 +1133,38 @@ HORIZONTAL
 BUTTON
 570
 415
-825
+705
 448
 Show Time Marker
-show-time-marker
+time-stamp
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+840
+385
+922
+430
+NIL
+the-marker
+17
+1
+11
+
+BUTTON
+705
+415
+820
+448
+NIL
+clear-stamp
 NIL
 1
 T
@@ -1558,6 +1619,8 @@ false
 "" ""
 PENS
 "Grass                   " 1.0 0 -10899396 true
+"Time Marker" 1.0 0 -7500403 true
+"Time Stamp" 1.0 0 -2674135 true
 
 PLOT
 15
@@ -1576,6 +1639,8 @@ false
 "" ""
 PENS
 "Cows                   " 1.0 0 -6459832 true
+"Time Marker" 1.0 0 -7500403 true
+"Time Stamp" 1.0 0 -2674135 true
 
 PLOT
 15
@@ -1594,6 +1659,8 @@ false
 "" ""
 PENS
 "Milk Production" 1.0 0 -5825686 true
+"Timer Marker" 1.0 0 -7500403 true
+"Time Stamp" 1.0 0 -2674135 true
 
 @#$#@#$#@
 default
