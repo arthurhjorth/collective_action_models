@@ -230,8 +230,9 @@ to sell-milk
   ;; this is a bit silly but only take energy from cows that are alive. we kill off the ones that are about to die
   ;; later.
   
-  let total-production [energy] of my-cows with [energy > 0]
-  let profit round sum total-production ^ 1.1
+  let total-production [(energy / 135) ^ 2 ] of my-cows with [energy > 0]
+  let profit sum total-production
+;  show profit
   set money money + profit
   set milk-production-list lput profit milk-production-list
 end
@@ -1125,7 +1126,7 @@ marker
 marker
 0
 100
-62
+48
 1
 1
 NIL
