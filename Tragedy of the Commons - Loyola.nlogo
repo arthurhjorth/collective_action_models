@@ -90,7 +90,7 @@ patches-own[
 ]
 
 to run-a-week
-  repeat 7 [ask cows [graze metabolize-and-maybe-die]]
+  ask cows [graze metabolize-and-maybe-die]
 
   ;; calculate how much milk they get (we need a better function for this, I think)
   ask farmers [
@@ -229,8 +229,9 @@ end
 to sell-milk
   ;; this is a bit silly but only take energy from cows that are alive. we kill off the ones that are about to die
   ;; later.
+  
   let total-production [energy] of my-cows with [energy > 0]
-  let profit round sum total-production
+  let profit round sum total-production ^ 1.1
   set money money + profit
   set milk-production-list lput profit milk-production-list
 end
@@ -1124,7 +1125,7 @@ marker
 marker
 0
 100
-25
+62
 1
 1
 NIL
