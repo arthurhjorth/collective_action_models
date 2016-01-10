@@ -126,7 +126,7 @@ end
 
 to reset-weekly-vars
   ask farmers [set will-do undecided set say-will-do undecided]
-  hubnet-broadcast "Status" "Choose what to say and do this week."
+  hubnet-broadcast "Status" "Remember to call out 'COW!' every time you buy a cow" ;"Choose what to say and do this week."
   set seen-this-week (turtle-set)
 end
 
@@ -335,7 +335,8 @@ end
 
 
 to go
-  hubnet-broadcast "Status" "Choose what to do this week!"
+  ;hubnet-broadcast "Status" "Choose what to do this week!"
+  hubnet-broadcast "Status" "Remember to call out 'COW!' every time you buy a cow" ;"Choose what to say and do this week."
 end
 
 to setup-world
@@ -511,7 +512,8 @@ to do-command [source tag]
     )
     ;; tell them if they still need to make a decision
     if will-do = undecided and say-will-do = undecided [
-    hubnet-send source "Status" "Decide what to say and do this week."
+    ;hubnet-send source "Status" "Decide what to say and do this week."
+    hubnet-send source "Status" "Remember to call out 'COW!' every time you buy a cow" ;"Choose what to say and do this week."
     ]
     if will-do != undecided and say-will-do = undecided [
     hubnet-send source "Status" "Decide on what you say you will do."
@@ -671,7 +673,7 @@ end
 
 
 to update-client-info
-   hubnet-send user-id "$" money
+   hubnet-send user-id "$" precision money 0
    hubnet-send user-id "# of Cows" (count my-cows)
    hubnet-send-override user-id my-cows "color" [red]
    hubnet-send-override user-id my-cows "size" [2]
