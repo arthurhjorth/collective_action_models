@@ -96,6 +96,8 @@ patches-own[
   water
 ]
 
+
+
 to run-a-week
   ask cows [graze metabolize-and-maybe-die]
 
@@ -899,7 +901,7 @@ to show-leaderboard
   clear-output
   output-print "Leaderboard"
   foreach farmers-by-wealth [
-    output-print [(word user-id ": $" wealth)] of ?
+    output-print [user-id ] of ?
   ]
 end
 
@@ -1168,7 +1170,7 @@ SLIDER
 marker
 marker
 0
-100
+(max (list 1 ticks))
 39
 1
 1
