@@ -104,7 +104,9 @@ to run-a-week
   ;; calculate how much milk they get (we need a better function for this, I think)
   ask farmers [
     sell-milk
+    update-client-info
     ]
+
 
   ask grass-patches [
     grow-grass grass-regrow
@@ -239,7 +241,7 @@ to sell-milk
   ;; this is a bit silly but only take energy from cows that are alive. we kill off the ones that are about to die
   ;; later.
 
-  let total-production [(energy / 135) ^ 2 ] of my-cows with [energy > 0]
+  let total-production [((energy / 135) ^ 2 ) * 7] of my-cows with [energy > 0]
   let profit sum total-production
 ;  show profit
   set money money + profit
@@ -322,7 +324,7 @@ to setup
   set client-info-task task [ hubnet-send ? "$" ? hubnet-send ? "# of Cows" ?  hubnet-send-override ? ? "color" [red]  hubnet-send-override ? ? "size" [2]]
 
 
-
+  ask cows [die]
   ask farmers [
     init-farmer ; we need to find some way of resetting farmers without killing them.
     reset-farmer]
@@ -1012,9 +1014,9 @@ Week
 
 BUTTON
 5
-85
+195
 110
-118
+228
 NIL
 listen-to-clients
 T
@@ -1029,9 +1031,9 @@ NIL
 
 BUTTON
 5
-250
+230
 110
-283
+263
 NIL
 run-a-week
 T
@@ -1046,10 +1048,10 @@ NIL
 
 BUTTON
 5
-50
+160
 110
-83
-NIL
+193
+Start New Model!
 setup
 NIL
 1
@@ -1147,9 +1149,9 @@ OUTPUT
 
 BUTTON
 5
-305
+355
 110
-338
+388
 Who's Winning?
 show-leaderboard
 NIL
@@ -1243,6 +1245,23 @@ latest-milk-production / count cows
 3
 1
 11
+
+BUTTON
+5
+390
+110
+423
+Post Screenshot!
+post
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
