@@ -1175,7 +1175,7 @@ marker
 marker
 0
 100
-53
+81
 1
 1
 %
@@ -1242,7 +1242,7 @@ MONITOR
 10
 920
 75
-Avg Milk Per Cow This Week
+Avg Milk Per Cow (gallons)
 latest-milk-production / count cows
 2
 1
