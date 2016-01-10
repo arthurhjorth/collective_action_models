@@ -1063,9 +1063,9 @@ NIL
 
 PLOT
 555
-10
+55
 920
-130
+175
 Grass
 NIL
 NIL
@@ -1083,9 +1083,9 @@ PENS
 
 PLOT
 555
-135
+180
 920
-255
+300
 Number of Cows
 NIL
 NIL
@@ -1103,9 +1103,9 @@ PENS
 
 PLOT
 555
-260
+305
 920
-380
+425
 Milk Production
 NIL
 NIL
@@ -1163,25 +1163,25 @@ NIL
 1
 
 SLIDER
-570
-380
-820
-413
+555
+425
+805
+458
 marker
 marker
 0
-(max (list 1 ticks))
-39
+100
+48
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-570
-415
-705
-448
+555
+460
+690
+493
 Show Time Marker
 time-stamp
 NIL
@@ -1195,10 +1195,10 @@ NIL
 1
 
 MONITOR
-840
-385
-922
+825
 430
+907
+475
 NIL
 the-marker
 17
@@ -1206,10 +1206,10 @@ the-marker
 11
 
 BUTTON
-705
-415
-820
-448
+690
+460
+805
+493
 NIL
 clear-stamp
 NIL
@@ -1221,6 +1221,28 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+555
+10
+720
+55
+# of cows
+count cows
+0
+1
+11
+
+MONITOR
+720
+10
+920
+55
+Milk per cow
+latest-milk-production / count cows
+3
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
