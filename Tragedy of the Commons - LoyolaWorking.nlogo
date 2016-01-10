@@ -1242,7 +1242,7 @@ MONITOR
 10
 920
 75
-Ave Milk Per Cow This Week
+Avg Milk Per Cow This Week
 latest-milk-production / count cows
 2
 1
