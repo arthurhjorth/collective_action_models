@@ -1,4 +1,4 @@
-extensions [table cf palette ] ;
+extensions [table cf palette webview] ;
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -6,6 +6,13 @@ breed [ farmers farmer ] ;; created and controlled by clients
 breed [ fences fence]
 
 globals [
+  ;; variables for posting screenshots
+  the-url
+  posting-setup?
+  filename
+  ;;
+
+
   old-marker
   client-info-task
   ;; make some tables for saving this stuff for later.
@@ -943,6 +950,36 @@ to-report the-marker
    ]
    report marker
  end
+
+
+
+
+to setup-posting
+  set the-url "https://script.google.com/macros/s/AKfycbxwWtkBbbh7Izr9bFBtbcZxG6UsOXTDBIuxJGMlbiIk-1zls18/exec"
+  webview:add-module "NetLogo"
+  (webview:create-frame "Posting Your Results" the-url)
+  set posting-setup? true
+end
+
+to post
+  save-interface-image
+  ifelse webview:is-open?
+  [
+    webview:load the-url
+    webview:focus
+  ]
+  [
+    setup-posting
+  ]
+end
+
+to save-interface-image
+  let appendix 0
+  while [ file-exists? (word "interface" appendix ".jpg") ]
+  [ set appendix appendix + 1]
+  set filename (word "interface" appendix ".jpg" )
+  export-interface filename
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 115
