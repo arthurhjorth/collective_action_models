@@ -913,8 +913,8 @@ to time-stamp
 end
 
 to clear-stamp
-    let plots ["Grass"  "Number of Cows" "Milk Production"]
 
+  let plots ["Grass"  "Number of Cows" "Milk Production"]
   foreach plots [
     ;; the x-value is the max-x-value multiplied by marker divided by 100
     set-current-plot ?
@@ -925,14 +925,21 @@ to clear-stamp
 end
 
 
- to-report the-marker
-   if (old-marker != marker)
-   [
-   set old-marker marker
-   set-current-plot "Grass"
-   set-current-plot-pen "Time Marker"
-   plot-pen-reset
-   update-plots
+to-report the-marker
+  let plots ["Grass"  "Number of Cows" "Milk Production"]
+  if (old-marker != marker)
+    [
+      set old-marker marker
+      foreach plots [
+        set-current-plot ?
+        set-current-plot-pen "Time Marker"
+        let x-value plot-x-max * marker / 100
+        plot-pen-reset
+        plot-pen-up
+        plotxy x-value plot-y-min
+        plot-pen-down
+        plotxy x-value plot-y-max
+      ]
    ]
    report marker
  end
@@ -1072,7 +1079,7 @@ true
 "" ""
 PENS
 "Milk Production" 1.0 0 -5825686 true "" "plot latest-milk-production"
-"Timer Marker" 1.0 0 -7500403 true "" "let x-value plot-x-max * marker / 100\nplot-pen-reset\n    plot-pen-up\n    plotxy x-value plot-y-min\n    plot-pen-down\n    plotxy x-value plot-y-max"
+"Time Marker" 1.0 0 -7500403 true "" "let x-value plot-x-max * marker / 100\nplot-pen-reset\n    plot-pen-up\n    plotxy x-value plot-y-min\n    plot-pen-down\n    plotxy x-value plot-y-max"
 "Time Stamp" 1.0 0 -2674135 true "" ""
 
 BUTTON
@@ -1125,7 +1132,7 @@ marker
 marker
 0
 100
-48
+39
 1
 1
 NIL
@@ -1660,7 +1667,7 @@ false
 "" ""
 PENS
 "Milk Production" 1.0 0 -5825686 true
-"Timer Marker" 1.0 0 -7500403 true
+"Time Marker" 1.0 0 -7500403 true
 "Time Stamp" 1.0 0 -2674135 true
 
 @#$#@#$#@
