@@ -1,4 +1,6 @@
-extensions [table cf goo gradient ] ;color-generator ]
+extensions [table cf palette ] ;color-generator ]
+
+;extensions [table cf goo gradient ] ;color-generator ]
 
 
 breed [ cows cow ]  ;; creation controlled by farmers
@@ -221,8 +223,8 @@ to show-who-i-met [people-i-met]
  hubnet-send-message user-id weekly-digest
 end
 
-to-report people-names [alist]
-  report ifelse-value (length alist > 2) [(word first alist ", " people-names butfirst alist)] [(word first alist " and " last alist)]
+to-report people-names [alist] ;; AH: this isn't working
+  report ifelse-value (length alist > 1) [(word first alist ", " people-names butfirst alist)] [(first alist )]
 end
 
 to-report  present-tense-action
@@ -463,9 +465,9 @@ to add-farmer [message-source bot?]
   ]
 
   wait .05
-  goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
+;  goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
   wait .05
-  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list
+;  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list
 
   scale-vars-for-n-players
 
@@ -569,7 +571,7 @@ to grow-grass [grow-amount]
 end
 
 to recolor-grass
-  set pcolor gradient:scale [[90 60 0] [0 255 0]] grass  0 max-grass
+  set pcolor palette:scale-gradient [[90 60 0] [0 255 0]] grass  0 max-grass
 end
 
 to-report my-cows  ;; farmer procedure, returns agentset of their cows
@@ -617,8 +619,8 @@ to-report get-plot-list [plot-list-description]
     )
 end
 
-to fine-them
-  let the-farmer one-of farmers with [user-id = farmer-list]
+to fine-them [a-user-id]
+  let the-farmer one-of farmers with [user-id = a-user-id]
   ask the-farmer [
     ifelse money >= $-amount [
       set money money - $-amount
@@ -643,9 +645,9 @@ to donate-to-common-$ [$-to-donate]
   ]
 end
 
-to give-$-to-farmer
+to give-$-to-farmer [a-user-id]
   ifelse common-pool-bank >= $-amount [
-    ask farmers with [user-id = farmer-list] [
+    ask farmers with [user-id = a-user-id] [
       set money money + $-amount
       set common-pool-bank common-pool-bank - $-amount
       hubnet-send user-id "$" money
@@ -725,14 +727,14 @@ to print-who-did-what
 end
 
 to print-what-farmer-did
-  clear-output
-  output-print farmer-list
-  let actions-of-farmer filter [item 0 ? = farmer-list and item 2 ? = "do"] farmer-actions
-  let week-counter 1
-  foreach sort-by [item 1 ?1 < item 1 ?2] actions-of-farmer [
-    output-print (word "Week " week-counter)
-    output-print item 3 ?
-  ]
+;  clear-output
+;  output-print farmer-list
+;  let actions-of-farmer filter [item 0 ? = farmer-list and item 2 ? = "do"] farmer-actions
+;  let week-counter 1
+;  foreach sort-by [item 1 ?1 < item 1 ?2] actions-of-farmer [
+;    output-print (word "Week " week-counter)
+;    output-print item 3 ?
+;  ]
 end
 
 to print-counts-of-actions-per-farmer
@@ -932,9 +934,9 @@ NIL
 
 BUTTON
 10
-80
+180
 135
-113
+213
 NIL
 run-a-week
 NIL
@@ -998,7 +1000,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences"
-4
+3
 
 PLOT
 875
@@ -1071,10 +1073,10 @@ NIL
 BUTTON
 875
 500
-1000
-535
+1022
+533
 NIL
-fine-them
+fine-them \"a-user\"
 NIL
 1
 T
@@ -1086,10 +1088,10 @@ NIL
 1
 
 PLOT
-140
-475
-390
-635
+145
+470
+395
+630
 gini-coefficient
 NIL
 NIL
@@ -1110,7 +1112,7 @@ BUTTON
 1125
 535
 Give to farmer
-give-$-to-farmer
+give-$-to-farmer \"user-id\"
 NIL
 1
 T
@@ -1175,16 +1177,6 @@ NIL
 NIL
 1
 
-CHOOSER
-875
-535
-1125
-580
-farmer-list
-farmer-list
-"0" "1" "10" "11" "12" "13" "14" "15" "16" "17" "18" "19" "2" "20" "21" "22" "23" "24" "3" "4" "5" "6" "7" "8" "9" "Local 3" "jenny"
-0
-
 BUTTON
 590
 540
@@ -1238,11 +1230,11 @@ NIL
 
 BUTTON
 10
-115
+215
 135
-148
+248
 setup test week data
-ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
+ask farmers with [is-bot?] [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
 NIL
 1
 T
@@ -1255,11 +1247,11 @@ NIL
 
 BUTTON
 10
-150
+405
 135
-183
+438
 setup test run
-setup\nforeach n-values 25 [?]  [\nadd-farmer (word ?) true\n]\nask farmers [repeat 3 [buy-cow]]
+;setup\nforeach n-values 25 [?]  [ add-farmer (word ?) true ] ask farmers [repeat 3 [buy-cow]]
 NIL
 1
 T
@@ -1626,7 +1618,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 6.0-PREVIEW-12-15
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

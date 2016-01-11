@@ -675,6 +675,7 @@ end
 to update-client-info
    hubnet-send user-id "$" precision money 0
    hubnet-send user-id "# of Cows" (count my-cows)
+   hubnet-send user-id "Total Wealth" wealth
    hubnet-send-override user-id my-cows "color" [red]
    hubnet-send-override user-id my-cows "size" [2]
 
@@ -1177,7 +1178,7 @@ marker
 marker
 0
 100
-81
+0
 1
 1
 %
@@ -1694,65 +1695,15 @@ NIL
 0
 1
 
-PLOT
+MONITOR
 15
-165
+170
 305
-295
-Grass
+219
+Total Wealth
 NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"Grass                   " 1.0 0 -10899396 true
-"Time Marker" 1.0 0 -7500403 true
-"Time Stamp" 1.0 0 -2674135 true
-
-PLOT
-15
-300
-305
-430
-Number of Cows
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"Cows                   " 1.0 0 -6459832 true
-"Time Marker" 1.0 0 -7500403 true
-"Time Stamp" 1.0 0 -2674135 true
-
-PLOT
-15
-435
-305
-565
-Milk Production
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"Milk Production" 1.0 0 -5825686 true
-"Time Marker" 1.0 0 -7500403 true
-"Time Stamp" 1.0 0 -2674135 true
+3
+1
 
 @#$#@#$#@
 default
