@@ -90,7 +90,7 @@ patches-own[
 ]
 
 to run-a-week
-  hubnet-broadcast-clear-output
+;  hubnet-broadcast-clear-output
 
   ;; only run the week if everybody has decided what to do
   let undecided-farmers farmers with [will-do = undecided or say-will-do = undecided]
@@ -332,7 +332,9 @@ to eat
 end
 
 to setup
+  ca
   hubnet-reset
+  setup-clean
 end
 
 
@@ -689,7 +691,7 @@ to make-cow
 ;  show self
   hatch-cows 1 [
 ;    show myself
-     set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches st display
+     set owner myself set shape "cow" set color brown set energy 10 move-to one-of grass-patches ;st ;display
      ]
   update-client-info
 end
@@ -1024,9 +1026,9 @@ NIL
 
 BUTTON
 10
-130
+45
 135
-163
+78
 New Game!
 setup-clean
 NIL
@@ -1041,9 +1043,9 @@ NIL
 
 MONITOR
 875
-420
+495
 1125
-465
+540
 Shared Money
 common-pool-bank
 0
@@ -1052,9 +1054,9 @@ common-pool-bank
 
 SLIDER
 875
-465
+540
 1125
-498
+573
 $-amount
 $-amount
 0
@@ -1073,7 +1075,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences"
-4
+3
 
 PLOT
 875
@@ -1145,9 +1147,9 @@ NIL
 
 BUTTON
 875
-500
+575
 1022
-533
+608
 NIL
 fine-them \"a-user\"
 NIL
@@ -1181,9 +1183,9 @@ PENS
 
 BUTTON
 1000
-500
+575
 1125
-535
+610
 Give to farmer
 give-$-to-farmer \"user-id\"
 NIL
@@ -1198,9 +1200,9 @@ NIL
 
 TEXTBOX
 955
-400
+475
 1105
-418
+493
 Money-related stuff
 11
 0.0
@@ -1341,7 +1343,24 @@ BUTTON
 117
 43
 Start HubNet
-hubnet-reset
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+20
+280
+112
+313
+test-week
+ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
 NIL
 1
 T

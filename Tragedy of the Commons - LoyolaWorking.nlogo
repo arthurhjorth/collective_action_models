@@ -241,7 +241,7 @@ to sell-milk
   ;; this is a bit silly but only take energy from cows that are alive. we kill off the ones that are about to die
   ;; later.
 
-  let total-production [((energy / 135) ^ 2 ) * 7] of my-cows with [energy > 0]
+  let total-production [((energy / 135) ^ 3 ) * 7] of my-cows with [energy > 0]
   let profit sum total-production
 ;  show profit
   set money money + profit
@@ -321,7 +321,7 @@ to setup
   clear-all-plots
   setup-plots
 
-  set client-info-task task [ hubnet-send ? "$" ? hubnet-send ? "# of Cows" ?  hubnet-send-override ? ? "color" [red]  hubnet-send-override ? ? "size" [2]]
+
 
 
   ask cows [die]
@@ -450,7 +450,7 @@ to add-farmer [message-source bot?]
     reset-farmer
     init-farmer
     hubnet-send-override message-source one-of farmers with [user-id = message-source] "size" [3]
-    display
+;    display
 
   ]
 
@@ -532,9 +532,13 @@ to buy-cow
   [
     set money money - 1500
     make-cow
-    ]
+  ]
   [
-    hubnet-send user-id "Status" "You can't afford a cow yet."
+    if not is-bot?[
+      hubnet-send user-id "Status" "You can't afford a cow yet."
+      hubnet-send-override user-id my-cows "color" [red]
+      hubnet-send-override user-id my-cows "size" [2]
+    ]
   ]
 
 end
@@ -660,25 +664,16 @@ end
 ;  ]
 ;end
 
-to update-client-info2
-  let atask  task [
-    hubnet-send ? "$" ?
-    hubnet-send ? "# of Cows" ?
-    hubnet-send-override ? ? "color" [red]
-    hubnet-send-override user-id my-cows "size" [2]
-  ]
-;  (run atask user-id money user-id count my-cows user-id my- )
-;  (run client-info-task user-id money user-id (count my-cows)  user-id my-cows user-id my-cows)
-end
 
 
 to update-client-info
+  if not is-bot? [
+
    hubnet-send user-id "$" precision money 0
    hubnet-send user-id "# of Cows" (count my-cows)
    hubnet-send user-id "Total Wealth" wealth
-   hubnet-send-override user-id my-cows "color" [red]
-   hubnet-send-override user-id my-cows "size" [2]
 
+  ]
 end
 
 to make-cow
@@ -873,7 +868,7 @@ to set-color-from-hsb-list [alist]
 end
 
 to-report wealth ; this returns a farmer's total wealth; 1500 per cow + their money
-  report money + 1500 * count my-cows
+  report round (money + 1500 * count my-cows)
 end
 
 to-report historical-data;; depending on what we end up doing with the data, this should spit out either a CSV or a json with all these data
@@ -903,10 +898,12 @@ end
 to show-leaderboard
   ;; sort people by money
   let farmers-by-wealth reverse sort-on  [wealth] farmers
+  let top (min (list count farmers 10))
+  set farmers-by-wealth sublist farmers-by-wealth 0 top
   clear-output
-  output-print "Leaderboard"
+  output-print "Leaderboard (Top-10)"
   foreach farmers-by-wealth [
-    output-print [user-id ] of ?
+    output-print [(word user-id " $" wealth)] of ?
   ]
 end
 
@@ -923,7 +920,6 @@ to time-stamp
     plot-pen-down
     plotxy x-value plot-y-max
   ]
-
 end
 
 to clear-stamp
@@ -1019,10 +1015,10 @@ Week
 
 BUTTON
 5
-195
-110
-228
-NIL
+125
+107
+158
+Clients
 listen-to-clients
 T
 1
@@ -1036,26 +1032,9 @@ NIL
 
 BUTTON
 5
-230
+90
 110
-263
-NIL
-run-a-week
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-5
-160
-110
-193
+123
 Start New Model!
 setup
 NIL
@@ -1149,14 +1128,14 @@ OUTPUT
 925
 10
 1190
-510
-17
+315
+20
 
 BUTTON
 5
-355
+280
 110
-388
+313
 Who's Winning?
 show-leaderboard
 NIL
@@ -1178,7 +1157,7 @@ marker
 marker
 0
 100
-0
+1
 1
 1
 %
@@ -1253,12 +1232,29 @@ latest-milk-production / count cows
 
 BUTTON
 5
-390
+315
 110
-423
+348
 Post Screenshot!
 post
 NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+5
+205
+110
+238
+Next Week
+run-a-week\nshow-leaderboard
+T
 1
 T
 OBSERVER
