@@ -13,6 +13,7 @@ globals [
   ;;
 
 
+
   old-marker
   client-info-task
   ;; make some tables for saving this stuff for later.
@@ -126,7 +127,7 @@ end
 
 to reset-weekly-vars
   ask farmers [set will-do undecided set say-will-do undecided]
-  hubnet-broadcast "Status" "Remember to call out 'COW!' every time you buy a cow" ;"Choose what to say and do this week."
+  ;hubnet-broadcast "Status" "Remember to call out 'COW!' every time you buy a cow" ;"Choose what to say and do this week."
   set seen-this-week (turtle-set)
 end
 
@@ -438,6 +439,10 @@ to listen-to-clients
   ]
 end
 
+to-report our-base-colors
+  report (list red orange (yellow - 2) blue sky brown (gray - 1) turquoise magenta pink)
+end
+
 to add-farmer [message-source bot?]
 ;  show message-source
 
@@ -446,10 +451,12 @@ to add-farmer [message-source bot?]
     move-to one-of grass-patches with [not any? farmers-here]
     set shape "person"
     set user-id message-source
-    set color one-of base-colors
+    set color one-of our-base-colors
     reset-farmer
     init-farmer
-    hubnet-send-override message-source one-of farmers with [user-id = message-source] "size" [3]
+    hubnet-send-override message-source self "size" [3]
+    hubnet-send-override message-source self "color" [violet]
+    hubnet-send message-source "Status" "Remember to call out 'COW!' every time you buy a cow"
 ;    display
 
   ]
@@ -513,16 +520,16 @@ to do-command [source tag]
     ;; tell them if they still need to make a decision
     if will-do = undecided and say-will-do = undecided [
     ;hubnet-send source "Status" "Decide what to say and do this week."
-    hubnet-send source "Status" "Remember to call out 'COW!' every time you buy a cow" ;"Choose what to say and do this week."
+    ;hubnet-send source "Status" "Remember to call out 'COW!' every time you buy a cow" ;"Choose what to say and do this week."
     ]
     if will-do != undecided and say-will-do = undecided [
-    hubnet-send source "Status" "Decide on what you say you will do."
+    ;hubnet-send source "Status" "Decide on what you say you will do."
     ]
     if will-do = undecided and say-will-do != undecided [
-    hubnet-send source "Status" "Decide on what you will actually do."
+    ;hubnet-send source "Status" "Decide on what you will actually do."
     ]
     if will-do != undecided and say-will-do != undecided [
-    hubnet-send source "Status" "You are ready for this week."
+    ;hubnet-send source "Status" "You are ready for this week."
     ]
   ]
 end
@@ -532,13 +539,15 @@ to buy-cow
   [
     set money money - 1500
     make-cow
+    if not is-bot?[
+      hubnet-send-override user-id my-cows "color" [violet]
+      hubnet-send-override user-id my-cows "size" [2]
+      hubnet-send user-id "Status" "Remember to call out 'COW!' every time you buy a cow"
+    ]
   ]
   [
-    if not is-bot?[
-      hubnet-send user-id "Status" "You can't afford a cow yet."
-      hubnet-send-override user-id my-cows "color" [red]
-      hubnet-send-override user-id my-cows "size" [2]
-    ]
+    show "hit money"
+       hubnet-send user-id "Status" "You were unable to buy a cow:  You didn't have $1500"
   ]
 
 end
