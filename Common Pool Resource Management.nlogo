@@ -90,6 +90,8 @@ patches-own[
 ]
 
 to run-a-week
+  hubnet-broadcast-clear-output
+
   ;; only run the week if everybody has decided what to do
   let undecided-farmers farmers with [will-do = undecided or say-will-do = undecided]
   if any? undecided-farmers [show (word [user-id] of undecided-farmers " still undecided.") stop]
@@ -154,7 +156,7 @@ end
 to log-weekly
 set actual-grass-amounts lput sum [grass] of grass-patches actual-grass-amounts
 set  total-milk-production lput sum [last milk-production-list] of farmers total-milk-production
-set actual-fence-states lput sum [durability] of fences actual-fence-states
+set actual-fence-states lput mean [durability] of fences actual-fence-states
 set  money-in-the-bank lput common-pool-bank money-in-the-bank
 set count-cows-history lput count cows count-cows-history
 set who-monitored lput farmers with [will-do = "Do: Monitor Peers"] who-monitored
@@ -222,6 +224,7 @@ to show-who-i-met [people-i-met]
   ]
  hubnet-send-message user-id weekly-digest
 end
+
 
 to-report people-names [alist] ;; AH: this isn't working
   report ifelse-value (length alist > 1) [(word first alist ", " people-names butfirst alist)] [(first alist )]
@@ -329,12 +332,27 @@ to eat
 end
 
 to setup
-  ca
+  hubnet-reset
+end
+
+
+to setup-clean
   setup-globals
   setup-world
+  ask farmers [
+    ask my-cows [die]
+    set milk-production-list (list)
+    set money cow-price * 2 + 250
+    update-client-info
+    hubnet-broadcast-clear-output
+    hubnet-send user-id "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
+  ]
+
+
+  clear-all-plots
   setup-plots
-  hubnet-reset
   reset-ticks
+
 end
 
 
@@ -917,9 +935,9 @@ OUTPUT
 
 BUTTON
 10
-10
+95
 135
-43
+128
 NIL
 listen-to-clients
 T
@@ -951,11 +969,11 @@ NIL
 
 BUTTON
 10
-45
+130
 135
-78
-NIL
-setup
+163
+New Game!
+setup-clean
 NIL
 1
 T
@@ -1000,7 +1018,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences"
-3
+4
 
 PLOT
 875
@@ -1234,7 +1252,7 @@ BUTTON
 135
 248
 setup test week data
-ask farmers with [is-bot?] [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
+ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
 NIL
 1
 T
@@ -1252,6 +1270,23 @@ BUTTON
 438
 setup test run
 ;setup\nforeach n-values 25 [?]  [ add-farmer (word ?) true ] ask farmers [repeat 3 [buy-cow]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+10
+10
+117
+43
+Start HubNet
+hubnet-reset
 NIL
 1
 T
