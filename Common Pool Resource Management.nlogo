@@ -337,6 +337,7 @@ end
 
 
 to setup-clean
+  clear-output
   setup-globals
   setup-world
   ask farmers [
@@ -476,7 +477,7 @@ to add-farmer [message-source bot?]
     if not is-bot?[
       update-client-info
       hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
-      hubnet-send-watch message-source one-of farmers with [user-id = message-source]
+;      hubnet-send- message-source one-of farmers with [user-id = message-source]
     ]
     display
 
@@ -898,6 +899,60 @@ to-report historical-data;; depending on what we end up doing with the data, thi
   ;; currently this returns lists of agentsets sometimes - in those cases, it should return a map [count ?]
   report map [(list ? (ifelse-value (is-agentset? item 1 run-result ?) [map [count  ?] runresult ?] [?]))] data-lists
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+;; post data to spreadsheet goes here
+
+
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 145
@@ -1687,30 +1742,30 @@ NIL
 NIL
 
 MONITOR
-840
-240
-950
-289
+15
+320
+160
+369
 # of Cows
 NIL
 0
 1
 
 MONITOR
-960
-240
-1080
-289
+165
+320
+325
+369
 $
 NIL
 0
 1
 
 BUTTON
-1085
-240
-1217
-286
+15
+285
+325
+318
 Buy Cow ($1500)
 NIL
 NIL
@@ -1745,7 +1800,7 @@ VIEW
 MONITOR
 15
 10
-1220
+835
 59
 Status
 NIL
@@ -1772,21 +1827,11 @@ What you actually do.
 0.0
 1
 
-TEXTBOX
-840
-220
-990
-238
-Click here to buy cows
-11
-0.0
-1
-
 SLIDER
-840
-295
-1080
-328
+15
+400
+325
+433
 money-to-shared-bank
 money-to-shared-bank
 0
@@ -1798,10 +1843,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-1085
-295
-1215
-328
+15
+435
+325
+468
 Donate
 NIL
 NIL
@@ -1867,23 +1912,6 @@ OBSERVER
 NIL
 NIL
 
-PLOT
-840
-65
-1220
-215
-Plot 1
-milk-production
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-
 BUTTON
 165
 120
@@ -1911,6 +1939,26 @@ T
 OBSERVER
 NIL
 NIL
+
+TEXTBOX
+15
+260
+165
+278
+Cows
+15
+0.0
+1
+
+TEXTBOX
+15
+375
+65
+393
+Money
+15
+0.0
+1
 
 @#$#@#$#@
 default
