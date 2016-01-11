@@ -1201,10 +1201,10 @@ NIL
 1
 
 MONITOR
-835
-423
+840
+435
 920
-468
+480
 marker (ticks)
 the-marker
 0
