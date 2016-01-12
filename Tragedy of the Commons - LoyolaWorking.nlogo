@@ -455,7 +455,7 @@ to add-farmer [message-source bot?]
     reset-farmer
     init-farmer
     hubnet-send-override message-source self "size" [3]
-    hubnet-send-override message-source self "color" [violet]
+    hubnet-send-override message-source self "color" [violet + 1]
     hubnet-send message-source "Status" "Remember to call out 'COW!' every time you buy a cow"
 ;    display
 
@@ -540,7 +540,7 @@ to buy-cow
     set money money - 1500
     make-cow
     if not is-bot?[
-      hubnet-send-override user-id my-cows "color" [violet]
+      hubnet-send-override user-id my-cows "color" [violet + 1]
       hubnet-send-override user-id my-cows "size" [2]
       hubnet-send user-id "Status" "Remember to call out 'COW!' every time you buy a cow"
     ]
