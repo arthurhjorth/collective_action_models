@@ -40,6 +40,7 @@ globals [
   actual-fence-states
   money-in-the-bank
   count-cows-history
+  gini-history
   ;; maybe log:
   ;; standard deviation of milk production of farmers
 
@@ -159,6 +160,7 @@ set  total-milk-production lput sum [last milk-production-list] of farmers total
 set actual-fence-states lput mean [durability] of fences actual-fence-states
 set  money-in-the-bank lput common-pool-bank money-in-the-bank
 set count-cows-history lput count cows count-cows-history
+set gini-history lput gini gini-history
 set who-monitored lput farmers with [will-do = "Do: Monitor Peers"] who-monitored
 set who-herded lput farmers with [will-do = "Do: Herd Cows"] who-herded
 set who-repaired lput farmers with [will-do = "Do: Repair Fences ($500)"] who-repaired
@@ -203,8 +205,7 @@ to do-weekly-action
     ]
     cf:else []
     )
-;  show (word "people I met " count people-i-met)
-  ;; remove self from people I met
+
   set people-i-met other people-i-met
   set seen-this-week (turtle-set seen-this-week people-i-met)
   show-who-i-met people-i-met
@@ -264,7 +265,7 @@ to sell-milk
   ;; this is a bit silly but only take energy from cows that are alive. we kill off the ones that are about to die
   ;; later.
   let total-production [energy] of my-cows with [energy > 0]
-  let profit round sum total-production
+  let profit round sum total-production * 4
   set money money + profit
   set milk-production-list lput profit milk-production-list
 end
@@ -311,7 +312,7 @@ end
 to cow-move
   ;; if they are on an edge patch, they die
   if member? patch-here edge-patches [
-    set pcolor red
+;    set pcolor red
     hubnet-send-message [user-id] of owner (word "One of your cows disappeared. A fence must be broken somewhere.")
     die
     ]
@@ -348,7 +349,9 @@ to setup-clean
     set money cow-price * 2 + 250
     update-client-info
     hubnet-broadcast-clear-output
+    if not is-bot? [
     hubnet-send user-id "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
+    ]
   ]
 
 
@@ -369,7 +372,7 @@ to setup-world
   set edge-patches patches with [pxcor = min-pxcor or pxcor = max-pxcor or pycor = min-pycor or pycor = max-pycor]
   set grass-patches patches with [not member? self edge-patches]
   ask grass-patches [
-    set grass random-float max-grass
+    set grass max-grass
     recolor-grass]
   ask fences [die]
   ask edge-patches [
@@ -386,6 +389,7 @@ to setup-globals
   set actual-fence-states (list)
   set  money-in-the-bank  (list)
   set count-cows-history (list)
+  set gini-history (list)
 
   set who-herded (list)
   set   who-monitored (list)
@@ -639,6 +643,7 @@ to-report get-plot-list [plot-list-description]
     cf:= "Grass Amount" [actual-grass-amounts]
     cf:= "State of Fences" [actual-fence-states]
     cf:= "Number of Cows" [count-cows-history]
+    cf:= "Gini Coefficient" [gini-history]
     )
 end
 
@@ -714,7 +719,7 @@ to-report gini-points
     let point (list (counter * %-per-farmer / 100) %-of-total-wealth)
     set points lput point points
   ]
-  report points
+  report points * 100
 end
 
 to show-gini
@@ -887,7 +892,24 @@ to-report wealth ; this returns a farmer's total wealth; 1500 per cow + their mo
 end
 
 
+to-report gini
+  let num-people count farmers
+  let sorted-wealths sort [wealth] of farmers
+  let total-wealth sum sorted-wealths
+  let wealth-sum-so-far 0
+  let index 0
+  let gini-index-reserve 0
+  repeat num-people [
+    set wealth-sum-so-far (wealth-sum-so-far + item index sorted-wealths)
+    set index (index + 1)
+    set gini-index-reserve
+    gini-index-reserve +
+    (index / num-people) -
+    (wealth-sum-so-far / total-wealth)
+  ]
+  report gini-index-reserve
 
+end
 
 
 
@@ -1122,8 +1144,8 @@ CHOOSER
 75
 plot-value
 plot-value
-"Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences"
-3
+"Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
+5
 
 PLOT
 875
@@ -1403,10 +1425,10 @@ NIL
 1
 
 BUTTON
-20
-280
-112
-313
+10
+370
+135
+403
 test-week
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
 NIL
