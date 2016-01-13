@@ -161,12 +161,12 @@ set  money-in-the-bank lput common-pool-bank money-in-the-bank
 set count-cows-history lput count cows count-cows-history
 set who-monitored lput farmers with [will-do = "Do: Monitor Peers"] who-monitored
 set who-herded lput farmers with [will-do = "Do: Herd Cows"] who-herded
-set who-repaired lput farmers with [will-do = "Do: Repair Fences"] who-repaired
-set who-sowed lput farmers with [will-do = "Do: Sow Grass"] who-sowed
+set who-repaired lput farmers with [will-do = "Do: Repair Fences ($500)"] who-repaired
+set who-sowed lput farmers with [will-do = "Do: Spread Fertilizer ($500)"] who-sowed
 set who-said-monitored lput farmers with [will-do = "Say: Monitor Peers"] who-said-monitored
 set who-said-herded lput farmers with [will-do = "Say: Herd Cows"] who-said-herded
-set who-said-repaired lput farmers with [will-do = "Say: Repair Fences"] who-said-repaired
-set who-said-sowed lput farmers with [will-do = "Say: Sow Grass"] who-said-sowed
+set who-said-repaired lput farmers with [will-do = "Say: Repair Fences ($500)"] who-said-repaired
+set who-said-sowed lput farmers with [will-do = "Say: Spread Fertilizer ($500)"] who-said-sowed
 
 end
 
@@ -192,9 +192,9 @@ to do-weekly-action
       set people-i-met union people-i-met meet-grass-sowers-with-probability 50
       set people-i-met union people-i-met meet-fence-inspectors-with-probability 50
     ]
-    cf:= "Do: Sow Grass ($500)"
+    cf:= "Do: Spread Fertilizer ($500)"
     [
-      sow-grass
+      spread-fertilizer
       set people-i-met union people-i-met meet-fence-fixers-with-probability  10
       set people-i-met union people-i-met meet-cow-herders-with-probability 25
       set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
@@ -244,7 +244,7 @@ end
 
 
 
-to sow-grass ;; sowing grass let's grass
+to spread-fertilizer ;; sowing grass let's grass
              ;; NB: THIS MIGHT NEED TWEAKING
   if length hubnet-clients-list > 0 [
     ask grass-patches [grow-grass grass-regrow / length hubnet-clients-list]
@@ -402,8 +402,8 @@ to setup-globals
   set fence-fixing-cost 500
   set seed-cost 500
   set cow-price 1500
-  set do-options (list "Do: Herd Cows" "Do: Repair Fences ($500)" "Do: Sow Grass ($500)" "Do: Monitor Peers" )
-  set say-options (list "Say: Herd Cows" "Say: Repair Fences ($500)" "Say: Sow Grass ($500)" "Say: Monitor Peers" )
+  set do-options (list "Do: Herd Cows" "Do: Repair Fences ($500)" "Do: Spread Fertilizer ($500)" "Do: Monitor Peers" )
+  set say-options (list "Say: Herd Cows" "Say: Repair Fences ($500)" "Say: Spread Fertilizer ($500)" "Say: Monitor Peers" )
 
 end
 
@@ -558,7 +558,9 @@ to buy-cow
     make-cow
     ]
   [
+    if not is-bot? [
     hubnet-send user-id "Status" "You can't afford a cow yet."
+    ]
   ]
 
 end
@@ -681,10 +683,12 @@ end
 
 
 to update-client-info
-   hubnet-send user-id "$" money
-   hubnet-send user-id "# of Cows" (count my-cows)
-   hubnet-send-override user-id my-cows "color" [red]
-   hubnet-send-override user-id my-cows "size" [2]
+  if not is-bot? [
+    hubnet-send user-id "$" money
+    hubnet-send user-id "# of Cows" (count my-cows)
+    hubnet-send-override user-id my-cows "color" [red]
+    hubnet-send-override user-id my-cows "size" [2]
+  ]
 end
 
 to make-cow
@@ -854,7 +858,7 @@ to-report fence-fixers
   report farmers with [will-do = "Do: Repair Fences ($500)"]
 end
 to-report grass-sowers
-  report farmers with [will-do = "Do: Sow Grass ($500)"]
+  report farmers with [will-do = "Do: Spread Fertilizer ($500)"]
 end
 to-report cow-herders
   report farmers with [will-do = "Do: Herd Cows"]
