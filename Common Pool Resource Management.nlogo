@@ -882,6 +882,51 @@ to-report wealth ; this returns a farmer's total wealth; 1500 per cow + their mo
   report money + 1500 * count my-cows
 end
 
+
+
+
+
+
+
+
+
+
+
+
+;;; @Corey: This is how I imagine it will work, basically:
+;;; Ideally I write this in my procedure - a list of tuples like this:
+;
+;[
+;  ["Grass Amounts" [1 2 3]]
+;  ["Milk Production" [5 1 3]]
+;  ["State of Fences" [1.4 2.3 89.1]]
+;
+;]
+;
+;; in reality of course I'll send variables that are lists, which will resolve to the list in the second part of the tuple, but wanted
+;; you to know what the data will look like:
+
+to write-time-data
+let the-data
+(list
+  ["Grass Amounts" [1 2 3]]
+  ["Milk Production" [5 1 3]]
+  ["State of Fences" [1.4 2.3 89.1]]
+)
+foreach the-data [
+  ;; pseudo code, so commenting out
+;  write first ?
+;  write last ?
+]
+end
+
+to write-person-data
+
+end
+
+
+
+;@corey: this is an old old. Don't worry about this one.
 to-report historical-data;; depending on what we end up doing with the data, this should spit out either a CSV or a json with all these data
   let data-lists (list
     "actual-grass-amounts"
@@ -951,7 +996,6 @@ end
 
 
 ;; post data to spreadsheet goes here
-
 
 
 

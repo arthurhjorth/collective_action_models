@@ -249,7 +249,7 @@ fertilization-rate
 fertilization-rate
 0
 1000
-0
+416
 1
 1
 NIL
