@@ -477,7 +477,7 @@ to listen-to-clients
       hubnet-fetch-message
       (cf:cond
         cf:case [ hubnet-enter-message? ] [ add-farmer hubnet-message-source false ]
-      cf:case [hubnet-exit-message?] [];kill-farmer hubnet-message-source]
+      cf:case [hubnet-exit-message?] [kill-farmer hubnet-message-source];kill-farmer hubnet-message-source]
       cf:else [ do-command hubnet-message-source hubnet-message-tag])
     ]
   ]
@@ -515,7 +515,7 @@ end
 
 to kill-farmer [message-source]
   ask farmers with [user-id = message-source ] [die]
-  scale-vars-for-n-players
+;  scale-vars-for-n-players
 end
 
 to do-command [source tag]
@@ -1043,8 +1043,6 @@ end
 
 ;; post data to spreadsheet goes here
 
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 5
@@ -1132,9 +1130,9 @@ NIL
 1
 
 MONITOR
-850
+730
 350
-1010
+890
 395
 Shared Bank
 common-pool-bank
@@ -1143,24 +1141,24 @@ common-pool-bank
 11
 
 SLIDER
-850
+730
 395
-1010
+890
 428
 $-amount
 $-amount
 0
 1000
-0
+340
 10
 1
 $
 HORIZONTAL
 
 CHOOSER
-850
+730
 10
-1032
+912
 55
 plot-value
 plot-value
@@ -1168,9 +1166,9 @@ plot-value
 3
 
 PLOT
-850
+730
 55
-1225
+1105
 195
 Plot 1
 NIL
@@ -1185,9 +1183,9 @@ true
 PENS
 
 PLOT
-850
+730
 195
-1225
+1105
 335
 Plot 2
 NIL
@@ -1202,9 +1200,9 @@ true
 PENS
 
 BUTTON
-1135
+1015
 10
-1225
+1105
 51
 Show in Plot 2
 show-in-plot 2
@@ -1219,9 +1217,9 @@ NIL
 1
 
 BUTTON
-1035
+915
 10
-1135
+1015
 51
 Show in Plot 1
 show-in-plot 1
@@ -1236,9 +1234,9 @@ NIL
 1
 
 BUTTON
-1010
+890
 410
-1170
+1050
 443
 Fine Farmer
 fine-them farmer-name
@@ -1272,9 +1270,9 @@ PENS
 "Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
 
 BUTTON
-1010
+890
 445
-1170
+1050
 480
 Give to farmer
 give-$-to-farmer farmer-name
@@ -1289,10 +1287,10 @@ NIL
 1
 
 BUTTON
-725
-10
-840
-43
+500
+505
+615
+538
 Who says what
 print-who-says-what
 NIL
@@ -1306,10 +1304,10 @@ NIL
 1
 
 BUTTON
-725
-45
-840
-78
+500
+540
+615
+573
 Who did what
 print-who-did-what
 NIL
@@ -1323,10 +1321,10 @@ NIL
 1
 
 BUTTON
-725
-80
-840
-113
+500
+575
+615
+608
 Who did what #
 print-counts-of-actions-per-farmer
 NIL
@@ -1340,10 +1338,10 @@ NIL
 1
 
 BUTTON
-725
-130
-840
-163
+500
+610
+615
+643
 Plot how many
 show-how-many-did-what-when
 NIL
@@ -1357,10 +1355,10 @@ NIL
 1
 
 BUTTON
-460
-470
-585
-503
+1240
+765
+1365
+798
 setup test week data
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
 NIL
@@ -1425,9 +1423,9 @@ NIL
 1
 
 INPUTBOX
-1010
+890
 350
-1170
+1050
 410
 farmer-name
 Local 1
