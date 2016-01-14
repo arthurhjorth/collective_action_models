@@ -20,9 +20,7 @@ globals [
   grass-regrow ;; the amount that grass grows back
   fence-fix-points
   shepherd-bonus ; the extra amount of food cows will try to eat if they are being shepherded
-
   cow-price
-
   ;; this might need balancing too
   seed-cost
   fence-fixing-cost
@@ -41,6 +39,11 @@ globals [
   money-in-the-bank
   count-cows-history
   gini-history
+
+  donations-history
+  withdrawal-history
+  fine-history
+
   ;; maybe log:
   ;; standard deviation of milk production of farmers
 
@@ -177,6 +180,14 @@ to do-weekly-action
   let people-i-met (turtle-set)
   (
     cf:match will-do
+    cf:= "Do: Herd Cows"
+    [
+      set people-i-met union people-i-met meet-fence-fixers-with-probability 5
+      set people-i-met union people-i-met meet-cow-herders-with-probability 5
+;      set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
+;      set people-i-met union people-i-met meet-grass-sowers-with-probability 5
+      set people-i-met union people-i-met meet-fertilizers-with-probability 100
+    ]
     cf:= "Do: Repair Fences ($500)"
     [
       fix-fences
@@ -184,7 +195,7 @@ to do-weekly-action
       set people-i-met union people-i-met meet-cow-herders-with-probability 5
       set people-i-met union people-i-met meet-grass-surveyors-with-probability 20
       set people-i-met union people-i-met meet-grass-sowers-with-probability 5
-      set people-i-met union people-i-met meet-fence-inspectors-with-probability 100
+      set people-i-met union people-i-met meet-fertilizers-with-probability 100
     ]
     cf:= "Do: Monitor Peers"
     [
@@ -192,7 +203,7 @@ to do-weekly-action
       set people-i-met union people-i-met meet-cow-herders-with-probability 50
       set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
       set people-i-met union people-i-met meet-grass-sowers-with-probability 50
-      set people-i-met union people-i-met meet-fence-inspectors-with-probability 50
+      set people-i-met union people-i-met meet-fertilizers-with-probability 50
     ]
     cf:= "Do: Spread Fertilizer ($500)"
     [
@@ -201,7 +212,7 @@ to do-weekly-action
       set people-i-met union people-i-met meet-cow-herders-with-probability 25
       set people-i-met union people-i-met meet-grass-surveyors-with-probability 50
       set people-i-met union people-i-met meet-grass-sowers-with-probability 25
-      set people-i-met union people-i-met meet-fence-inspectors-with-probability 10
+      set people-i-met union people-i-met meet-fertilizers-with-probability 10
     ]
     cf:else []
     )
@@ -237,7 +248,7 @@ to-report  present-tense-action
     cf:= "Do: Herd Cows" ["herding cows"]
     cf:= "Do: Repair Fences ($500)" ["repairing fences"]
     cf:= "Do: Inspect Fences" ["inspecting fences"]
-    cf:= "Do: Sow Grass ($500)" ["sowing grass"]
+    cf:= "Do: Spread Fertilizer ($500)" ["Spreading Fertilizer"]
     cf:= "Do: Survey Grass" ["surveying grass"]
     cf:= "Do: Monitor Peers" ["monitoring peers"]
     )
@@ -299,7 +310,7 @@ end
 to-report meet-grass-surveyors-with-probability [%-prob]
   report grass-surveyors with [random 100 < %-prob]
 end
-to-report meet-fence-inspectors-with-probability [%-prob]
+to-report meet-fertilizers-with-probability [%-prob]
   report fence-inspectors with [random 100 < %-prob]
 end
 
@@ -390,6 +401,10 @@ to setup-globals
   set  money-in-the-bank  (list)
   set count-cows-history (list)
   set gini-history (list)
+
+  set donations-history (list)
+  set withdrawal-history (list)
+  set fine-history (list)
 
   set who-herded (list)
   set   who-monitored (list)
@@ -560,6 +575,7 @@ to buy-cow
   [
     set money money - 1500
     make-cow
+    display
     ]
   [
     if not is-bot? [
@@ -654,6 +670,7 @@ to fine-them [a-user-id]
       set money money - $-amount
       set common-pool-bank common-pool-bank + $-amount
       hubnet-send user-id "$" money
+      set fine-history fput (list user-id ticks $-amount) fine-history
     ]
     [
       show (word user-id " does not have $ " $-amount "!")
@@ -662,11 +679,11 @@ to fine-them [a-user-id]
 end
 
 to donate-to-common-$ [$-to-donate]
-  show "trying to donate"
   ifelse money >= $-to-donate [
     set money money - $-to-donate
     set common-pool-bank common-pool-bank + $-to-donate
     hubnet-send user-id "$" money
+    set donations-history fput (list user-id ticks $-to-donate) donations-history
   ]
   [
     hubnet-send-message user-id (word "You don't have $" $-to-donate " in your bank!")
@@ -682,7 +699,7 @@ to give-$-to-farmer [a-user-id]
     ]
   ]
   [
-    show "The common pool bank doesn't have that much money!"
+    show "The bank doesn't have that much money!"
   ]
 end
 
@@ -719,7 +736,7 @@ to-report gini-points
     let point (list (counter * %-per-farmer / 100) %-of-total-wealth)
     set points lput point points
   ]
-  report points * 100
+  report points
 end
 
 to show-gini
@@ -874,6 +891,9 @@ end
 to-report fence-inspectors
   report farmers with [will-do = "Do: Inspect Fences"]
 end
+to-report monitors
+  report farmers with [will-do = "Do: Monitor Peers"]
+end
 
 to-report undecided
   report "Undecided"
@@ -907,7 +927,7 @@ to-report gini
     (index / num-people) -
     (wealth-sum-so-far / total-wealth)
   ]
-  report gini-index-reserve
+  report round (gini-index-reserve * 100)
 
 end
 
@@ -1027,9 +1047,9 @@ end
 
 @#$#@#$#@
 GRAPHICS-WINDOW
-145
+5
 10
-584
+444
 470
 16
 16
@@ -1054,17 +1074,17 @@ Week
 30.0
 
 OUTPUT
-590
+445
 10
-870
+725
 470
 13
 
 BUTTON
-10
-95
-135
-128
+200
+470
+300
+503
 NIL
 listen-to-clients
 T
@@ -1078,10 +1098,10 @@ NIL
 1
 
 BUTTON
-10
-180
-135
-213
+310
+470
+435
+503
 NIL
 run-a-week
 NIL
@@ -1095,12 +1115,12 @@ NIL
 1
 
 BUTTON
-10
-45
-135
-78
+115
+470
+200
+503
 New Game!
-setup-clean
+export-world (word \"Loyola CPRS \" date-and-time \".save\")\nsetup-clean
 NIL
 1
 T
@@ -1112,10 +1132,10 @@ NIL
 1
 
 MONITOR
-875
-495
-1125
-540
+850
+350
+1010
+395
 Shared Money
 common-pool-bank
 0
@@ -1123,35 +1143,35 @@ common-pool-bank
 11
 
 SLIDER
-875
-540
-1125
-573
+850
+395
+1010
+428
 $-amount
 $-amount
 0
 1000
-290
+1000
 10
 1
 $
 HORIZONTAL
 
 CHOOSER
-875
-30
-1057
-75
+850
+10
+1032
+55
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
 5
 
 PLOT
-875
-75
-1390
-215
+850
+55
+1225
+195
 Plot 1
 NIL
 NIL
@@ -1165,10 +1185,10 @@ true
 PENS
 
 PLOT
-875
-215
-1390
-355
+850
+195
+1225
+335
 Plot 2
 NIL
 NIL
@@ -1182,10 +1202,10 @@ true
 PENS
 
 BUTTON
-1185
-30
-1302
-71
+1135
+10
+1225
+51
 Show in Plot 2
 show-in-plot 2
 NIL
@@ -1199,10 +1219,10 @@ NIL
 1
 
 BUTTON
-1060
-30
-1185
-71
+1035
+10
+1135
+51
 Show in Plot 1
 show-in-plot 1
 NIL
@@ -1216,12 +1236,12 @@ NIL
 1
 
 BUTTON
-875
-575
-1022
-608
-NIL
-fine-them \"a-user\"
+1010
+410
+1170
+443
+Fine Farmer
+fine-them farmer-name
 NIL
 1
 T
@@ -1233,10 +1253,10 @@ NIL
 1
 
 PLOT
-145
-470
-395
-630
+1255
+665
+1505
+825
 gini-coefficient
 NIL
 NIL
@@ -1252,12 +1272,12 @@ PENS
 "Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
 
 BUTTON
-1000
-575
-1125
-610
+1010
+445
+1170
+480
 Give to farmer
-give-$-to-farmer \"user-id\"
+give-$-to-farmer farmer-name
 NIL
 1
 T
@@ -1268,32 +1288,12 @@ NIL
 NIL
 1
 
-TEXTBOX
-955
-475
-1105
-493
-Money-related stuff
-11
-0.0
-1
-
-TEXTBOX
-945
-10
-1095
-28
-Historical data
-11
-0.0
-1
-
 BUTTON
-590
-470
-870
-503
-Show who says what
+725
+10
+840
+43
+Who says what
 print-who-says-what
 NIL
 1
@@ -1306,11 +1306,11 @@ NIL
 1
 
 BUTTON
-590
-505
-870
-538
-Show who did what
+725
+45
+840
+78
+Who did what
 print-who-did-what
 NIL
 1
@@ -1323,10 +1323,10 @@ NIL
 1
 
 BUTTON
-590
-540
-870
-573
+725
+170
+840
+203
 Show what this farmer did
 print-what-farmer-did
 NIL
@@ -1340,11 +1340,11 @@ NIL
 1
 
 BUTTON
-590
-575
-870
-608
-Show who did what how many times
+725
+80
+840
+113
+Who did what #
 print-counts-of-actions-per-farmer
 NIL
 1
@@ -1357,11 +1357,11 @@ NIL
 1
 
 BUTTON
-1130
-355
-1390
-400
-How many did what and when?
+725
+130
+840
+163
+Plot how many
 show-how-many-did-what-when
 NIL
 1
@@ -1374,10 +1374,10 @@ NIL
 1
 
 BUTTON
-10
-215
-135
-248
+1402
+305
+1527
+338
 setup test week data
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
 NIL
@@ -1391,10 +1391,10 @@ NIL
 1
 
 BUTTON
-10
-405
-135
-438
+1402
+400
+1527
+433
 setup test run
 ;setup\nforeach n-values 25 [?]  [ add-farmer (word ?) true ] ask farmers [repeat 3 [buy-cow]]
 NIL
@@ -1408,12 +1408,12 @@ NIL
 1
 
 BUTTON
-10
-10
-117
-43
+5
+470
+90
+503
 Start HubNet
-setup
+hubnet-reset
 NIL
 1
 T
@@ -1425,10 +1425,10 @@ NIL
 1
 
 BUTTON
-10
-370
-135
-403
+1402
+365
+1527
+398
 test-week
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
 NIL
@@ -1440,6 +1440,17 @@ NIL
 NIL
 NIL
 1
+
+INPUTBOX
+1010
+350
+1170
+410
+farmer-name
+Local 1
+1
+0
+String
 
 @#$#@#$#@
 ## WHAT IS IT?
