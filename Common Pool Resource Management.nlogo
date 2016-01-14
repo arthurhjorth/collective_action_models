@@ -642,7 +642,7 @@ to show-in-plot [plot-no]
   set-plot-x-range 0 length the-list
   set-plot-y-range 0 precision ((max the-list) * 1.1) 0
   create-temporary-plot-pen plot-value
-  plotxy 0 0
+  plot first the-list
   foreach the-list [
     plot ?
   ]
@@ -1136,7 +1136,7 @@ MONITOR
 350
 1010
 395
-Shared Money
+Shared Bank
 common-pool-bank
 0
 1
@@ -1151,7 +1151,7 @@ $-amount
 $-amount
 0
 1000
-1000
+0
 10
 1
 $
@@ -1165,7 +1165,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
-5
+3
 
 PLOT
 850
@@ -1324,23 +1324,6 @@ NIL
 
 BUTTON
 725
-170
-840
-203
-Show what this farmer did
-print-what-farmer-did
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-725
 80
 840
 113
@@ -1374,10 +1357,10 @@ NIL
 1
 
 BUTTON
-1402
-305
-1527
-338
+460
+470
+585
+503
 setup test week data
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
 NIL
