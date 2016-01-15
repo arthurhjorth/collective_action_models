@@ -58,9 +58,10 @@ end
 
 to save-interface-image
   let appendix 0
-  while [ file-exists? (word "interface" appendix ".jpg") ]
+  let prefix your-first-name
+  while [ file-exists? (word prefix "Image" appendix ".jpg") ]
   [ set appendix appendix + 1]
-  set filename (word "interface" appendix ".jpg" )
+  set filename (word prefix "Image" appendix ".jpg" )
   export-interface filename
 end
 
@@ -297,15 +298,24 @@ to-report percent-above
   ]
   report (word (precision (100 * wealth-above reference-value / total-wealth) 1) "% of the wealth controlled by the richest " (precision ((1 - reference-value) * 100) 0) "%")
 end
+
+to-report percent-below
+  if reference-value != old-reference-value
+  [
+    update-plots
+    set old-reference-value reference-value
+  ]
+  report (word (precision (100 * (1 - (wealth-above reference-value) / total-wealth)) 1) "% of the wealth controlled by the poorest " (precision ((reference-value) * 100) 0) "%")
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-205
-10
-983
-505
+5
+70
+639
+478
 -1
 -1
-16.0
+13.0
 1
 20
 1
@@ -326,10 +336,10 @@ ticks
 30.0
 
 BUTTON
+5
 10
-10
-195
-70
+190
+65
 Setup
 setup
 NIL
@@ -343,10 +353,10 @@ NIL
 1
 
 BUTTON
+215
 10
-85
-195
-151
+635
+65
 Manually Distribute Wealth Units
 drag
 T
@@ -360,10 +370,10 @@ NIL
 0
 
 PLOT
-990
-10
-1370
-355
+644
+72
+1024
+417
 Lorenz Curve and Gini Index
 NIL
 NIL
@@ -380,11 +390,11 @@ PENS
 "default2" 1.0 0 -16777216 true "" "plotxy 0 0  plotxy 1 1"
 
 BUTTON
-10
-310
-195
-355
-Make an Even Distribution
+120
+560
+305
+605
+Make a Uniform Distribution
 make-even-distribution
 NIL
 1
@@ -397,10 +407,10 @@ NIL
 0
 
 BUTTON
-10
-360
-195
-405
+120
+608
+305
+653
 Make a (Near) Linear Distribution
 make-linear-distribution
 NIL
@@ -414,10 +424,10 @@ NIL
 0
 
 BUTTON
-10
-410
-195
-455
+310
+561
+495
+606
 Make a Random Distribution
 make-random-distribution
 NIL
@@ -431,10 +441,10 @@ NIL
 0
 
 BUTTON
-10
-205
-195
-245
+455
+480
+640
+520
 Sort the Bins by Wealth
 sort-bins-by-wealth
 NIL
@@ -448,21 +458,21 @@ NIL
 0
 
 MONITOR
-990
-430
-1107
-507
+715
+515
+829
+588
 Gini Index
 gini-index
 2
 1
-19
+18
 
 BUTTON
-1240
-430
-1370
-505
+830
+590
+1000
+650
 Post Your Results
 post
 NIL
@@ -476,10 +486,10 @@ NIL
 0
 
 BUTTON
-10
-160
-195
-201
+5
+480
+190
+521
 Add One Wealth Unit to Each Bin
 add-one-to-each-bin
 NIL
@@ -493,21 +503,21 @@ NIL
 0
 
 MONITOR
-1110
-430
-1235
-507
-Total Wealth
-total-wealth-string
+657
+455
+1022
+512
+NIL
+percent-below
 17
 1
-19
+14
 
 BUTTON
-10
-460
-195
-505
+311
+608
+496
+653
 Make a Sorted Random Distrib
 make-sorted-random-distrib
 NIL
@@ -521,20 +531,20 @@ NIL
 0
 
 TEXTBOX
-25
-265
-185
-301
+236
+517
+396
+553
 Create Distributions of 50 Wealth Units...
 16
 12.0
 1
 
 MONITOR
-1005
-360
-1370
-417
+657
+425
+1022
+482
 NIL
 percent-above
 17
@@ -542,10 +552,10 @@ percent-above
 14
 
 SLIDER
-1005
-355
-1370
-388
+657
+420
+1022
+453
 reference-value
 reference-value
 0
@@ -556,64 +566,47 @@ reference-value
 NIL
 HORIZONTAL
 
-MONITOR
-585
-530
-662
-575
-NIL
-chi-square
-17
-1
-11
-
-MONITOR
-660
-530
-752
-575
-NIL
-chi-absolute
-17
-1
-11
-
-BUTTON
-455
-540
-582
-573
-NIL
-show run-test 5
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 TEXTBOX
-1250
-325
-1345
-343
+896
+400
+991
+418
 % of population
 10
 0.0
 1
 
 TEXTBOX
-995
-55
-1010
-326
-C\nU\nM\nU\nL\nA\nT\nI\nV\nE\n%\n\nof\n\nW\nE\nA\nL\nT\nH
+652
+118
+667
+389
+C\nU\nM\nU\nL\nA\nT\n I\nV\nE\n%\n\nof\n\nW\nE\nA\nL\nT\nH
 10
 0.0
 1
+
+MONITOR
+831
+515
+956
+588
+Total Wealth
+total-wealth-string
+17
+1
+18
+
+INPUTBOX
+615
+590
+830
+650
+your-first-name
+NIL
+1
+0
+String
 
 @#$#@#$#@
 ## WHAT IS IT?
