@@ -1174,9 +1174,9 @@ end
 ;; post data to spreadsheet goes here
 @#$#@#$#@
 GRAPHICS-WINDOW
-5
+90
 10
-444
+529
 470
 16
 16
@@ -1201,18 +1201,18 @@ Week
 30.0
 
 OUTPUT
-445
-10
-725
+90
 470
+875
+600
 13
 
 BUTTON
-930
-530
-1030
-563
-NIL
+5
+85
+85
+118
+HN
 listen-to-clients
 T
 1
@@ -1225,11 +1225,11 @@ NIL
 1
 
 BUTTON
-1040
-530
-1165
-563
-NIL
+5
+135
+80
+168
+Go!
 run-a-week
 NIL
 1
@@ -1242,10 +1242,10 @@ NIL
 1
 
 BUTTON
-846
-530
-931
-563
+5
+50
+85
+83
 New Game!
 export-world (word \"Loyola CPRS \" date-and-time \".save\")\nsetup-clean
 NIL
@@ -1259,10 +1259,10 @@ NIL
 1
 
 MONITOR
-730
-350
-890
-395
+530
+425
+650
+470
 Shared Bank
 common-pool-bank
 0
@@ -1270,35 +1270,35 @@ common-pool-bank
 11
 
 SLIDER
-730
-395
-890
-428
+755
+435
+875
+468
 $-amount
 $-amount
 0
 1000
-590
+600
 10
 1
 $
 HORIZONTAL
 
 CHOOSER
-445
-630
-730
-675
+530
+10
+715
+55
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
 3
 
 PLOT
-5
-470
-445
-590
+530
+135
+970
+255
 Plot 1
 NIL
 NIL
@@ -1312,10 +1312,10 @@ true
 PENS
 
 PLOT
-5
-590
-445
-710
+530
+255
+970
+375
 Plot 2
 NIL
 NIL
@@ -1329,11 +1329,11 @@ true
 PENS
 
 BUTTON
-635
-675
-730
-708
-Show in Plot 2
+585
+80
+640
+113
+Plot 2
 show-in-plot 2
 NIL
 1
@@ -1346,11 +1346,11 @@ NIL
 1
 
 BUTTON
-445
-675
-555
-708
-Show in Plot 1
+530
+80
+585
+113
+Plot 1
 show-in-plot 1
 NIL
 1
@@ -1363,10 +1363,10 @@ NIL
 1
 
 BUTTON
-890
-410
-1050
-443
+650
+375
+755
+420
 Fine Farmer
 fine-them farmer-name
 NIL
@@ -1380,10 +1380,10 @@ NIL
 1
 
 PLOT
-1255
-665
-1505
-825
+725
+10
+970
+135
 gini-coefficient
 NIL
 NIL
@@ -1399,10 +1399,10 @@ PENS
 "Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
 
 BUTTON
-890
-445
-1050
-480
+650
+423
+755
+468
 Give to farmer
 give-$-to-farmer farmer-name
 NIL
@@ -1416,10 +1416,10 @@ NIL
 1
 
 BUTTON
-445
-470
-535
-503
+90
+600
+180
+633
 Who says what
 print-who-says-what
 NIL
@@ -1433,10 +1433,10 @@ NIL
 1
 
 BUTTON
-535
-470
-625
-503
+180
+600
+270
+633
 Who did what
 print-who-did-what
 NIL
@@ -1450,10 +1450,10 @@ NIL
 1
 
 BUTTON
-625
-470
-725
-503
+270
+600
+370
+633
 Who did what #
 print-counts-of-actions-per-farmer
 NIL
@@ -1467,11 +1467,11 @@ NIL
 1
 
 BUTTON
-730
-475
-845
-508
-Plot how many
+640
+80
+715
+113
+# did what
 show-how-many-did-what-when
 NIL
 1
@@ -1484,10 +1484,10 @@ NIL
 1
 
 BUTTON
-810
-780
-935
-813
+250
+670
+375
+703
 setup test week data
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
 NIL
@@ -1518,10 +1518,10 @@ NIL
 1
 
 BUTTON
-736
-530
-821
-563
+5
+10
+85
+43
 Start HubNet
 hubnet-reset
 NIL
@@ -1552,10 +1552,10 @@ NIL
 1
 
 INPUTBOX
-890
-350
-1050
-410
+755
+375
+875
+435
 farmer-name
 Local 1
 1
