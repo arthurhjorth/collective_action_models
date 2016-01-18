@@ -55,11 +55,11 @@ globals [
   who-herded
   who-monitored
   who-repaired
-  who-sowed
+  who-fertilized
   who-said-herded
   who-said-monitored
   who-said-repaired
-  who-said-sowed
+  who-said-fertilized
 
 
   ;@corey --> these are the globals needed for the google sheets stuff
@@ -171,11 +171,11 @@ set gini-history lput gini gini-history
 set who-monitored lput farmers with [will-do = "Do: Monitor Peers"] who-monitored
 set who-herded lput farmers with [will-do = "Do: Herd Cows"] who-herded
 set who-repaired lput farmers with [will-do = "Do: Repair Fences ($500)"] who-repaired
-set who-sowed lput farmers with [will-do = "Do: Spread Fertilizer ($500)"] who-sowed
+set who-fertilized lput farmers with [will-do = "Do: Spread Fertilizer ($500)"] who-fertilized
 set who-said-monitored lput farmers with [will-do = "Say: Monitor Peers"] who-said-monitored
 set who-said-herded lput farmers with [will-do = "Say: Herd Cows"] who-said-herded
 set who-said-repaired lput farmers with [will-do = "Say: Repair Fences ($500)"] who-said-repaired
-set who-said-sowed lput farmers with [will-do = "Say: Spread Fertilizer ($500)"] who-said-sowed
+set who-said-fertilized lput farmers with [will-do = "Say: Spread Fertilizer ($500)"] who-said-fertilized
 
 end
 
@@ -413,11 +413,11 @@ to setup-globals
   set who-herded (list)
   set   who-monitored (list)
   set   who-repaired (list)
-  set   who-sowed (list)
+  set   who-fertilized (list)
   set   who-said-herded (list)
   set   who-said-monitored (list)
   set   who-said-repaired (list)
-  set   who-said-sowed   (list)
+  set   who-said-fertilized   (list)
 
   set seen-this-week (turtle-set)
   set common-pool-bank 500
@@ -935,7 +935,9 @@ to-report gini
 
 end
 
-
+to-report agents-in-list [list-of-agentsets]
+  report map [count ?] list-of-agentsets
+end
 
 
 
@@ -945,22 +947,18 @@ end
 ;@corey: this is an old old. Don't worry about this one.
 to-report historical-data;; depending on what we end up doing with the data, this should spit out either a CSV or a json with all these data
   let data-lists (list
-    "actual-grass-amounts"
-    "total-milk-production"
-    "actual-fence-states"
-    "money-in-the-bank"
-    "count-cows-history"
-;    "who-herded"
-;    "who-monitored"
-;    "who-repaired"
-;    "who-sowed"
-;    "who-said-herded"
-;    "who-said-monitored"
-;    "who-said-repaired"
-;    "who-said-sowed"
+    (list "Grass" actual-grass-amounts)
+    (list "Milk Production" total-milk-production)
+    (list "State of Fences" actual-fence-states)
+    (list "Number of Cows" count-cows-history)
+    (list "Fence Repairers" agents-in-list who-repaired)
+    (list "Herders" agents-in-list who-herded)
+    (list "Monitors" agents-in-list who-monitored)
+    (list "Fertilizers" agents-in-list who-fertilized)
     )
+  report data-lists
   ;; currently this returns lists of agentsets sometimes - in those cases, it should return a map [count ?]
-  report map [(list ? (ifelse-value (is-agentset? item 1 run-result ?) [map [count  ?] runresult ?] [?]))] data-lists
+;  report map [(list ? (ifelse-value (is-agentset? item 1 run-result ?) [map [count  ?] runresult ?] [?]))] data-lists
 end
 
 
@@ -1010,7 +1008,7 @@ end
 
 
 ;;We call this once - once per simulation run, i guess - it clears the data (tickValues) so it's like a "new game!" action
-to setup-google-spreadsheet [reporter-list tick-values]
+to setup-google-spreadsheet
   if not webview:is-open? [
     (webview:create-frame "Sheet Test" "https://script.google.com/macros/s/AKfycbywQLkGHG1YVHJkr2qCOeq2Vt_Sp5IUI1PtxIfknlUbUjgSP7T6/exec")
   ]
@@ -1029,7 +1027,10 @@ end
 ;;here's where the sheets are created.
 to load-up-data
   create-student-sheets
-  stuff-data-into-student-sheets
+end
+
+to submit-data
+
 end
 
 ;;initialize a sheet (this is google's name for a tab) for each student
@@ -1060,11 +1061,6 @@ end
 to stuff-data-into-student-sheets [reporters values]
   foreach student-names [
    set activeUsername ?
-
-   ;;obviously this wouldn't be hardcoded.  the reporterList is set here just so that I remembered the column headers as i made up the data
-
-;   set reporterList ["GrassBiomass" "Number of Cows" "Milk Produced" "Gini"]
-;   set tickValues [ [ 100 10 3 .1 ] [ 102 18 8 .11 ] [ 98 25 15 .2 ] [ 95 30 22 .25 ] [ 90 32 23 .26 ] ]
 
    add-dataset-with-data reporters values
    show (word "student " ? " has data")
@@ -1212,10 +1208,10 @@ OUTPUT
 13
 
 BUTTON
-200
-470
-300
-503
+930
+530
+1030
+563
 NIL
 listen-to-clients
 T
@@ -1229,10 +1225,10 @@ NIL
 1
 
 BUTTON
-310
-470
-435
-503
+1040
+530
+1165
+563
 NIL
 run-a-week
 NIL
@@ -1246,10 +1242,10 @@ NIL
 1
 
 BUTTON
-115
-470
-200
-503
+846
+530
+931
+563
 New Game!
 export-world (word \"Loyola CPRS \" date-and-time \".save\")\nsetup-clean
 NIL
@@ -1282,27 +1278,27 @@ $-amount
 $-amount
 0
 1000
-340
+590
 10
 1
 $
 HORIZONTAL
 
 CHOOSER
+445
+630
 730
-10
-912
-55
+675
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
 3
 
 PLOT
-730
-55
-1105
-195
+5
+470
+445
+590
 Plot 1
 NIL
 NIL
@@ -1316,10 +1312,10 @@ true
 PENS
 
 PLOT
-730
-195
-1105
-335
+5
+590
+445
+710
 Plot 2
 NIL
 NIL
@@ -1333,10 +1329,10 @@ true
 PENS
 
 BUTTON
-1015
-10
-1105
-51
+635
+675
+730
+708
 Show in Plot 2
 show-in-plot 2
 NIL
@@ -1350,10 +1346,10 @@ NIL
 1
 
 BUTTON
-915
-10
-1015
-51
+445
+675
+555
+708
 Show in Plot 1
 show-in-plot 1
 NIL
@@ -1420,10 +1416,10 @@ NIL
 1
 
 BUTTON
-500
-505
-615
-538
+445
+470
+535
+503
 Who says what
 print-who-says-what
 NIL
@@ -1437,10 +1433,10 @@ NIL
 1
 
 BUTTON
-500
-540
-615
-573
+535
+470
+625
+503
 Who did what
 print-who-did-what
 NIL
@@ -1454,10 +1450,10 @@ NIL
 1
 
 BUTTON
-500
-575
-615
-608
+625
+470
+725
+503
 Who did what #
 print-counts-of-actions-per-farmer
 NIL
@@ -1471,10 +1467,10 @@ NIL
 1
 
 BUTTON
-500
-610
-615
-643
+730
+475
+845
+508
 Plot how many
 show-how-many-did-what-when
 NIL
@@ -1488,10 +1484,10 @@ NIL
 1
 
 BUTTON
-1240
-765
-1365
-798
+810
+780
+935
+813
 setup test week data
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
 NIL
@@ -1522,10 +1518,10 @@ NIL
 1
 
 BUTTON
-5
-470
-90
-503
+736
+530
+821
+563
 Start HubNet
 hubnet-reset
 NIL
