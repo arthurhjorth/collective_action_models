@@ -950,14 +950,14 @@ to-report historical-data;; depending on what we end up doing with the data, thi
     "actual-fence-states"
     "money-in-the-bank"
     "count-cows-history"
-    "who-herded"
-    "who-monitored"
-    "who-repaired"
-    "who-sowed"
-    "who-said-herded"
-    "who-said-monitored"
-    "who-said-repaired"
-    "who-said-sowed"
+;    "who-herded"
+;    "who-monitored"
+;    "who-repaired"
+;    "who-sowed"
+;    "who-said-herded"
+;    "who-said-monitored"
+;    "who-said-repaired"
+;    "who-said-sowed"
     )
   ;; currently this returns lists of agentsets sometimes - in those cases, it should return a map [count ?]
   report map [(list ? (ifelse-value (is-agentset? item 1 run-result ?) [map [count  ?] runresult ?] [?]))] data-lists
@@ -1010,18 +1010,19 @@ end
 
 
 ;;We call this once - once per simulation run, i guess - it clears the data (tickValues) so it's like a "new game!" action
-to setup-google-spreadsheet
+to setup-google-spreadsheet [reporter-list tick-values]
   if not webview:is-open? [
     (webview:create-frame "Sheet Test" "https://script.google.com/macros/s/AKfycbywQLkGHG1YVHJkr2qCOeq2Vt_Sp5IUI1PtxIfknlUbUjgSP7T6/exec")
   ]
-  webview:focus ;not really necessary
+;  webview:focus ;not really necessary
 
   ;;set the column heading names
-  set reporterList ["GrassBiomass" "Number of Cows" "Milk Produced" "Gini"]
-  set tickValues []
+;  set reporterList ["GrassBiomass" "Number of Cows" "Milk Produced" "Gini"]
+;  set tickValues []
 
-  ;set student-names hubnet-client-list
-  set student-names ["joe" "mary" "bill"]
+  set student-names hubnet-clients-list
+;  set student-names ["joe" "mary" "bill"]
+
 end
 
 
@@ -1056,15 +1057,16 @@ to add-student-named [ aname ]
 end
 
 ;;put (the same) stuff into each of the student sheet/tabs
-to stuff-data-into-student-sheets
+to stuff-data-into-student-sheets [reporters values]
   foreach student-names [
    set activeUsername ?
 
    ;;obviously this wouldn't be hardcoded.  the reporterList is set here just so that I remembered the column headers as i made up the data
-   set reporterList ["GrassBiomass" "Number of Cows" "Milk Produced" "Gini"]
-   set tickValues [ [ 100 10 3 .1 ] [ 102 18 8 .11 ] [ 98 25 15 .2 ] [ 95 30 22 .25 ] [ 90 32 23 .26 ] ]
 
-   add-dataset-with-data reporterList tickValues
+;   set reporterList ["GrassBiomass" "Number of Cows" "Milk Produced" "Gini"]
+;   set tickValues [ [ 100 10 3 .1 ] [ 102 18 8 .11 ] [ 98 25 15 .2 ] [ 95 30 22 .25 ] [ 90 32 23 .26 ] ]
+
+   add-dataset-with-data reporters values
    show (word "student " ? " has data")
   ]
 end
