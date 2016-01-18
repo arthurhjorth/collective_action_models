@@ -203,7 +203,7 @@ to add-CO2 [n] ;; randomly adds 25 CO2 molecules to atmosphere
 end
 
 to remove-CO2 [n];; randomly remove 25 CO2 molecules
-  repeat 25 [
+  repeat n [
     if any? CO2s [
       ask one-of CO2s [ die ]
     ]
@@ -635,7 +635,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.0-LS1
 @#$#@#$#@
 setup add-cloud add-cloud add-cloud repeat 800 [ go ]
 @#$#@#$#@

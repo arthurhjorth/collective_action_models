@@ -1,4 +1,4 @@
-extensions [gradient cf]
+extensions [palette cf]
 
 breed [cows cow]
 breed [trees tree]
@@ -10,25 +10,22 @@ globals [
   cows-eat 
   grow-amount
   total-eaten
-  eaten-history
   ]
 patches-own [
   grass
   patch-type
   ]
-cows-own [energy]
+cows-own [energy eaten-history eaten-this-week]
 
 to setup
   ca
   ask patches with [pxcor < 0 ] [change-type "forest"]
-  ask patches with [pxcor >= 0] [change-type "grass" set grass random 15]
+  ask patches with [pxcor >= 0] [change-type "grass" set grass 15]
   ask trees [set size 1]
   set cows-max-energy 25
   set cows-eat 2
   set grow-amount .25
-  set eaten-history (list)
   set max-grass 15
-  ask patches [set grass random 9]
   ask patches [recolor-grass]
   reset-ticks
 end
@@ -43,8 +40,7 @@ to go [grow-multiplier]
     regrow grow-multiplier 
     recolor-grass
   ]
-  set eaten-history fput total-eaten eaten-history
-  if length eaten-history > 10 [set eaten-history sublist eaten-history 0 10 ]
+  ask trees with [size < 1] [set size size + .025]
   update-plots
   tick
 end
@@ -65,7 +61,11 @@ to cow-move
 end
 
 to eat
-  if grass > cows-eat and energy <= cows-max-energy [set energy energy + cows-eat set grass grass - cows-eat set total-eaten total-eaten + cows-eat] 
+  let eaten-amount min (list grass cows-eat (cows-max-energy - energy))
+  set grass grass - eaten-amount
+  set energy energy + eaten-amount
+  set eaten-history fput eaten-amount eaten-history
+  if length eaten-history > 10 [set eaten-history sublist eaten-history 0 10 ]  
 end
 
 
@@ -82,12 +82,9 @@ end
 
 
 to recolor-grass
-  set pcolor gradient:scale [[90 60 0] [0 255 0]] grass  0 max-grass
+  set pcolor palette:scale-gradient [[90 60 0] [0 255 0]] grass  0 max-grass
 end
 
-to spread-fertilizer
-  ask patches []
-end
 
 
 to change-area
@@ -105,22 +102,33 @@ to change-type [a-type]
 end
 
 to buy-cow
-create-cows 1 [set energy 10 set shape "cow" move-to one-of patches with [patch-type != "forest"]]
+create-cows 1 [
+  set energy 10 
+  set shape "cow" 
+  move-to one-of patches with [patch-type != "forest"]
+  set eaten-history (list)
+  set eaten-this-week 0
+  ]
 end
 
 to plant-tree
-  if not any? trees-here [sprout-trees 1 [set size .2 set shape "tree" set color green]]
+  if not any? trees-here [sprout-trees 1 [set size .2 set shape "tree" set color green st set grass 0 recolor-grass]]
 end
 
 to-report food-production
-  report ifelse-value (length eaten-history > 0) [mean eaten-history] [0]
+  report sum [milk-production] of cows
+end
+
+
+to-report milk-production
+  report ifelse-value (length eaten-history > 0) [(mean eaten-history) ^ 1.4 ] [0]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 5
-95
+80
 250
-330
+315
 8
 8
 12.0
@@ -145,9 +153,9 @@ ticks
 
 BUTTON
 5
-10
+330
 220
-43
+363
 NIL
 change-area
 T
@@ -162,13 +170,62 @@ NIL
 
 CHOOSER
 5
-45
+365
 220
-90
+410
 plant-type
 plant-type
 "grass" "forest"
 1
+
+BUTTON
+5
+10
+110
+43
+Buy Cow
+buy-cow
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+110
+10
+220
+43
+Sell Cow
+ask one-of cows [die]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+5
+45
+220
+78
+fertilization
+fertilization
+0
+100
+50
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -513,7 +570,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 5.2.0-LS1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

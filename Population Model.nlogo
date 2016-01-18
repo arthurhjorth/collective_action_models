@@ -1,18 +1,20 @@
 ;; Interpreting Congestion Charge ;;
-;; This model is based on Michael Freeden s example 
+;; This model is based on Michael Freeden s example
 ;; The purpose of this model is to show the ambiguity of political concepts such as public goods
 ;; and the interpretation of policies.
-;; TODOS: price sensitivity 
+;; TODOS: price sensitivity
 
-extensions [gradient]
+extensions [palette]
 
 globals [
-  
+
+  lake-patches
+
   global-pollution-per-day               ;; pollution variable
-  travel-time-added                      ;; traffic congestion, how congested is traffic. 
+  travel-time-added                      ;; traffic congestion, how congested is traffic.
                                          ;; this variable adds itself to a vehicle s travel time
   average-travel-time                    ;; average travel time calculated per day per person
-  
+
   yesterdays-travel-time-added           ;; the average travel time added per vehicle yesterday
                                          ;; this is key in people s decision making process for whether they want
                                          ;; to go by car or bus.
@@ -25,25 +27,25 @@ globals [
   median-income-preference-not-met       ;; median income for those whose transport preference was not met
   turtles-preference-met                 ;; number of people whose prefernces are met
   turtles-preference-not-met             ;; number of people whose preferences are not met
-  
+
   color?                                 ;; color code boolean
-  
+
   base-price-bus                         ;; base price for taking the bus
   real-price-bus                         ;; real price for taking the bus
   bus-subsidies                          ;; money going towards bus subsidies
-  
+
   base-price-car                         ;; base price car. real price is base price plus congestion charge
   road-maintenance-expenses              ;; road maintenance expenses. The higher this is, the higher capacity on roads.
-  
-  base-road-capacity                     ;; 
+
+  base-road-capacity                     ;;
   real-road-capacity                     ;;
-  
+
   revenue-bus-tickets                    ;; total revenue from bus tickets
   revenue-congestion-charge              ;; total revenue from congestion charge
-  
+
   expenses                               ;; total expenses
   budget-balance                         ;; budget balance
-  
+
   avg-passengers-per-bus
   pollution-per-bus
   pollution-per-car
@@ -74,21 +76,17 @@ to setup
   ;; the beginning of your setup procedure and reset-ticks at the end
   ;; of the procedure.)
   __clear-all-and-reset-ticks
-  
+
   set avg-passengers-per-bus 32
   set pollution-per-bus 50
   set pollution-per-car 7
   set avg-passengers-per-car 1.5
   set population 1089
-  
+
   set color? false
 ;  ask patch 0 0 [sprout 1 [set shape "house"]]
-  ask patches with [distancexy -11 11 < 10] [set pcolor blue]
-  
-
-
-
-  
+  set lake-patches patches with [distancexy -11 11 < 10]
+  ask lake-patches [set pcolor blue]
 end
 
 
@@ -109,7 +107,7 @@ to go
   calculate-median-preference-met
   ask turtles with [will-drive?] [set shape "car"]
   ask turtles with [not will-drive?] [set shape "train"]
- 
+
   calc-pollution
   ]
 end
@@ -136,7 +134,7 @@ to calculate-median-incomes
   ]
   [
     set median-income-drivers 0
-  ]  
+  ]
   ifelse any? turtles with [will-drive?]
   [
     set median-income-bussers median [income] of turtles with [will-drive?]
@@ -145,7 +143,7 @@ to calculate-median-incomes
     set median-income-bussers 0
   ]
 end
-  
+
 to calculate-preference-met
   set turtles-preference-met (count turtles - count turtles with [wishes-to-drive? and will-drive?])
   set turtles-preference-not-met population - turtles-preference-met
@@ -153,16 +151,16 @@ end
 
 to calculate-median-preference-met
   ;; if clause to avoid null pointer exc
-  
+
   ifelse any? turtles with [(wishes-to-drive? and will-drive?) or not wishes-to-drive?]
   [
-     set median-income-preference-met median [income] of turtles with 
+     set median-income-preference-met median [income] of turtles with
            [(wishes-to-drive? and will-drive?) or not wishes-to-drive?]
   ]
   [
     set median-income-preference-met 0
   ]
-  
+
   ;; if clause to avoid null pointer exc
   ifelse any? turtles with [wishes-to-drive? and not will-drive?]
   [
@@ -173,8 +171,8 @@ to calculate-median-preference-met
   ]
 
 
-end  
-  
+end
+
 to color-turtle
   ask turtles[
   ;; coloring people per income
@@ -203,7 +201,7 @@ to white-turtle
   [
     set color white
   ]
-  
+
 end
 
 to calc-pollution
@@ -214,7 +212,7 @@ to calc-pollution
 to calculate-delay-created
   ;; calculates delay created by finding sum of vehicles. All vehicles cause same amount of delay which probably isnt true...
   set travel-time-added cars + busses
-  
+
 end
 
 to-report wishes-to-drive? ;; this determines if the turtle would ideally drive
@@ -241,16 +239,16 @@ to add-person
     move-to min-one-of patches with [not any? turtles-here and pcolor != blue] [distancexy -4 3]
 ;    move-to min-one-of patches with [not any? turtles-here] [sum (list abs pxcor abs pycor)]
     ;;move-to first patches with  [any? turtles-here = false]
-    
 
-    
+
+
     ;; setting income randomly (will be changed as part of gini coefficient implementation)
     set income random 99
     set color white
     set car-love random 99
     set willing-to-wait random 99
 
-    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this. 
+    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this.
     set income income + 1
     set car-love car-love + 1
     set willing-to-wait willing-to-wait + 1
@@ -618,7 +616,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 6.0-PREVIEW-12-15
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
