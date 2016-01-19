@@ -1286,9 +1286,9 @@ HORIZONTAL
 
 CHOOSER
 530
-10
-715
 55
+715
+100
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
@@ -1297,7 +1297,7 @@ plot-value
 PLOT
 530
 135
-970
+880
 255
 Plot 1
 NIL
@@ -1314,7 +1314,7 @@ PENS
 PLOT
 530
 255
-970
+880
 375
 Plot 2
 NIL
@@ -1330,9 +1330,9 @@ PENS
 
 BUTTON
 585
-80
+100
 640
-113
+133
 Plot 2
 show-in-plot 2
 NIL
@@ -1347,9 +1347,9 @@ NIL
 
 BUTTON
 530
-80
+100
 585
-113
+133
 Plot 1
 show-in-plot 1
 NIL
@@ -1380,9 +1380,9 @@ NIL
 1
 
 PLOT
-725
+715
 10
-970
+880
 135
 gini-coefficient
 NIL
@@ -1392,7 +1392,7 @@ NIL
 0.0
 1.0
 false
-true
+false
 "" "clear-plot"
 PENS
 "Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[foreach gini-points [plotxy first ? last ?]]"
@@ -1468,9 +1468,9 @@ NIL
 
 BUTTON
 640
-80
+100
 715
-113
+133
 # did what
 show-how-many-did-what-when
 NIL
