@@ -1012,14 +1012,7 @@ to setup-google-spreadsheet
   if not webview:is-open? [
     (webview:create-frame "Sheet Test" "https://script.google.com/macros/s/AKfycbywQLkGHG1YVHJkr2qCOeq2Vt_Sp5IUI1PtxIfknlUbUjgSP7T6/exec")
   ]
-;  webview:focus ;not really necessary
 
-  ;;set the column heading names
-;  set reporterList ["GrassBiomass" "Number of Cows" "Milk Produced" "Gini"]
-;  set tickValues []
-
-  set student-names hubnet-clients-list
-;  set student-names ["joe" "mary" "bill"]
 
 end
 
@@ -1153,11 +1146,38 @@ end
 
 
 
+to-report transpose [list-of-lists]
+  let no-rows length first list-of-lists
+  let transposed-list (list)
+  foreach n-values no-rows [?]  [
+    let counter ?
+    let row (list)
+    foreach list-of-lists [
+      set row lput (item counter ?) row
+    ]
+    set transposed-list lput row transposed-list
+  ]
+  report transposed-list
+
+end
 
 
 
+to post-data [names]
+  ; if there are no names, then ask for a name, and that's the only name this session will use
+  ifelse names = [][
+    let the-group-name user-input "What is the name of your group?"
+    set student-names (list the-group-name)
+  ]
+  [
+    set student-names names
+  ]
 
+  setup-google-spreadsheet
+  create-student-sheets
+  stuff-data-into-student-sheets map [first ?] historical-data transpose map [last ?] historical-data
 
+end
 
 
 
@@ -1227,7 +1247,7 @@ NIL
 BUTTON
 5
 135
-80
+85
 168
 Go!
 run-a-week
@@ -1286,9 +1306,9 @@ HORIZONTAL
 
 CHOOSER
 530
-55
+10
 715
-100
+55
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
@@ -1330,9 +1350,9 @@ PENS
 
 BUTTON
 585
-100
+55
 640
-133
+88
 Plot 2
 show-in-plot 2
 NIL
@@ -1347,9 +1367,9 @@ NIL
 
 BUTTON
 530
-100
+55
 585
-133
+88
 Plot 1
 show-in-plot 1
 NIL
@@ -1395,7 +1415,7 @@ false
 false
 "" "clear-plot"
 PENS
-"Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[foreach gini-points [plotxy first ? last ?]]"
+"Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[plotxy 0 0 foreach gini-points [plotxy first ? last ?]]"
 "Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
 
 BUTTON
@@ -1468,9 +1488,9 @@ NIL
 
 BUTTON
 640
-100
+55
 715
-133
+88
 # did what
 show-how-many-did-what-when
 NIL
@@ -1535,10 +1555,10 @@ NIL
 1
 
 BUTTON
-1402
-365
-1527
-398
+394
+654
+519
+687
 test-week
 ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
 NIL
@@ -1561,6 +1581,23 @@ Local 1
 1
 0
 String
+
+BUTTON
+530
+90
+715
+135
+Post Village data!
+post-data []
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
