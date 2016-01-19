@@ -1,8 +1,8 @@
 extensions [ls]
 globals [
   ;; model ids
-  milk 
-  climate 
+  milk
+  climate
   population
   ;; variables for keeping track of inter-model logic
   food-surplus
@@ -27,39 +27,45 @@ to soft-setup
   set population 2
   ls:ask ls:models "setup"
   ls:ask climate "import-world \"cc-start\""
+  ls:ask climate "reset-ticks"
   clear-all-plots
   reset-ticks
 end
 
 ;; before we do anything, let's talk about a few heuristics for balancing the system
-;; Questions: 
+;; Questions:
 ;; how may people can one cow sustain? let's just say 3'ish
-;; how much co2 should people produce? and how many trees should 
+;; how much co2 should people produce? and how many trees should
 ;; there are 136 trees in the food production model
-;; 
+;;
 
 to go
-  
-  
   ;; the go procedure does a few things. First it runs the go in congestion and climate:
   ls:ask population "go"
-  ls:ask climate "no-display repeat 10 [go] display"
-  ;; then it runs the food production model. Two things affect this - 
+  ls:ask climate "no-display repeat 15 [go] display"
+  ;; then it runs the food production model. Two things affect this -
   ;;;; first, the temperature in the climate model; second, the amount of fertilizer used
   ;;;; in the model
-  
+
   ;; this variable is central to the balancing of the model, so this needs to be carefully calculated.
   ;; 60 is the ideal growth temperature for grass. SO we take the absolute difference between that and
   ;; the actual temperature and calculate some coefficient for that.
   let temp  "temperature" ls:of climate
-  ;; let's try with the ratio -^1
-  let grow-coeff abs (60 - temp)
-  set grow-coeff  60 / (60 - grow-coeff)
-  set grow-coeff grow-coeff * (1 + fertilization-rate / 100)
+  let grow-coeff 0
+;  show temp
+  if temp < 90 and temp > 30 
+  [
+    set grow-coeff abs (60 - temp)
+;    show grow-coeff
+    set grow-coeff 1 - ((grow-coeff / 30) ^ 2)
+    set grow-coeff grow-coeff * (1 + "fertilization" ls:of milk / 100)    
+  ]
 ;  show grow-coeff
-  (ls:ask milk "go ?" grow-coeff) ; 1 here
-
+  (ls:ask milk "go ?" grow-coeff) 
   
+  
+  adjust-co2
+
 
   ; maybe add people to our village
   ;; get our food production
@@ -68,15 +74,39 @@ to go
   set food-surplus food-surplus - "count turtles" ls:of population
   ;; then if we have enough, we create more people
   if food-surplus > 100 [ls:ask population "add-person" set food-surplus food-surplus - 100]
-  if food-surplus < -100 [ls:ask population "remove-person" set food-surplus food-surplus + 100 show "one died"]
+  if food-surplus < -100 [ls:ask population "remove-person" set food-surplus food-surplus + 100 ]
+  
+  set pollution pollution + ("fertilization" ls:of milk / 100)
+  set pollution pollution - pollution / 100
+  
 tick
+end
+
+
+
+to adjust-co2
+  ;; this is where the magic happens for good and bad. For each person in the model we add
+  ;; CO2, and for each tree missing, we add CO2. For each tree added, we remove CO2.
+  ;; Let's see how it works out.
+  ;; Baseline is 136 trees (for a max of 272), 136 CO2s.
+  let current-trees "count trees" ls:of milk
+  let people "count turtles" ls:of population
+  let total-co2s (272 - current-trees) + (people * 3)
+  let co2-diff total-co2s - "count co2s" ls:of climate
+  ifelse co2-diff > 0 
+  [
+    (ls:ask climate "add-co2 ?" co2-diff)
+  ]
+  [ 
+    (ls:ask climate "remove-co2 ?" abs co2-diff)
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 180
-10
+200
 425
-206
+396
 16
 16
 5.0
@@ -117,10 +147,10 @@ NIL
 1
 
 BUTTON
-5
-45
 75
-78
+10
+145
+43
 NIL
 go
 T
@@ -134,10 +164,10 @@ NIL
 1
 
 PLOT
-155
-10
-475
-130
+5
+50
+185
+170
 CO2
 NIL
 NIL
@@ -152,10 +182,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"count co2s\" ls:of climate"
 
 PLOT
-155
-250
-475
-370
+5
+170
+185
+290
 Temperature
 NIL
 NIL
@@ -170,10 +200,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"temperature\" ls:of climate"
 
 PLOT
-155
-370
-475
-490
+185
+170
+365
+290
 Cows
 NIL
 NIL
@@ -188,10 +218,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"count cows\" ls:of milk"
 
 PLOT
-155
-490
-475
-610
+185
+290
+365
+410
 Food Production
 NIL
 NIL
@@ -206,10 +236,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot \"food-production\" ls:of milk"
 
 PLOT
-155
-130
-475
-250
+365
+50
+545
+170
 People
 NIL
 NIL
@@ -223,44 +253,12 @@ false
 PENS
 "Public transit" 1.0 0 -16777216 true "" "plot \"count turtles\" ls:of population"
 
-BUTTON
-5
-185
-75
-218
-Buy Cow
-ls:ask milk \"buy-cow\"
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-5
-220
-145
-253
-fertilization-rate
-fertilization-rate
-0
-1000
-416
-1
-1
-NIL
-HORIZONTAL
-
 PLOT
-475
-10
-795
-130
-Pollution
+365
+290
+545
+410
+Water Pollution
 NIL
 NIL
 0.0
@@ -271,13 +269,13 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count turtles"
+"default" 1.0 0 -16777216 true "" "plot pollution"
 
 BUTTON
-5
-80
-117
-113
+145
+10
+240
+43
 Run 400 ticks
 repeat 400 [go]
 NIL
@@ -291,10 +289,10 @@ NIL
 1
 
 BUTTON
-5
-115
-127
-148
+240
+10
+345
+43
 Run 1000 ticks
 repeat 1000 [go]
 NIL
@@ -306,6 +304,60 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+5
+290
+185
+410
+Trees
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot \"count trees\" ls:of milk"
+
+PLOT
+185
+50
+365
+170
+Grass
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot \"sum [grass] of patches with [patch-type = \\\"grass\\\"]\" ls:of milk"
+
+PLOT
+365
+170
+545
+290
+Fertilization
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot \"fertilization\" ls:of milk"
 
 @#$#@#$#@
 ## WHAT IS IT?
