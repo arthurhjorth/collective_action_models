@@ -44,6 +44,7 @@ to setup-posting
 end
 
 to post
+  while [your-first-name = ""] [ set your-first-name user-input "Please enter your first name" ]
   save-interface-image
   ifelse webview:is-open?
   [
@@ -51,6 +52,7 @@ to post
     webview:focus
   ]
   [
+    user-message (word "Remember to select the file " filename "\n before you submit the form!")
     setup-posting
   ]
 end
@@ -237,6 +239,22 @@ to-report gini-index
   report 2 * (.5 - (area / tot))
 end
 
+
+to-report gini-of [alist]
+  let slist sort alist
+  let tot sum slist
+  let area 0
+  let last-height 0
+  let hincrement 1 / (length alist)
+  foreach slist
+  [
+   set area area + ( hincrement * last-height) + (.5 * hincrement * ?)
+   set last-height last-height + ?
+  ]
+  show (word "Total = " tot " and average = " (mean alist))
+  report (word "Gini Index = " (2 * (.5 - (area / tot) )) )
+end
+
 to-report chi-square
   let accumulation 0
   foreach gini-list
@@ -306,6 +324,35 @@ to-report percent-below
     set old-reference-value reference-value
   ]
   report (word (precision (100 * (1 - (wealth-above reference-value) / total-wealth)) 1) "% of the wealth controlled by the poorest " (precision ((reference-value) * 100) 0) "%")
+end
+
+
+
+to run-gini-search
+  let keep-going true
+  let index 0
+  let highest 0
+  let lowest 1
+  while [ keep-going and index < 1000 ]
+  [
+    make-sorted-random-distrib
+    let g gini-index
+    if g > highest [ set highest g ]
+    if g < lowest [ set lowest g ]
+    ifelse abs (g - gvalue) < 0.005
+    [
+      display wait .5 update-plots  display
+      export-interface (word "exampleOfGiniOf" gvalue ".jpg" )
+      set keep-going false
+    ]
+    [
+      set index index + 1
+    ]
+  ]
+  ifelse (index < 1000)
+  [ user-message (word "Produced a distribution with the\ndesired Gini index of " gvalue ".") ]
+  [ user-message (word "Did not find a distribution with\nthe desired Gini index of " gvalue " in\n1000 random trials.\nIn those trials, the highest\nindex was " (precision highest 2) ", and the lowest\nindex was " (precision lowest 2) ".") ]
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -390,10 +437,10 @@ PENS
 "default2" 1.0 0 -16777216 true "" "plotxy 0 0  plotxy 1 1"
 
 BUTTON
-120
-560
-305
-605
+125
+535
+310
+580
 Make a Uniform Distribution
 make-even-distribution
 NIL
@@ -407,10 +454,10 @@ NIL
 0
 
 BUTTON
-120
-608
-305
-653
+125
+583
+310
+628
 Make a (Near) Linear Distribution
 make-linear-distribution
 NIL
@@ -424,10 +471,10 @@ NIL
 0
 
 BUTTON
-310
-561
-495
-606
+315
+536
+500
+581
 Make a Random Distribution
 make-random-distribution
 NIL
@@ -514,10 +561,10 @@ percent-below
 14
 
 BUTTON
-311
-608
-496
-653
+316
+583
+501
+628
 Make a Sorted Random Distrib
 make-sorted-random-distrib
 NIL
@@ -532,9 +579,9 @@ NIL
 
 TEXTBOX
 236
-517
+495
 396
-553
+556
 Create Distributions of 50 Wealth Units...
 16
 12.0
@@ -607,6 +654,38 @@ NIL
 1
 0
 String
+
+BUTTON
+40
+645
+315
+678
+Draw repeated samples to find a Gini Index of...
+run-gini-search
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+0
+
+SLIDER
+315
+645
+487
+678
+gvalue
+gvalue
+0.1
+.5
+0.34
+.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
