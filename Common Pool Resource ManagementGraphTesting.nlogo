@@ -488,38 +488,56 @@ to listen-to-clients
 end
 
 to add-farmer [message-source bot?]
+;  ;; branch here: if a famer already exists with this name, don't do anything.
+;  ifelse not any? farmers with [user-id = message-source ]
+;  [
+;
+;    create-farmers 1 [
+;      set is-bot? bot?
+;      move-to one-of grass-patches
+;      set shape "person"
+;      set user-id message-source
+;      set money cow-price * 2 + 250 ; give everybody enough money to buy two cows, plus change.
+;      set color one-of base-colors
+;      set milk-production-list []
+;      reset-farmer
+;      set money-to-bank 20 ;; this is what it inits to in the client view
+;    ]
+;
+;    display
+;
+;
+;
+;  ]
+;  [
 
-  create-farmers 1 [
-    set is-bot? bot?
-    move-to one-of grass-patches
-    set shape "person"
-    set user-id message-source
-    set money cow-price * 2 + 250 ; give everybody enough money to buy two cows, plus change.
-    set color one-of base-colors
-    set milk-production-list []
-    reset-farmer
-    set money-to-bank 20 ;; this is what it inits to in the client view
-    if not is-bot?[
-      update-client-info
-      hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
-;      hubnet-send- message-source one-of farmers with [user-id = message-source]
+
+
+
+  ifelse not any? farmers with [user-id = message-source][
+    show (word "New student " message-source " typed their name wrong.  Kicking")
+    hubnet-kick-client message-source
+  ]
+  [
+    ask one-of farmers with [user-id = message-source][
+      if not is-bot?[
+
+        update-client-info
+        hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
+        ;      hubnet-send- message-source one-of farmers with [user-id = message-source]
+      ]
     ]
-    display
-
   ]
 
-  wait .05
-;  goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
-  wait .05
-;  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list
 
   scale-vars-for-n-players
-
 end
 
-to kill-farmer [message-source]
-  ask farmers with [user-id = message-source ] [die]
-;  scale-vars-for-n-players
+
+to kill-farmer [name]
+  ask farmers with [user-id = name ] [ask my-cows [die] die]
+ carefully [  hubnet-kick-client name] [show (word  "failed to kick " name)]
+  scale-vars-for-n-players
 end
 
 to do-command [source tag]
@@ -1032,6 +1050,7 @@ to create-student-sheets
    add-student-named ?
    show (word "student " ? " created")
   ]
+  wait 1
 end
 
 ;;actually initialize the sheet/tab
@@ -1133,7 +1152,14 @@ end
 
 
 
+to-report weeks
+  report ticks
+end
 
+
+to-report starting-money
+  report 3250
+end
 
 
 
@@ -1221,10 +1247,10 @@ Week
 30.0
 
 OUTPUT
-90
-470
-875
-600
+89
+469
+874
+632
 13
 
 BUTTON
@@ -1298,7 +1324,7 @@ $-amount
 $-amount
 0
 1000
-600
+50
 10
 1
 $
@@ -1312,13 +1338,13 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
-3
+5
 
 PLOT
 530
-135
+137
 880
-255
+257
 Plot 1
 NIL
 NIL
@@ -1436,10 +1462,10 @@ NIL
 1
 
 BUTTON
-90
-600
-180
+89
 633
+179
+666
 Who says what
 print-who-says-what
 NIL
@@ -1453,10 +1479,10 @@ NIL
 1
 
 BUTTON
-180
-600
-270
+179
 633
+269
+666
 Who did what
 print-who-did-what
 NIL
@@ -1470,10 +1496,10 @@ NIL
 1
 
 BUTTON
-270
-600
-370
+269
 633
+369
+666
 Who did what #
 print-counts-of-actions-per-farmer
 NIL
@@ -1577,17 +1603,17 @@ INPUTBOX
 875
 435
 farmer-name
-Local 1
+sean
 1
 0
 String
 
 BUTTON
-530
-90
-715
-135
-Post Village data!
+5
+177
+95
+222
+Post data!
 post-data []
 NIL
 1
@@ -1598,6 +1624,17 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+530
+90
+715
+135
+Gini
+gini / 100
+2
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
