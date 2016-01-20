@@ -78,7 +78,8 @@ to go
   
   set pollution pollution + ("fertilization" ls:of milk / 100)
   set pollution pollution - pollution / 100
-  
+  (ls:ask population "ask lake-patches [set pcolor palette:scale-gradient [[0 0 255] [0 255 0]] ? 0 100]" pollution)
+  (ls:ask population "ask turtles [if random 100 < ? [remove-person]]" pollution / 100)
 tick
 end
 

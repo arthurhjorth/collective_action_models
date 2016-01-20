@@ -236,7 +236,7 @@ to add-person
     ;; setting shape person
     set shape "house"
     ;; placing randomly on map in unoccupied location
-    move-to min-one-of patches with [not any? turtles-here and pcolor != blue] [distancexy -4 3]
+    move-to min-one-of patches with [not member? self lake-patches and not any? turtles-here] [distancexy -4 3]
 ;    move-to min-one-of patches with [not any? turtles-here] [sum (list abs pxcor abs pycor)]
     ;;move-to first patches with  [any? turtles-here = false]
 
@@ -256,7 +256,7 @@ to add-person
 end
 
 to remove-person
-  ask max-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
+  ask min-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -616,7 +616,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 6.0-PREVIEW-12-15
+NetLogo 5.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
