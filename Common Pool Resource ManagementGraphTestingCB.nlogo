@@ -340,7 +340,7 @@ end
 
 to eat
   ;; let cows eat 20% more if their owner shepherds
-  let my-max-eat ifelse-value [shepherding-this-week?] of owner [cows-eat * (1 + shepherd-bonus)] [cows-eat]
+ carefully [  let my-max-eat ifelse-value [shepherding-this-week?] of owner [cows-eat * (1 + shepherd-bonus)] [cows-eat] ] [ ]
   let stomach-space-left cows-max-energy - energy
   let eaten-amount min (list stomach-space-left grass cows-eat)
   set energy energy  + eaten-amount
@@ -488,56 +488,38 @@ to listen-to-clients
 end
 
 to add-farmer [message-source bot?]
-;  ;; branch here: if a famer already exists with this name, don't do anything.
-;  ifelse not any? farmers with [user-id = message-source ]
-;  [
-;
-;    create-farmers 1 [
-;      set is-bot? bot?
-;      move-to one-of grass-patches
-;      set shape "person"
-;      set user-id message-source
-;      set money cow-price * 2 + 250 ; give everybody enough money to buy two cows, plus change.
-;      set color one-of base-colors
-;      set milk-production-list []
-;      reset-farmer
-;      set money-to-bank 20 ;; this is what it inits to in the client view
-;    ]
-;
-;    display
-;
-;
-;
-;  ]
-;  [
 
-
-
-
-  ifelse not any? farmers with [user-id = message-source][
-    show (word "New student " message-source " typed their name wrong.  Kicking")
-    hubnet-kick-client message-source
-  ]
-  [
-    ask one-of farmers with [user-id = message-source][
-      if not is-bot?[
-
-        update-client-info
-        hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
-        ;      hubnet-send- message-source one-of farmers with [user-id = message-source]
-      ]
+  create-farmers 1 [
+    set is-bot? bot?
+    move-to one-of grass-patches
+    set shape "person"
+    set user-id message-source
+    set money cow-price * 2 + 250 ; give everybody enough money to buy two cows, plus change.
+    set color one-of base-colors
+    set milk-production-list []
+    reset-farmer
+    set money-to-bank 20 ;; this is what it inits to in the client view
+    if not is-bot?[
+      update-client-info
+      hubnet-send message-source "Status" "Welcome to the weekly town hall meeting. Coordinate with your village, and decide what to do next week."
+;      hubnet-send- message-source one-of farmers with [user-id = message-source]
     ]
+    display
+
   ]
 
+  wait .05
+;  goo:set-chooser-items "farmer-list" sort [user-id] of farmers;sort hubnet-clients-list
+  wait .05
+;  set farmer-list item 0 sort [user-id] of farmers;hubnet-clients-list
 
   scale-vars-for-n-players
+
 end
 
-
-to kill-farmer [name]
-  ask farmers with [user-id = name ] [ask my-cows [die] die]
- carefully [  hubnet-kick-client name] [show (word  "failed to kick " name)]
-  scale-vars-for-n-players
+to kill-farmer [message-source]
+  ask farmers with [user-id = message-source ] [die]
+;  scale-vars-for-n-players
 end
 
 to do-command [source tag]
@@ -1050,7 +1032,6 @@ to create-student-sheets
    add-student-named ?
    show (word "student " ? " created")
   ]
-  wait 1
 end
 
 ;;actually initialize the sheet/tab
@@ -1152,14 +1133,7 @@ end
 
 
 
-to-report weeks
-  report ticks
-end
 
-
-to-report starting-money
-  report 3250
-end
 
 
 
@@ -1245,6 +1219,403 @@ GRAPHICS-WINDOW
 1
 Week
 30.0
+
+OUTPUT
+90
+470
+875
+677
+13
+
+BUTTON
+5
+85
+85
+118
+HN
+listen-to-clients
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+5
+135
+85
+168
+Go!
+run-a-week
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+5
+50
+85
+83
+New Game!
+export-world (word \"Loyola CPRS \" date-and-time \".save\")\nsetup-clean
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+530
+425
+650
+470
+Shared Bank
+common-pool-bank
+0
+1
+11
+
+SLIDER
+755
+435
+875
+468
+$-amount
+$-amount
+0
+1000
+260
+10
+1
+$
+HORIZONTAL
+
+CHOOSER
+530
+10
+715
+55
+plot-value
+plot-value
+"Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
+4
+
+PLOT
+530
+135
+880
+255
+Plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+
+PLOT
+530
+255
+880
+375
+Plot 2
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+
+BUTTON
+585
+55
+640
+88
+Plot 2
+show-in-plot 2
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+530
+55
+585
+88
+Plot 1
+show-in-plot 1
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+650
+375
+755
+420
+Fine Farmer
+fine-them farmer-name
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+715
+10
+880
+135
+gini-coefficient
+NIL
+NIL
+0.0
+1.0
+0.0
+1.0
+false
+false
+"" "clear-plot"
+PENS
+"Actual Wealth" 1.0 0 -13840069 true "" "if ticks > 0[plotxy 0 0 foreach gini-points [plotxy first ? last ?]]"
+"Equal Wealth" 1.0 0 -7500403 true "" "plotxy 0 0 plotxy 1 1"
+
+BUTTON
+650
+423
+755
+468
+Give to farmer
+give-$-to-farmer farmer-name
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+884
+467
+990
+501
+Who says what
+print-who-says-what
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+885
+505
+990
+539
+Who did what
+print-who-did-what
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+885
+543
+990
+577
+Who did what #
+print-counts-of-actions-per-farmer
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+640
+55
+715
+88
+# did what
+show-how-many-did-what-when
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+975
+702
+1100
+735
+setup test week data
+ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1402
+400
+1527
+433
+setup test run
+;setup\nforeach n-values 25 [?]  [ add-farmer (word ?) true ] ask farmers [repeat 3 [buy-cow]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+5
+10
+85
+43
+Start HubNet
+hubnet-reset
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1119
+686
+1244
+719
+test-week
+ask farmers [\nset will-do one-of do-options\nset say-will-do one-of say-options\n]\nrun-a-week
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+INPUTBOX
+755
+375
+875
+435
+farmer-name
+willy
+1
+0
+String
+
+BUTTON
+530
+90
+715
+135
+Post Village data!
+post-data []
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+881
+133
+1081
+283
+WealthDistribution
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" "carefully \n[set-plot-x-range 100 * floor ((min [wealth] of farmers - 500) / 100) 100 * ceiling ((max [wealth] of farmers + 1000) / 100) \n]\n[\n]"
+PENS
+"default" 500.0 1 -16777216 true "" "histogram [wealth] of farmers"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1607,6 +1978,253 @@ NetLogo 6.0-PREVIEW-12-15
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+BUTTON
+15
+85
+160
+118
+Say: Repair Fences ($500)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+15
+120
+160
+153
+Say: Herd Cows
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+MONITOR
+15
+320
+160
+369
+# of Cows
+NIL
+0
+1
+
+MONITOR
+165
+320
+325
+369
+$
+NIL
+0
+1
+
+BUTTON
+15
+285
+325
+318
+Buy Cow ($1500)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+VIEW
+335
+65
+835
+565
+0
+0
+0
+1
+1
+1
+1
+1
+0
+1
+1
+1
+-16
+16
+-16
+16
+
+MONITOR
+15
+10
+835
+59
+Status
+NIL
+0
+1
+
+TEXTBOX
+15
+60
+210
+78
+What you say you will do
+15
+0.0
+1
+
+TEXTBOX
+15
+160
+175
+178
+What you actually do.
+15
+0.0
+1
+
+SLIDER
+15
+400
+325
+433
+money-to-shared-bank
+money-to-shared-bank
+0
+1000
+50
+1
+1
+NIL
+HORIZONTAL
+
+BUTTON
+15
+435
+325
+468
+Donate
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+165
+85
+325
+118
+Say: Spread Fertilizer ($500)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+15
+185
+160
+218
+Do: Repair Fences ($500)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+15
+220
+160
+253
+Do: Herd Cows
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+165
+185
+325
+218
+Do: Spread Fertilizer ($500)
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+165
+120
+325
+153
+Say: Monitor Peers
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+BUTTON
+165
+220
+325
+253
+Do: Monitor Peers
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+
+TEXTBOX
+15
+260
+165
+278
+Cows
+15
+0.0
+1
+
+TEXTBOX
+15
+375
+65
+393
+Money
+15
+0.0
+1
+
 @#$#@#$#@
 default
 0.0
