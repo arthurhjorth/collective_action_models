@@ -340,7 +340,7 @@ end
 
 to eat
   ;; let cows eat 20% more if their owner shepherds
-  let my-max-eat ifelse-value [shepherding-this-week?] of owner [cows-eat * (1 + shepherd-bonus)] [cows-eat]
+ carefully [  let my-max-eat ifelse-value [shepherding-this-week?] of owner [cows-eat * (1 + shepherd-bonus)] [cows-eat] ] [ ]
   let stomach-space-left cows-max-energy - energy
   let eaten-amount min (list stomach-space-left grass cows-eat)
   set energy energy  + eaten-amount
@@ -1298,7 +1298,7 @@ $-amount
 $-amount
 0
 1000
-600
+260
 10
 1
 $
@@ -1312,7 +1312,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
-3
+4
 
 PLOT
 530
@@ -1577,7 +1577,7 @@ INPUTBOX
 875
 435
 farmer-name
-Local 1
+willy
 1
 0
 String
@@ -1598,6 +1598,24 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+881
+133
+1081
+283
+WealthDistribution
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" "carefully \n[set-plot-x-range 100 * floor ((min [wealth] of farmers - 500) / 100) 100 * ceiling ((max [wealth] of farmers + 1000) / 100) \n]\n[\n]"
+PENS
+"default" 500.0 1 -16777216 true "" "histogram [wealth] of farmers"
 
 @#$#@#$#@
 ## WHAT IS IT?
