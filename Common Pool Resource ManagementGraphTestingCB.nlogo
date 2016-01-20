@@ -1600,10 +1600,10 @@ NIL
 1
 
 PLOT
-881
-133
-1081
-283
+880
+135
+1080
+375
 WealthDistribution
 NIL
 NIL
