@@ -7,17 +7,24 @@ globals [
   ;; variables for keeping track of inter-model logic
   food-surplus
   pollution
+  setup-clicked?
   ]
 
 
 ;; Load the CC model, the traffic model, and the milk production model
 to setup
-  ls:reset
+  if length ls:models = 0 [
+    ls:reset
+    ls:load-gui-model "milk production model.nlogo"
+    ls:load-gui-model "Climate Change.nlogo"
+    ls:load-gui-model "Population Model.nlogo"
+  ]
   ca
-  ls:load-gui-model "milk production model.nlogo"
-  ls:load-gui-model "Climate Change.nlogo"
-  ls:load-gui-model "Population Model.nlogo"
   soft-setup
+end
+
+to startup
+set setup-clicked? false
 end
 
 
@@ -28,6 +35,7 @@ to soft-setup
   ls:ask ls:models "setup"
   ls:ask climate "import-world \"cc-start\""
   ls:ask climate "reset-ticks"
+  set setup-clicked? false
   clear-all-plots
   reset-ticks
 end
@@ -40,6 +48,10 @@ end
 ;;
 
 to go
+  if setup-clicked? [
+    set setup-clicked? false
+    stop
+  ]
   ;; the go procedure does a few things. First it runs the go in congestion and climate:
   ls:ask population "go"
   ls:ask climate "no-display repeat 15 [go] display"
@@ -105,9 +117,9 @@ end
 @#$#@#$#@
 GRAPHICS-WINDOW
 180
-200
+210
 425
-396
+406
 16
 16
 5.0
@@ -133,10 +145,10 @@ ticks
 BUTTON
 5
 10
-75
+72
 43
-NIL
-setup\n
+Setup
+set setup-clicked? true\nsetup\n
 NIL
 1
 T
@@ -166,9 +178,9 @@ NIL
 
 PLOT
 5
-50
+60
 185
-170
+180
 CO2
 NIL
 NIL
@@ -184,9 +196,9 @@ PENS
 
 PLOT
 5
-170
+180
 185
-290
+300
 Temperature
 NIL
 NIL
@@ -202,9 +214,9 @@ PENS
 
 PLOT
 185
-170
+180
 365
-290
+300
 Cows
 NIL
 NIL
@@ -220,9 +232,9 @@ PENS
 
 PLOT
 185
-290
+300
 365
-410
+420
 Food Production
 NIL
 NIL
@@ -238,9 +250,9 @@ PENS
 
 PLOT
 365
-50
+60
 545
-170
+180
 People
 NIL
 NIL
@@ -256,9 +268,9 @@ PENS
 
 PLOT
 365
-290
+300
 545
-410
+420
 Water Pollution
 NIL
 NIL
@@ -308,9 +320,9 @@ NIL
 
 PLOT
 5
-290
+300
 185
-410
+420
 Trees
 NIL
 NIL
@@ -326,9 +338,9 @@ PENS
 
 PLOT
 185
-50
+60
 365
-170
+180
 Grass
 NIL
 NIL
@@ -344,9 +356,9 @@ PENS
 
 PLOT
 365
-170
+180
 545
-290
+300
 Fertilization
 NIL
 NIL
@@ -359,6 +371,17 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot \"fertilization\" ls:of milk"
+
+MONITOR
+365
+10
+545
+55
+Ticks
+ticks
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
