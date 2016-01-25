@@ -28,7 +28,6 @@ to setup
   let temp-student-name ""
   if student-name != 0 [set temp-student-name student-name]
   if length ls:models = 0 [
-;    webview:browse "http://goo.gl/forms/yMLnS1NO0A"
     ls:reset
     wait .3
     ls:load-gui-model "milk production model.nlogo"
@@ -45,7 +44,7 @@ to setup
     set student-name temp-student-name
   ]
   [
-    webview:browse "http://goo.gl/forms/yMLnS1NO0A"
+;    webview:browse "http://goo.gl/forms/yMLnS1NO0A"
     set student-name user-input "Please tell us your name."
   ]
   soft-setup
@@ -79,6 +78,8 @@ to soft-setup
   foreach log-vars [
     set logged-data lput (list) logged-data
   ]
+  setup-google-spreadsheet
+  create-student-sheets
 
   clear-all-plots
   reset-ticks
@@ -149,7 +150,7 @@ to adjust-co2
   ;; Baseline is 136 trees (for a max of 272), 136 CO2s.
   let current-trees "count trees" ls:of milk
   let people "count turtles" ls:of population
-  let total-co2s (272 - current-trees) + (people * 3)
+  let total-co2s (272 - current-trees) + (people * 2)
   let co2-diff total-co2s - "count co2s" ls:of climate
   ifelse co2-diff > 0
   [
@@ -298,34 +299,52 @@ to-report js-translate [v]
   ]
 end
 
-
 to-report javascript-listener
   report (word
 "  window.addEventListener('message',"
-"  function (e) {"
-"    if (e.data.eventData) {"
-"      document.getElementsByTagName('body')[0].appendChild(document.createTextNode(JSON.stringify(e.data)));"
-"      if (e.data.eventData.action === 'create_dataset' && e.data.result === 'success') {"
-"         NetLogo.evaluateCommand('set datasetCount datasetCount + 1', function () {"
-"           document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Added Dataset'));"
-"         }, function () {"
-"            document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Failed to update dataset count'));"
-"        });"
+"    function (e) {"
+"      if (e.data.successData && e.data.successData.sheetURL) {" ; change "myURL" to the name of a global variable to use later
+"        NetLogo.evaluateCommand('set myURL \"' + e.data.successData.sheetURL + '\"', function () { }, function () { });"
 "      }"
-"      if (e.data.result === 'error') {"
-"        NetLogo.evaluateCommand('output-print ' + JSON.stringify(e.data), function () { }, function () { });"
-"      }"
-"    }"
-"  });"
+"    });"
       )
 end
+
+;to-report javascript-listener
+;  report (word
+;"  window.addEventListener('message',"
+;"  function (e) {"
+;"    if (e.data.eventData) {"
+;"      document.getElementsByTagName('body')[0].appendChild(document.createTextNode(JSON.stringify(e.data)));"
+;"      if (e.data.eventData.action === 'create_dataset' && e.data.result === 'success') {"
+;"         NetLogo.evaluateCommand('set datasetCount datasetCount + 1', function () {"
+;"           document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Added Dataset'));"
+;"         }, function () {"
+;"            document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Failed to update dataset count'));"
+;"        });"
+;"      }"
+;"      if (e.data.result === 'error') {"
+;"        NetLogo.evaluateCommand('output-print ' + JSON.stringify(e.data), function () { }, function () { });"
+;"      }"
+;"    }"
+;"  });"
+;      )
+;end
 
 to set-task
   set current-task user-one-of "Which question are you working on now?" ["1: Finding Carrying Capacity" "2: Maximizing Food Production" "3: Maximizing Population"]
 end
 
 to show-instructions
-  webview:browse "http://goo.gl/forms/yMLnS1NO0A"
+  webview:browse "http://goo.gl/forms/9DLJnXVUcf"
+end
+
+to show-reflection
+
+end
+
+to show-goals
+  (webview:browse "http://goo.gl/forms/Thv2tqhXK7")
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -361,25 +380,8 @@ BUTTON
 75
 55
 Setup
-set setup-clicked? true\nsetup\n
+set setup-clicked? true\nsetup\nshow-goals
 NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-75
-10
-145
-55
-NIL
-go
-T
 1
 T
 OBSERVER
@@ -498,12 +500,12 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot pollution"
 
 BUTTON
-145
+75
 10
-240
+155
 55
-Run 400 ticks
-repeat 400 [go]
+Go 400 Years
+repeat 400 [go]\ncreate-student-sheets\nwait .5\nstuff-data-into-student-sheets\nshow-reflection
 NIL
 1
 T
@@ -515,9 +517,9 @@ NIL
 1
 
 BUTTON
-240
+250
 10
-360
+365
 55
 Show Instructions
 show-instructions
@@ -590,7 +592,7 @@ MONITOR
 10
 415
 55
-Ticks
+Years
 ticks
 0
 1
@@ -606,6 +608,23 @@ student-name
 0
 1
 11
+
+BUTTON
+155
+10
+250
+55
+Go 1,000 Years
+repeat 1000 [go]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

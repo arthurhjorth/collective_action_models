@@ -105,6 +105,7 @@ to buy-cow
 create-cows 1 [
   set energy 10
   set shape "cow"
+  set color brown
   move-to one-of patches with [patch-type != "forest"]
   set eaten-history (list)
   set eaten-this-week 0
@@ -126,9 +127,9 @@ end
 @#$#@#$#@
 GRAPHICS-WINDOW
 5
-80
+90
 250
-315
+325
 8
 8
 12.0
@@ -153,9 +154,9 @@ ticks
 
 BUTTON
 5
-330
+340
 220
-363
+373
 NIL
 change-area
 T
@@ -170,9 +171,9 @@ NIL
 
 CHOOSER
 5
-365
+375
 220
-410
+420
 plant-type
 plant-type
 "grass" "forest"
@@ -181,8 +182,8 @@ plant-type
 BUTTON
 5
 10
-110
-43
+80
+55
 Buy Cow
 buy-cow
 NIL
@@ -196,10 +197,10 @@ NIL
 1
 
 BUTTON
-110
+80
 10
-220
-43
+155
+55
 Sell Cow
 ask one-of cows [die]
 NIL
@@ -214,9 +215,9 @@ NIL
 
 SLIDER
 5
-45
+55
 220
-78
+88
 fertilization
 fertilization
 0
@@ -226,6 +227,17 @@ fertilization
 1
 NIL
 HORIZONTAL
+
+MONITOR
+155
+10
+220
+55
+# cows
+count cows
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
