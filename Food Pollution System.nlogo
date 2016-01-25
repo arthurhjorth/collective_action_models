@@ -1,5 +1,7 @@
 extensions [ls table webview]
 globals [
+  current-task
+
   log-vars
   logged-data
 
@@ -26,17 +28,24 @@ to setup
   let temp-student-name ""
   if student-name != 0 [set temp-student-name student-name]
   if length ls:models = 0 [
+;    webview:browse "http://goo.gl/forms/yMLnS1NO0A"
     ls:reset
+    wait .3
     ls:load-gui-model "milk production model.nlogo"
+    wait .3
     ls:load-gui-model "Climate Change.nlogo"
+    wait .3
     ls:load-gui-model "Population Model.nlogo"
+    wait .3
   ]
+
   ca
   ifelse temp-student-name != ""
   [
     set student-name temp-student-name
   ]
   [
+    webview:browse "http://goo.gl/forms/yMLnS1NO0A"
     set student-name user-input "Please tell us your name."
   ]
   soft-setup
@@ -87,9 +96,9 @@ to go
     set setup-clicked? false
     stop
   ]
-  ;; the go procedure does a few things. First it runs the go in congestion and climate:
-  ls:ask population "go"
-  ls:ask climate "no-display repeat 15 [go] display"
+  ;; the go procedure does a few things. First it runs the go in population and climate:
+;  ls:ask population "go"
+  ls:ask climate "no-display repeat 25 [go] display"
   ;; then it runs the food production model. Two things affect this -
   ;;;; first, the temperature in the climate model; second, the amount of fertilizer used
   ;;;; in the model
@@ -207,7 +216,7 @@ end
 ;;We call this once - once per simulation run, i guess - it clears the data (tickValues) so it's like a "new game!" action
 to setup-google-spreadsheet
   if not webview:is-open? [
-    (webview:create-frame "Data Chart Maker" "https://script.google.com/macros/s/AKfycbywQLkGHG1YVHJkr2qCOeq2Vt_Sp5IUI1PtxIfknlUbUjgSP7T6/exec")
+    (webview:create-tab "Data Chart Maker" "https://script.google.com/macros/s/AKfycbywQLkGHG1YVHJkr2qCOeq2Vt_Sp5IUI1PtxIfknlUbUjgSP7T6/exec")
   ]
 end
 
@@ -235,32 +244,32 @@ to add-student-named [ aname ]
   set activeUsername student-name ;studentName
   set datasetCount 0      ; this value is updated by the javascript, below
   set requestedDatasets 0 ; this value is incremented each time we request to add a dataset
-  webview:exec generated-message "create_sheet" ""
+  webview:exec generated-message "https://docs.google.com/spreadsheets/d/1ZdB_AA-kYIjxI3YHj7me8itASX6pxhD9LIDzwyh3gu4/edit?usp=sharing" "create_sheet" ""
 end
 
 ;;put (the same) stuff into each of the student sheet/tabs
-to stuff-data-into-student-sheets [reporters values]
+to stuff-data-into-student-sheets
    set activeUsername student-name
-   add-dataset-with-data map [first ?] g-sheets-log-data map [last ?] g-sheets-log-data
+   add-dataset-with-data first g-sheets-log-data transpose last g-sheets-log-data
 
 end
 
 ;;actually add the data
 to add-dataset-with-data [columns rows]
   set requestedDatasets requestedDatasets + 1
-  webview:exec generated-message "create_dataset" (word "columns: " (js-translate columns) ", rows: " (js-translate rows))
+  webview:exec generated-message "https://docs.google.com/spreadsheets/d/1ZdB_AA-kYIjxI3YHj7me8itASX6pxhD9LIDzwyh3gu4/edit?usp=sharing" "create_dataset" (word "columns: " (js-translate columns) ", rows: " (js-translate rows))
 end
 
 
 
-
+;; actions can be: create_dataset, add_row, create_sheet
 ;;utility methods borrowed from Robert's original sample file.
-to-report generated-message [action data]
+to-report generated-message [ spreadsheetURL action data]
   let formatted-data ""
   if length data > 0 [
     set formatted-data (word ", " data)
   ]
-  let message (word "{action: " '' action ", user: " '' activeUsername formatted-data "}")
+  let message (word "{action: " '' action ", sheetURL: \"" spreadsheetURL "\", user: " '' activeUsername formatted-data "}")
   report (word "document.getElementsByTagName('iframe')[0].contentWindow.frames[0].postMessage(" message ", '*');")
 end
 
@@ -311,17 +320,19 @@ to-report javascript-listener
       )
 end
 
-to test-chooser
-  show user-one-of "Which question are you working on now?" ["test1" "test 2"]
+to set-task
+  set current-task user-one-of "Which question are you working on now?" ["1: Finding Carrying Capacity" "2: Maximizing Food Production" "3: Maximizing Population"]
 end
 
-
+to show-instructions
+  webview:browse "http://goo.gl/forms/yMLnS1NO0A"
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 180
-210
+205
 425
-406
+401
 16
 16
 5.0
@@ -347,8 +358,8 @@ ticks
 BUTTON
 5
 10
-72
-43
+75
+55
 Setup
 set setup-clicked? true\nsetup\n
 NIL
@@ -365,7 +376,7 @@ BUTTON
 75
 10
 145
-43
+55
 NIL
 go
 T
@@ -380,9 +391,9 @@ NIL
 
 PLOT
 5
-60
+55
 185
-180
+175
 CO2
 NIL
 NIL
@@ -398,9 +409,9 @@ PENS
 
 PLOT
 5
-180
+175
 185
-300
+295
 Temperature
 NIL
 NIL
@@ -416,9 +427,9 @@ PENS
 
 PLOT
 185
-180
+175
 365
-300
+295
 Cows
 NIL
 NIL
@@ -434,9 +445,9 @@ PENS
 
 PLOT
 185
-300
+295
 365
-420
+415
 Food Production
 NIL
 NIL
@@ -452,9 +463,9 @@ PENS
 
 PLOT
 365
-60
+55
 545
-180
+175
 People
 NIL
 NIL
@@ -470,9 +481,9 @@ PENS
 
 PLOT
 365
-300
+295
 545
-420
+415
 Water Pollution
 NIL
 NIL
@@ -490,7 +501,7 @@ BUTTON
 145
 10
 240
-43
+55
 Run 400 ticks
 repeat 400 [go]
 NIL
@@ -506,10 +517,10 @@ NIL
 BUTTON
 240
 10
-345
-43
-Run 1000 ticks
-repeat 1000 [go]
+360
+55
+Show Instructions
+show-instructions
 NIL
 1
 T
@@ -522,9 +533,9 @@ NIL
 
 PLOT
 5
-300
+295
 185
-420
+415
 Trees
 NIL
 NIL
@@ -540,9 +551,9 @@ PENS
 
 PLOT
 185
-60
+55
 365
-180
+175
 Grass
 NIL
 NIL
@@ -558,9 +569,9 @@ PENS
 
 PLOT
 365
-180
+175
 545
-300
+295
 Fertilization
 NIL
 NIL

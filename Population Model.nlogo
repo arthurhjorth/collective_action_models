@@ -54,6 +54,7 @@ globals [
 ]
 
 turtles-own [
+  age
   income                                 ;; income level of turtle, 1-100
   car-love                               ;; how much the person wants to drive their car, 1-100
   willing-to-wait                        ;; how willing the person is to spend extra time on travelling by car
@@ -92,24 +93,35 @@ end
 
 
 to go
-  if any? turtles with [shape = "person"] [
-  ;; switch over yesterdays time travel
-  set yesterdays-travel-time-added travel-time-added
-  ;; calculate number of cars and busses
-  calc-vehicles
-  ;; calculate the time delay created by number of cars
-  calculate-delay-created
-  ;; calculate median incomes for respectively drivers and non-drivers
-  calculate-median-incomes
-  ;; calculate how many turtles traveled by their preferred medians
-  calculate-preference-met
-  ;; calculate median income for those who traveled by preferred and those who did not.
-  calculate-median-preference-met
-  ask turtles with [will-drive?] [set shape "car"]
-  ask turtles with [not will-drive?] [set shape "train"]
-
-  calc-pollution
+;  if any? turtles with [shape = "person"] [
+;  ;; switch over yesterdays time travel
+;  set yesterdays-travel-time-added travel-time-added
+;  ;; calculate number of cars and busses
+;  calc-vehicles
+;  ;; calculate the time delay created by number of cars
+;  calculate-delay-created
+;  ;; calculate median incomes for respectively drivers and non-drivers
+;  calculate-median-incomes
+;  ;; calculate how many turtles traveled by their preferred medians
+;  calculate-preference-met
+;  ;; calculate median income for those who traveled by preferred and those who did not.
+;  calculate-median-preference-met
+;  ask turtles with [will-drive?] [set shape "car"]
+;  ask turtles with [not will-drive?] [set shape "train"]
+;
+;  calc-pollution
+;  ]
+ask turtles [
+;; turtles age and potentially die
+  set age age + 1
+  if age > 50 [ if random 100 < 3 [die]]
+  ;; turtles can reproduce
+  if age > 18 and age < 55
+  [
+    if random 100 < 1 [give-birth]
   ]
+  ]
+
 end
 
 to color-code
@@ -229,29 +241,39 @@ to-report will-drive? ;; this determines if the turle will actually drive
   report wishes-to-drive? and can-afford-to-drive?
 end
 
-to add-person
-    ;; create population
-  create-turtles 1
-  [
+to init-new-person
+    set age 0
     ;; setting shape person
     set shape "house"
     ;; placing randomly on map in unoccupied location
     move-to min-one-of patches with [not member? self lake-patches and not any? turtles-here] [distancexy -4 3]
+
+end
+
+to give-birth
+  hatch 1 [init-new-person]
+end
+
+to add-person
+    ;; create population
+  create-turtles 1
+  [
+    init-new-person
 ;    move-to min-one-of patches with [not any? turtles-here] [sum (list abs pxcor abs pycor)]
     ;;move-to first patches with  [any? turtles-here = false]
 
 
 
-    ;; setting income randomly (will be changed as part of gini coefficient implementation)
-    set income random 99
-    set color white
-    set car-love random 99
-    set willing-to-wait random 99
-
-    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this.
-    set income income + 1
-    set car-love car-love + 1
-    set willing-to-wait willing-to-wait + 1
+;    ;; setting income randomly (will be changed as part of gini coefficient implementation)
+;    set income random 99
+;    set color white
+;    set car-love random 99
+;    set willing-to-wait random 99
+;
+;    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this.
+;    set income income + 1
+;    set car-love car-love + 1
+;    set willing-to-wait willing-to-wait + 1
   ]
 end
 
