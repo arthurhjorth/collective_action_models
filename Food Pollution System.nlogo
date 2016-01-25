@@ -1,5 +1,13 @@
-extensions [ls]
+extensions [ls table webview]
 globals [
+  log-vars
+  logged-data
+
+  student-name
+
+  started-tasks
+  finished-tasks
+
   ;; model ids
   milk
   climate
@@ -8,6 +16,8 @@ globals [
   food-surplus
   pollution
   setup-clicked?
+
+  activeUsername datasetCount requestedDataSets
   ]
 
 
@@ -20,6 +30,7 @@ to setup
     ls:load-gui-model "Population Model.nlogo"
   ]
   ca
+  set student-name user-input "Please tell us your name."
   soft-setup
 end
 
@@ -36,6 +47,22 @@ to soft-setup
   ls:ask climate "import-world \"cc-start\""
   ls:ask climate "reset-ticks"
   set setup-clicked? false
+  set log-vars (list
+    (list "CO2" task ["count co2s" ls:of climate])
+    (list "Temperature" task ["temperature" ls:of climate])
+    (list "Forest" task ["count trees" ls:of milk])
+    (list "Grass" task ["sum [grass] of patches with [patch-type = \"grass\"]" ls:of milk])
+    (list "Cows" task ["count cows" ls:of milk])
+    (list "Food Production" task ["food-production" ls:of milk])
+    (list "Population" task ["count turtles" ls:of population])
+    (list "Fertilization" task ["fertilization" ls:of milk])
+    (list "Pollution" task [pollution])
+  )
+  set logged-data (list)
+  foreach log-vars [
+    set logged-data lput (list) logged-data
+  ]
+
   clear-all-plots
   reset-ticks
 end
@@ -65,17 +92,17 @@ to go
   let temp  "temperature" ls:of climate
   let grow-coeff 0
 ;  show temp
-  if temp < 90 and temp > 30 
+  if temp < 90 and temp > 30
   [
     set grow-coeff abs (60 - temp)
 ;    show grow-coeff
     set grow-coeff 1 - ((grow-coeff / 30) ^ 2)
-    set grow-coeff grow-coeff * (1 + "fertilization" ls:of milk / 100)    
+    set grow-coeff grow-coeff * (1 + "fertilization" ls:of milk / 100)
   ]
 ;  show grow-coeff
-  (ls:ask milk "go ?" grow-coeff) 
-  
-  
+  (ls:ask milk "go ?" grow-coeff)
+
+
   adjust-co2
 
 
@@ -87,15 +114,16 @@ to go
   ;; then if we have enough, we create more people
   if food-surplus > 100 [ls:ask population "add-person" set food-surplus food-surplus - 100]
   if food-surplus < -100 [ls:ask population "remove-person" set food-surplus food-surplus + 100 ]
-  
+
   set pollution pollution + ("fertilization" ls:of milk / 100)
   set pollution pollution - min (list  (pollution / 100) .5)
   (ls:ask population "ask lake-patches [set pcolor palette:scale-gradient [[0 0 255] [0 255 0]] ? 0 100]" pollution)
   (ls:ask population "ask turtles [if random 100 < ? [remove-person]]" pollution / 100)
+
+  ;; finally we log data
+log-data
 tick
 end
-
-
 
 to adjust-co2
   ;; this is where the magic happens for good and bad. For each person in the model we add
@@ -106,14 +134,182 @@ to adjust-co2
   let people "count turtles" ls:of population
   let total-co2s (272 - current-trees) + (people * 3)
   let co2-diff total-co2s - "count co2s" ls:of climate
-  ifelse co2-diff > 0 
+  ifelse co2-diff > 0
   [
     (ls:ask climate "add-co2 ?" co2-diff)
   ]
-  [ 
+  [
     (ls:ask climate "remove-co2 ?" abs co2-diff)
   ]
 end
+
+
+to log-data
+  foreach n-values length log-vars [?] [
+    let the-list item ? logged-data
+    ; get the reporter task and run it
+    let the-data-point runresult last item ? log-vars
+    set the-list lput the-data-point the-list
+    set logged-data replace-item ? logged-data the-list
+  ]
+end
+
+to-report all-logged-data
+  let the-values (list)
+  foreach n-values length log-vars [?] [
+    let var-name first item ? log-vars
+    let var-values item ? logged-data
+    set the-values lput (list var-name var-values) the-values
+  ]
+  report the-values
+end
+
+to-report transpose [list-of-lists]
+  let no-rows length first list-of-lists
+  let transposed-list (list)
+  foreach n-values no-rows [?]  [
+    let counter ?
+    let row (list)
+    foreach list-of-lists [
+      set row lput (item counter ?) row
+    ]
+    set transposed-list lput row transposed-list
+  ]
+  report transposed-list
+end
+
+to-report g-sheets-log-data
+  report transpose all-logged-data
+end
+
+
+
+
+
+
+
+
+
+
+;;FOR ARTHUR
+;need globals [student-names tick-values reporterList  activeUsername datasetCount requestedDataSets ]  <--these are in the globals listing with a comment
+;;NOTE this code is ONLY intended to do the "class" spreadsheets --> it's not clear to me how the by-user ones are structured
+
+
+;;We call this once - once per simulation run, i guess - it clears the data (tickValues) so it's like a "new game!" action
+to setup-google-spreadsheet
+  if not webview:is-open? [
+    (webview:create-frame "Data Chart Maker" "https://script.google.com/macros/s/AKfycbywQLkGHG1YVHJkr2qCOeq2Vt_Sp5IUI1PtxIfknlUbUjgSP7T6/exec")
+  ]
+end
+
+;;here's where the sheets are created.
+to load-up-data
+  create-student-sheets
+end
+
+;;initialize a sheet (this is google's name for a tab) for each student
+to create-student-sheets
+   add-student-named student-name
+  wait 1
+end
+
+;;actually initialize the sheet/tab
+to add-student-named [ aname ]
+  webview:add-module "NetLogo"
+  if empty? aname [
+    error (word "Need a real student name, not ->" aname "<-")
+  ]
+  ; this is to ensure the listener only gets added once
+  if activeUsername = 0 [
+    webview:exec javascript-listener
+  ]
+  set activeUsername student-name ;studentName
+  set datasetCount 0      ; this value is updated by the javascript, below
+  set requestedDatasets 0 ; this value is incremented each time we request to add a dataset
+  webview:exec generated-message "create_sheet" ""
+end
+
+;;put (the same) stuff into each of the student sheet/tabs
+to stuff-data-into-student-sheets [reporters values]
+   set activeUsername student-name
+   add-dataset-with-data map [first ?] g-sheets-log-data map [last ?] g-sheets-log-data
+
+end
+
+;;actually add the data
+to add-dataset-with-data [columns rows]
+  set requestedDatasets requestedDatasets + 1
+  webview:exec generated-message "create_dataset" (word "columns: " (js-translate columns) ", rows: " (js-translate rows))
+end
+
+
+
+
+;;utility methods borrowed from Robert's original sample file.
+to-report generated-message [action data]
+  let formatted-data ""
+  if length data > 0 [
+    set formatted-data (word ", " data)
+  ]
+  let message (word "{action: " '' action ", user: " '' activeUsername formatted-data "}")
+  report (word "document.getElementsByTagName('iframe')[0].contentWindow.frames[0].postMessage(" message ", '*');")
+end
+
+
+to-report '' [w]
+  report (word "\"" w "\"")
+end
+
+to-report js-translate [v]
+  if is-number? v [
+    report (word v)
+  ]
+  if is-string? v [
+    report '' v
+  ]
+  if is-boolean? v [
+    report (word v)
+  ]
+  if is-list? v [
+    if empty? v [
+      report "[]"
+    ]
+    let escapedComponents map [js-translate ?] v
+    let joinedComponents reduce [(word ?1 ", " ?2)] escapedComponents
+    report (word "[" joinedComponents "]")
+  ]
+end
+
+
+to-report javascript-listener
+  report (word
+"  window.addEventListener('message',"
+"  function (e) {"
+"    if (e.data.eventData) {"
+"      document.getElementsByTagName('body')[0].appendChild(document.createTextNode(JSON.stringify(e.data)));"
+"      if (e.data.eventData.action === 'create_dataset' && e.data.result === 'success') {"
+"         NetLogo.evaluateCommand('set datasetCount datasetCount + 1', function () {"
+"           document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Added Dataset'));"
+"         }, function () {"
+"            document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Failed to update dataset count'));"
+"        });"
+"      }"
+"      if (e.data.result === 'error') {"
+"        NetLogo.evaluateCommand('output-print ' + JSON.stringify(e.data), function () { }, function () { });"
+"      }"
+"    }"
+"  });"
+      )
+end
+
+to test-chooser
+  show user-one-of "Which question are you working on now?" ["test1" "test 2"]
+end
+
+
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 180
@@ -375,10 +571,21 @@ PENS
 MONITOR
 365
 10
-545
+415
 55
 Ticks
 ticks
+0
+1
+11
+
+MONITOR
+415
+10
+545
+55
+Your name
+student-name
 0
 1
 11
@@ -726,7 +933,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0
+NetLogo 6.0-PREVIEW-12-15
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

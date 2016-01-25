@@ -1298,7 +1298,7 @@ $-amount
 $-amount
 0
 1000
-260
+50
 10
 1
 $
@@ -1312,7 +1312,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
-4
+5
 
 PLOT
 530
@@ -1577,7 +1577,7 @@ INPUTBOX
 875
 435
 farmer-name
-willy
+sean
 1
 0
 String

@@ -635,7 +635,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0-LS1
+NetLogo 6.0-PREVIEW-12-15
 @#$#@#$#@
 setup add-cloud add-cloud add-cloud repeat 800 [ go ]
 @#$#@#$#@

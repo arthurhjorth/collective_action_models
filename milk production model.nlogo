@@ -4,10 +4,10 @@ breed [cows cow]
 breed [trees tree]
 
 globals [
-  edge-patches 
-  max-grass 
-  cows-max-energy 
-  cows-eat 
+  edge-patches
+  max-grass
+  cows-max-energy
+  cows-eat
   grow-amount
   total-eaten
   ]
@@ -35,9 +35,9 @@ end
 to go [grow-multiplier]
   set total-eaten 0
   ask cows [graze metabolize-and-maybe-die]
-  ask patches with [patch-type = "grass"] 
+  ask patches with [patch-type = "grass"]
   [
-    regrow grow-multiplier 
+    regrow grow-multiplier
     recolor-grass
   ]
   ask trees with [size < 1] [set size size + .025]
@@ -65,7 +65,7 @@ to eat
   set grass grass - eaten-amount
   set energy energy + eaten-amount
   set eaten-history fput eaten-amount eaten-history
-  if length eaten-history > 10 [set eaten-history sublist eaten-history 0 10 ]  
+  if length eaten-history > 10 [set eaten-history sublist eaten-history 0 10 ]
 end
 
 
@@ -75,7 +75,7 @@ to metabolize-and-maybe-die
 end
 
 
-to regrow [multiplier] 
+to regrow [multiplier]
   set grass min (list max-grass (grass + grow-amount * multiplier))
   if any? trees-here [ask trees-here with [size < 1][set size size + 0.01]]
 end
@@ -95,16 +95,16 @@ end
 
 to change-type [a-type]
   set patch-type a-type
-  (cf:match a-type 
+  (cf:match a-type
     cf:= "forest" [ask cows-here [move-to one-of patches with [not any? trees-here]] plant-tree]
     cf:= "grass" [ask trees-here [die] set grass 0]
-  ) 
+  )
 end
 
 to buy-cow
 create-cows 1 [
-  set energy 10 
-  set shape "cow" 
+  set energy 10
+  set shape "cow"
   move-to one-of patches with [patch-type != "forest"]
   set eaten-history (list)
   set eaten-this-week 0
@@ -570,7 +570,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.0-LS1
+NetLogo 6.0-PREVIEW-12-15
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

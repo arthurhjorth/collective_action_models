@@ -1324,7 +1324,7 @@ $-amount
 $-amount
 0
 1000
-260
+50
 10
 1
 $
@@ -1338,7 +1338,7 @@ CHOOSER
 plot-value
 plot-value
 "Total Milk Production" "Number of Cows" "Money in Bank" "Grass Amount" "State of Fences" "Gini Coefficient"
-4
+5
 
 PLOT
 530
@@ -1462,10 +1462,10 @@ NIL
 1
 
 BUTTON
-884
-467
-990
-501
+0
+475
+90
+509
 Who says what
 print-who-says-what
 NIL
@@ -1479,10 +1479,10 @@ NIL
 1
 
 BUTTON
-885
-505
-990
-539
+0
+510
+90
+543
 Who did what
 print-who-did-what
 NIL
@@ -1496,10 +1496,10 @@ NIL
 1
 
 BUTTON
-885
-543
-990
-577
+0
+545
+90
+579
 Who did what #
 print-counts-of-actions-per-farmer
 NIL
@@ -1603,7 +1603,7 @@ INPUTBOX
 875
 435
 farmer-name
-willy
+sean
 1
 0
 String
@@ -1626,10 +1626,10 @@ NIL
 1
 
 PLOT
-880
-135
-1080
-375
+1229
+214
+1429
+454
 WealthDistribution
 NIL
 NIL
