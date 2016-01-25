@@ -23,6 +23,8 @@ globals [
 
 ;; Load the CC model, the traffic model, and the milk production model
 to setup
+  let temp-student-name ""
+  if student-name != 0 [set temp-student-name student-name]
   if length ls:models = 0 [
     ls:reset
     ls:load-gui-model "milk production model.nlogo"
@@ -30,7 +32,13 @@ to setup
     ls:load-gui-model "Population Model.nlogo"
   ]
   ca
-  set student-name user-input "Please tell us your name."
+  ifelse temp-student-name != ""
+  [
+    set student-name temp-student-name
+  ]
+  [
+    set student-name user-input "Please tell us your name."
+  ]
   soft-setup
 end
 
@@ -306,8 +314,6 @@ end
 to test-chooser
   show user-one-of "Which question are you working on now?" ["test1" "test 2"]
 end
-
-
 
 
 @#$#@#$#@
