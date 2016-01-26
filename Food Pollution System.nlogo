@@ -310,26 +310,6 @@ to-report javascript-listener
       )
 end
 
-;to-report javascript-listener
-;  report (word
-;"  window.addEventListener('message',"
-;"  function (e) {"
-;"    if (e.data.eventData) {"
-;"      document.getElementsByTagName('body')[0].appendChild(document.createTextNode(JSON.stringify(e.data)));"
-;"      if (e.data.eventData.action === 'create_dataset' && e.data.result === 'success') {"
-;"         NetLogo.evaluateCommand('set datasetCount datasetCount + 1', function () {"
-;"           document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Added Dataset'));"
-;"         }, function () {"
-;"            document.getElementsByTagName('body')[0].appendChild(document.createTextNode('Failed to update dataset count'));"
-;"        });"
-;"      }"
-;"      if (e.data.result === 'error') {"
-;"        NetLogo.evaluateCommand('output-print ' + JSON.stringify(e.data), function () { }, function () { });"
-;"      }"
-;"    }"
-;"  });"
-;      )
-;end
 
 to set-task
   set current-task user-one-of "Which question are you working on now?" ["1: Finding Carrying Capacity" "2: Maximizing Food Production" "3: Maximizing Population"]
@@ -625,6 +605,24 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+365
+415
+545
+535
+Average Lifespan
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot \"mean age-at-death\" ls:of population"
 
 @#$#@#$#@
 ## WHAT IS IT?

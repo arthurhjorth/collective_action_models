@@ -1,246 +1,31 @@
-;; Interpreting Congestion Charge ;;
-;; This model is based on Michael Freeden s example
-;; The purpose of this model is to show the ambiguity of political concepts such as public goods
-;; and the interpretation of policies.
-;; TODOS: price sensitivity
-
 extensions [palette]
 
 globals [
-
   lake-patches
-
-  global-pollution-per-day               ;; pollution variable
-  travel-time-added                      ;; traffic congestion, how congested is traffic.
-                                         ;; this variable adds itself to a vehicle s travel time
-  average-travel-time                    ;; average travel time calculated per day per person
-
-  yesterdays-travel-time-added           ;; the average travel time added per vehicle yesterday
-                                         ;; this is key in people s decision making process for whether they want
-                                         ;; to go by car or bus.
-  turtles-driving                        ;; number of turtles driving on any day
-  median-income-drivers                  ;; the median income of turtles who drive
-  median-income-bussers                  ;; the median income of turtles who take the bus
-  cars                                   ;; number of cars
-  busses                                 ;; number of busses
-  median-income-preference-met           ;; median income for those whose transport preference was met
-  median-income-preference-not-met       ;; median income for those whose transport preference was not met
-  turtles-preference-met                 ;; number of people whose prefernces are met
-  turtles-preference-not-met             ;; number of people whose preferences are not met
-
-  color?                                 ;; color code boolean
-
-  base-price-bus                         ;; base price for taking the bus
-  real-price-bus                         ;; real price for taking the bus
-  bus-subsidies                          ;; money going towards bus subsidies
-
-  base-price-car                         ;; base price car. real price is base price plus congestion charge
-  road-maintenance-expenses              ;; road maintenance expenses. The higher this is, the higher capacity on roads.
-
-  base-road-capacity                     ;;
-  real-road-capacity                     ;;
-
-  revenue-bus-tickets                    ;; total revenue from bus tickets
-  revenue-congestion-charge              ;; total revenue from congestion charge
-
-  expenses                               ;; total expenses
-  budget-balance                         ;; budget balance
-
-  avg-passengers-per-bus
-  pollution-per-bus
-  pollution-per-car
-  avg-passengers-per-car
-  population
+  age-at-death
 ]
 
 turtles-own [
   age
-  income                                 ;; income level of turtle, 1-100
-  car-love                               ;; how much the person wants to drive their car, 1-100
-  willing-to-wait                        ;; how willing the person is to spend extra time on travelling by car
-                                         ;; rather than travelling by public transport, 1-100
-;  wishes-to-drive?                       ;; would this person ideally drive today?
-;  can-afford-to-drive?                   ;; can this person afford to drive today
-;  will-drive-today?                      ;; will this person actually drive today
-  preference-met?                        ;; true if person travels by preferred medians
 ]
 
-;;;
-;;; SETUP PROCEDURES
-;;;
-
 to setup
-  ;; clean up
-  reset-ticks
-  ;; (for this model to work with NetLogo's new plotting features,
-  ;; __clear-all-and-reset-ticks should be replaced with clear-all at
-  ;; the beginning of your setup procedure and reset-ticks at the end
-  ;; of the procedure.)
-  __clear-all-and-reset-ticks
-
-  set avg-passengers-per-bus 32
-  set pollution-per-bus 50
-  set pollution-per-car 7
-  set avg-passengers-per-car 1.5
-  set population 1089
-
-  set color? false
-;  ask patch 0 0 [sprout 1 [set shape "house"]]
+  ca
+  set age-at-death (list)
   set lake-patches patches with [distancexy -11 11 < 10]
   ask lake-patches [set pcolor blue]
+  reset-ticks
 end
-
-
 
 to go
-;  if any? turtles with [shape = "person"] [
-;  ;; switch over yesterdays time travel
-;  set yesterdays-travel-time-added travel-time-added
-;  ;; calculate number of cars and busses
-;  calc-vehicles
-;  ;; calculate the time delay created by number of cars
-;  calculate-delay-created
-;  ;; calculate median incomes for respectively drivers and non-drivers
-;  calculate-median-incomes
-;  ;; calculate how many turtles traveled by their preferred medians
-;  calculate-preference-met
-;  ;; calculate median income for those who traveled by preferred and those who did not.
-;  calculate-median-preference-met
-;  ask turtles with [will-drive?] [set shape "car"]
-;  ask turtles with [not will-drive?] [set shape "train"]
-;
-;  calc-pollution
-;  ]
-ask turtles [
-;; turtles age and potentially die
-  set age age + 1
-  if age > 50 [ if random 100 < 3 [die]]
-  ;; turtles can reproduce
-  if age > 18 and age < 55
-  [
-    if random 100 < 1 [give-birth]
-  ]
-  ]
-
-end
-
-to color-code
-  ifelse color? = false
-  [
-    set color?  true
-  ]
-  [
-    set color?  false
+  ask turtles [set age age + 1
+    if age > 50 [if random (age - 50) > 14 [set age-at-death fput age age-at-death die]]
+    if age > 18 and age < 55
+    [
+      if random 100 < 1 [give-birth]
+    ]
   ]
 end
-
-to calc-vehicles
-  set cars count turtles with [will-drive?] / avg-passengers-per-car
-  set busses count turtles with [will-drive?] / avg-passengers-per-bus
-end
-
-to calculate-median-incomes
-  ifelse any? turtles with [will-drive?]
-  [
-    set median-income-drivers median [income] of turtles with [will-drive? ]
-  ]
-  [
-    set median-income-drivers 0
-  ]
-  ifelse any? turtles with [will-drive?]
-  [
-    set median-income-bussers median [income] of turtles with [will-drive?]
-  ]
-  [
-    set median-income-bussers 0
-  ]
-end
-
-to calculate-preference-met
-  set turtles-preference-met (count turtles - count turtles with [wishes-to-drive? and will-drive?])
-  set turtles-preference-not-met population - turtles-preference-met
-end
-
-to calculate-median-preference-met
-  ;; if clause to avoid null pointer exc
-
-  ifelse any? turtles with [(wishes-to-drive? and will-drive?) or not wishes-to-drive?]
-  [
-     set median-income-preference-met median [income] of turtles with
-           [(wishes-to-drive? and will-drive?) or not wishes-to-drive?]
-  ]
-  [
-    set median-income-preference-met 0
-  ]
-
-  ;; if clause to avoid null pointer exc
-  ifelse any? turtles with [wishes-to-drive? and not will-drive?]
-  [
-     set median-income-preference-not-met median [income] of turtles with [wishes-to-drive? and not will-drive?]
-  ]
-  [
-    set median-income-preference-not-met 0
-  ]
-
-
-end
-
-to color-turtle
-  ask turtles[
-  ;; coloring people per income
-  ;; dark red for lowest quartile, pink for next, light blue for next, dark blue for highest quartile
-  if income <= 25
-  [
-    set color 15
-  ]
-  if income > 25 and income <= 50
-  [
-    set color 17
-  ]
-  if income > 50 and income <= 75
-  [
-    set color 95
-  ]
-  if income > 75
-  [
-    set color 105
-  ]
-  ]
-end
-
-to white-turtle
-  ask turtles
-  [
-    set color white
-  ]
-
-end
-
-to calc-pollution
-  ;; calculates pollution by multiplying pollution per car with no of cars and ditto for busses
-  set global-pollution-per-day cars * pollution-per-car + busses * pollution-per-bus
-  end
-
-to calculate-delay-created
-  ;; calculates delay created by finding sum of vehicles. All vehicles cause same amount of delay which probably isnt true...
-  set travel-time-added cars + busses
-
-end
-
-to-report wishes-to-drive? ;; this determines if the turtle would ideally drive
-  report car-love - (yesterdays-travel-time-added / (willing-to-wait + 0.01 )) > 0
-end
-
-to-report can-afford-to-drive? ;; this determines if the turtle can afford to drive. This needs to be tweaked to take into
-                       ;; consideration feedback effect from congestion charge lowering price of public transp
-                       report 1
-;  report congestion-charge-cost / 2 < income
-end
-
-to-report will-drive? ;; this determines if the turle will actually drive
-  report wishes-to-drive? and can-afford-to-drive?
-end
-
 to init-new-person
     set age 0
     ;; setting shape person
@@ -249,34 +34,15 @@ to init-new-person
     move-to min-one-of patches with [not member? self lake-patches and not any? turtles-here] [distancexy -4 3]
 
 end
-
 to give-birth
   hatch 1 [init-new-person]
 end
-
 to add-person
-    ;; create population
   create-turtles 1
   [
     init-new-person
-;    move-to min-one-of patches with [not any? turtles-here] [sum (list abs pxcor abs pycor)]
-    ;;move-to first patches with  [any? turtles-here = false]
-
-
-
-;    ;; setting income randomly (will be changed as part of gini coefficient implementation)
-;    set income random 99
-;    set color white
-;    set car-love random 99
-;    set willing-to-wait random 99
-;
-;    ;; adding 1 to all turtle properties to avoid divide by zero errors. Look up how to set a range for random and correct this.
-;    set income income + 1
-;    set car-love car-love + 1
-;    set willing-to-wait willing-to-wait + 1
   ]
 end
-
 to remove-person
   ask min-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
 end
