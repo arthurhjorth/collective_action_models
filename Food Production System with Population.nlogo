@@ -34,8 +34,8 @@ to setup
     wait .3
     ls:load-gui-model "c.nlogo"
     wait .3
-;    ls:load-gui-model "p.nlogo"
-;    wait .3
+    ls:load-gui-model "p.nlogo"
+    wait .3
   ]
 
   ca
@@ -58,7 +58,7 @@ end
 to soft-setup
   set milk 0
   set climate 1
-;  set population 2
+  set population 2
   ls:ask ls:models "setup"
   ls:ask climate "import-world \"cc-start\""
   ls:ask climate "reset-ticks"
@@ -70,10 +70,10 @@ to soft-setup
     (list "Grass" task ["sum [grass] of patches with [patch-type = \"grass\"]" ls:of milk])
     (list "Cows" task ["count cows" ls:of milk])
     (list "Food Production" task ["food-production" ls:of milk])
-;    (list "Population" task ["count turtles" ls:of population])
+    (list "Population" task ["count turtles" ls:of population])
     (list "Fertilization" task ["fertilization" ls:of milk])
     (list "Pollution" task [pollution])
-;    (list "Avg. Lifespan" task ["mean age-at-death" ls:of population])
+    (list "Avg. Lifespan" task ["mean age-at-death" ls:of population])
   )
   set logged-data (list)
   foreach log-vars [
@@ -100,7 +100,7 @@ to go
     stop
   ]
   ;; the go procedure does a few things. First it runs the go in population and climate:
-;  ls:ask population "go"
+  ls:ask population "go"
   ls:ask climate "no-display repeat 25 [go] display"
   ;; then it runs the food production model. Two things affect this -
   ;;;; first, the temperature in the climate model; second, the amount of fertilizer used
@@ -130,17 +130,17 @@ to go
   ;; get our food production
   set food-surplus food-surplus + "food-production" ls:of milk
   ;; then people eat:
-;  set food-surplus food-surplus - ("count turtles" ls:of population) / 2
+  set food-surplus food-surplus - ("count turtles" ls:of population) / 2
   ;; then if we have enough, we create more people
-;  if food-surplus > 100 [ls:ask population "add-person" set food-surplus food-surplus - 100]
-;  if food-surplus < -100 [ls:ask population "ask one-of turtles [remove-person]" set food-surplus food-surplus + 100
-;    show "one starved"
-;    ]
+  if food-surplus > 100 [ls:ask population "add-person" set food-surplus food-surplus - 100]
+  if food-surplus < -100 [ls:ask population "ask one-of turtles [remove-person]" set food-surplus food-surplus + 100
+    show "one starved"
+    ]
 
   set pollution pollution + ("fertilization" ls:of milk / 100)
   set pollution pollution - min (list  (pollution / 100) .5)
-;  (ls:ask population "ask lake-patches [set pcolor palette:scale-gradient [[0 0 255] [0 255 0]] ? 0 100]" pollution)
-;  (ls:ask population "ask turtles [if random-float 100 < ? [remove-person]]" pollution / 100)
+  (ls:ask population "ask lake-patches [set pcolor palette:scale-gradient [[0 0 255] [0 255 0]] ? 0 100]" pollution)
+  (ls:ask population "ask turtles [if random-float 100 < ? [remove-person]]" pollution / 100)
 
   ;; finally we log data
 log-data
@@ -153,8 +153,8 @@ to adjust-co2
   ;; Let's see how it works out.
   ;; Baseline is 136 trees (for a max of 272), 136 CO2s.
   let current-trees "count trees" ls:of milk
-;  let people "count turtles" ls:of population
-  let total-co2s (272 - current-trees); + (people * 2)
+  let people "count turtles" ls:of population
+  let total-co2s (272 - current-trees) + (people * 2)
   let co2-diff total-co2s - "count co2s" ls:of climate
   ifelse co2-diff > 0
   [
@@ -311,7 +311,7 @@ end
 
 
 to set-task
-;  set current-task user-one-of "Which question are you working on now?" ["1: Finding Carrying Capacity" "2: Maximizing Food Production" "3: Maximizing Population"]
+  set current-task user-one-of "Which question are you working on now?" ["1: Finding Carrying Capacity" "2: Maximizing Food Production" "3: Maximizing Population"]
 end
 
 to show-instructions
@@ -458,7 +458,7 @@ true
 false
 "" ""
 PENS
-"Public transit" 1.0 0 -16777216 true "" "plot 0"
+"Public transit" 1.0 0 -16777216 true "" "plot \"count turtles\" ls:of population"
 
 PLOT
 365
@@ -621,7 +621,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot 0"
+"default" 1.0 0 -16777216 true "" "plot \"avg-life-span\" ls:of population"
 
 @#$#@#$#@
 ## WHAT IS IT?
