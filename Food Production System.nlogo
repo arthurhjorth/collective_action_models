@@ -30,11 +30,11 @@ to setup
   if length ls:models = 0 [
     ls:reset
     wait .3
-    ls:load-gui-model "milk production model.nlogo"
+    ls:load-gui-model "f.nlogo"
     wait .3
-    ls:load-gui-model "Climate Change.nlogo"
+    ls:load-gui-model "c.nlogo"
     wait .3
-    ls:load-gui-model "Population Model.nlogo"
+    ls:load-gui-model "p.nlogo"
     wait .3
   ]
 
