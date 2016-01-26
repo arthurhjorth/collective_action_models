@@ -23,7 +23,7 @@ to setup
   ask patches with [pxcor >= 0] [change-type "grass" set grass 15]
   ask trees [set size 1]
   set cows-max-energy 25
-  set cows-eat 2
+  set cows-eat 5
   set grow-amount .25
   set max-grass 15
   ask patches [recolor-grass]
@@ -103,11 +103,11 @@ end
 
 to buy-cow
 create-cows 1 [
-  set energy 10
+  set energy 25
   set shape "cow"
   set color brown
   move-to one-of patches with [patch-type != "forest"]
-  set eaten-history (list)
+  set eaten-history map [1.5] n-values 10 [?]
   set eaten-this-week 0
   ]
 end
@@ -122,7 +122,8 @@ end
 
 
 to-report milk-production
-  report ifelse-value (length eaten-history > 0) [(mean eaten-history) ^ 1.4 ] [0]
+  ;; make sure this scales up depending on how much they've eaten
+  report ifelse-value (length eaten-history > 0) [mean map [? ^ 1.8] eaten-history] [0]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -202,7 +203,7 @@ BUTTON
 155
 55
 Sell Cow
-ask one-of cows [die]
+if any? cows [ask one-of cows [die]]
 NIL
 1
 T
@@ -222,7 +223,7 @@ fertilization
 fertilization
 0
 100
-50
+0
 1
 1
 NIL

@@ -82,8 +82,9 @@ to soft-setup
   setup-google-spreadsheet
   create-student-sheets
 
-  clear-all-plots
+
   reset-ticks
+    clear-all-plots
 end
 
 ;; before we do anything, let's talk about a few heuristics for balancing the system
@@ -314,15 +315,15 @@ to set-task
 end
 
 to show-instructions
-  webview:browse "http://goo.gl/forms/9DLJnXVUcf"
+  webview:browse "http://goo.gl/forms/YLC37SH0DW"
 end
 
 to show-reflection
-
+  (webview:browse "http://goo.gl/forms/86pC57MFZM")
 end
 
 to show-goals
-  (webview:browse "http://goo.gl/forms/Thv2tqhXK7")
+  (webview:browse "http://goo.gl/forms/WQgKZvfeOI")
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
