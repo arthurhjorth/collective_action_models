@@ -11,7 +11,7 @@ turtles-own [
 
 to setup
   ca
-  set age-at-death (list)
+  set age-at-death map [65 + random 10] n-values 10 [?]
   set lake-patches patches with [distancexy -11 11 < 10]
   ask lake-patches [set pcolor blue]
   reset-ticks
@@ -19,7 +19,12 @@ end
 
 to go
   ask turtles [set age age + 1
-    if age > 50 [if random (age - 50) > 14 [set age-at-death fput age age-at-death die]]
+    ;; turtles start dying when they get old
+    if age > 50 [if random (age - 50) > 14 [
+    show (word "died from aging at " age)
+        remove-person]
+
+    ]
     if age > 18 and age < 55
     [
       if random 100 < 1 [give-birth]
@@ -31,8 +36,9 @@ to init-new-person
     ;; setting shape person
     set shape "house"
     ;; placing randomly on map in unoccupied location
-    move-to min-one-of patches with [not member? self lake-patches and not any? turtles-here] [distancexy -4 3]
-
+    let free-patches-near-lake patches with [not member? self lake-patches and not any? turtles-here]
+    if not any? free-patches-near-lake [die]
+    move-to min-one-of free-patches-near-lake [distancexy -4 3]
 end
 to give-birth
   hatch 1 [init-new-person]
@@ -44,8 +50,15 @@ to add-person
   ]
 end
 to remove-person
-  ask min-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
+  set age-at-death fput age age-at-death
+  if length age-at-death > 10 [set age-at-death butlast age-at-death]
+  die
 end
+
+
+;to remove-person
+;  ask min-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
+;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 5

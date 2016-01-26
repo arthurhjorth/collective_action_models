@@ -1,4 +1,4 @@
-extensions [ls table webview]
+extensions [ls webview]
 globals [
   current-task
 
@@ -98,7 +98,7 @@ to go
     stop
   ]
   ;; the go procedure does a few things. First it runs the go in population and climate:
-;  ls:ask population "go"
+  ls:ask population "go"
   ls:ask climate "no-display repeat 25 [go] display"
   ;; then it runs the food production model. Two things affect this -
   ;;;; first, the temperature in the climate model; second, the amount of fertilizer used
@@ -128,15 +128,17 @@ to go
   ;; get our food production
   set food-surplus food-surplus + "food-production" ls:of milk
   ;; then people eat:
-  set food-surplus food-surplus - "count turtles" ls:of population
+  set food-surplus food-surplus - ("count turtles" ls:of population) / 2
   ;; then if we have enough, we create more people
   if food-surplus > 100 [ls:ask population "add-person" set food-surplus food-surplus - 100]
-  if food-surplus < -100 [ls:ask population "remove-person" set food-surplus food-surplus + 100 ]
+  if food-surplus < -100 [ls:ask population "ask one-of turtles [remove-person]" set food-surplus food-surplus + 100
+    show "one starved"
+    ]
 
   set pollution pollution + ("fertilization" ls:of milk / 100)
   set pollution pollution - min (list  (pollution / 100) .5)
   (ls:ask population "ask lake-patches [set pcolor palette:scale-gradient [[0 0 255] [0 255 0]] ? 0 100]" pollution)
-  (ls:ask population "ask turtles [if random 100 < ? [remove-person]]" pollution / 100)
+  (ls:ask population "ask turtles [if random-float 100 < ? [remove-person]]" pollution / 100)
 
   ;; finally we log data
 log-data
@@ -199,11 +201,6 @@ end
 to-report g-sheets-log-data
   report transpose all-logged-data
 end
-
-
-
-
-
 
 
 
