@@ -73,6 +73,7 @@ to soft-setup
     (list "Population" task ["count turtles" ls:of population])
     (list "Fertilization" task ["fertilization" ls:of milk])
     (list "Pollution" task [pollution])
+    (list "Avg. Lifespan" task ["mean age-at-death" ls:of population])
   )
   set logged-data (list)
   foreach log-vars [
@@ -619,7 +620,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot \"mean age-at-death\" ls:of population"
+"default" 1.0 0 -16777216 true "" "plot \"avg-life-span\" ls:of population"
 
 @#$#@#$#@
 ## WHAT IS IT?

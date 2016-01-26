@@ -55,6 +55,10 @@ to remove-person
   die
 end
 
+to-report avg-life-span
+  report ifelse-value (age-at-death = 0) [70] [mean age-at-death]
+end
+
 
 ;to remove-person
 ;  ask min-one-of patches with [any? turtles-here] [sum (list abs pxcor abs pycor)] [ask turtles-here [die]]
